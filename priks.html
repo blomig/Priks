@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Priks - V1.1</title>
+    <style>
+        canvas { border: 1px solid #ccc; }
+        #game-info { margin-top: 10px; font-family: Arial, sans-serif; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="530"></canvas> <!-- Hauteur ajustée -->
+    <div id="game-info"></div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const GRID_SIZE = 8;
+        const CELL_SIZE = 50;
+        const COLORS = {
+            'R': 'red',
+            'B': 'blue',
+            'Y': 'yellow',
+            'G': 'green',
+            'O': 'orange',
+            'P': 'purple',
+            'PRIKS': 'gray',
+            '_': 'white'
+        };
+
+        let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('_'));
+        let nextBlock = randomBlock();
+        let nextLine = generateNextLine(); // Ligne complète initiale
+        let moves = 0;
+        let chains = 0;
+        let bombs = 1;
+        let score = 0;
+        let gameOver = false;
+        let bombsEarned = 1;
+
+        function randomBlock() {
+            return Math.random() < 0.1 ? { type: 'PRIKS', count: 3 } : ['R', 'B', 'Y', 'G', 'O', 'P'][Math.floor(Math.random() * 6)];
+        }
+
+        function generateNextLine() {
+            let line = Array(GRID_SIZE).fill().map(() => randomBlock());
+            let pricksPos = Math.floor(Math.random() * GRID_SIZE);
+            line[pricksPos] = { type: 'PRIKS', count: 3 };
+            return line;
+        }
+
+        function resetGame() {
+            grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('_'));
+            nextBlock = randomBlock();
+            nextLine = generateNextLine();
+            moves = 0;
+            chains = 0;
+            bombs = 1;
+            score = 0;
+            gameOver = false;
+            bombsEarned = 1;
+        }
+
+        function checkBombBonus() {
+            let newBombsEarned = Math.floor(score / 50) + 1; // +1 pour la bombe initiale
+            if (newBombsEarned > bombsEarned) {
+                bombs += (newBombsEarned - bombsEarned);
+                bombsEarned = newBombsEarned;
+            }
+        }
+
+        function placeBlock(col, block) {
+            if (gameOver) return false;
+            if (grid[GRID_SIZE - 1][col] !== '_') { // Ligne du bas occupée
+                gameOver = true;
+                return false;
+            }
+            let lastEmptyRow = 0; // Par défaut, va au haut (ligne 0)
+            for (let row = GRID_SIZE - 1; row >= 0; row--) {
+                if (grid[row][col] !== '_') {
+                    lastEmptyRow = row + 1;
+                    break;
+                }
+            }
+            grid[lastEmptyRow][col] = block;
+            moves++;
+            score += 1; // +1 pour chaque Blox joué
+            checkChains();
+            checkBombBonus();
+            if (moves % 10 === 9) {
+                nextLine = generateNextLine(); // Génère la prochaine ligne à 9/10
+            }
+            if (moves % 10 === 0) addFullLine();
+            nextBlock = randomBlock();
+            return true;
+        }
+
+        function checkChains() {
+            let toRemove = new Set();
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (grid[r][c] !== '_' && typeof grid[r][c] !== 'object') { // Pas un Priks
+                        let chain = findChain(r, c, grid[r][c], new Set());
+                        if (chain.size >= 5) chain.forEach(pos => toRemove.add(pos));
+                    }
+                }
+            }
+            if (toRemove.size > 0) {
+                chains++;
+                score += 5; // +5 pour chaque chaîne de 5
+                checkBombBonus();
+                let affectedPriks = new Set();
+                toRemove.forEach(([r, c]) => {
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            let nr = r + dr, nc = c + dc;
+                            if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE && 
+                                typeof grid[nr][nc] === 'object' && grid[nr][nc].type === 'PRIKS') {
+                                affectedPriks.add(`${nr},${nc}`);
+                            }
+                        }
+                    }
+                });
+                affectedPriks.forEach(pos => {
+                    let [r, c] = pos.split(',').map(Number);
+                    grid[r][c].count--;
+                    if (grid[r][c].count <= 0) grid[r][c] = '_';
+                });
+            }
+            toRemove.forEach(([r, c]) => grid[r][c] = '_');
+        }
+
+        function findChain(r, c, color, visited) {
+            let key = `${r},${c}`;
+            if (visited.has(key) || r < 0 || r >= GRID_SIZE || c < 0 || c >= GRID_SIZE || grid[r][c] !== color) return new Set();
+            visited.add(key);
+            let chain = new Set([[r, c]]);
+            [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]].forEach(([dr, dc]) => {
+                findChain(r + dr, c + dc, color, visited).forEach(pos => chain.add(pos));
+            });
+            return chain;
+        }
+
+        function addFullLine() {
+            for (let col = 0; col < GRID_SIZE; col++) {
+                if (grid[GRID_SIZE - 1][col] !== '_') { // Ligne du bas occupée
+                    gameOver = true;
+                    return;
+                }
+                let lastEmptyRow = 0;
+                for (let row = GRID_SIZE - 1; row >= 0; row--) {
+                    if (grid[row][col] !== '_') {
+                        lastEmptyRow = row + 1;
+                        break;
+                    }
+                }
+                grid[lastEmptyRow][col] = nextLine[col];
+                score += 1; // +1 pour chaque Blox de la ligne complète
+            }
+            checkChains();
+            checkBombBonus();
+            nextLine = generateNextLine(); // Génère une nouvelle ligne après ajout
+        }
+
+        function useBomb(col) {
+            if (bombs <= 0 || gameOver) return false;
+            bombs--; // Décrémente immédiatement
+            let bombRow = 0; // Par défaut, va au haut (ligne 0)
+            for (let row = GRID_SIZE - 1; row >= 0; row--) {
+                if (grid[row][col] !== '_') {
+                    bombRow = row + 1 < GRID_SIZE ? row + 1 : row;
+                    break;
+                }
+            }
+            let removedBlocks = 0;
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    let nr = bombRow + dr, nc = col + dc;
+                    if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE && grid[nr][nc] !== '_') {
+                        grid[nr][nc] = '_';
+                        removedBlocks++;
+                    }
+                }
+            }
+            moves++;
+            score += removedBlocks;
+            checkChains();
+            checkBombBonus();
+            if (moves % 10 === 9) {
+                nextLine = generateNextLine(); // Génère à 9/10
+            }
+            if (moves % 10 === 0) addFullLine();
+            nextBlock = randomBlock();
+            return true;
+        }
+
+        function draw() {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (typeof grid[r][c] === 'object' && grid[r][c].type === 'PRIKS') {
+                        ctx.fillStyle = COLORS['PRIKS'];
+                        ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+                        ctx.fillStyle = 'white';
+                        ctx.font = '20px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(grid[r][c].count, c * CELL_SIZE + CELL_SIZE / 2, r * CELL_SIZE + CELL_SIZE / 2 + 7);
+                    } else {
+                        ctx.fillStyle = COLORS[grid[r][c]];
+                        ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+                    }
+                    ctx.strokeStyle = 'lightgray';
+                    ctx.strokeRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                }
+            }
+            // Affichage du prochain Blox
+            ctx.fillStyle = typeof nextBlock === 'object' ? COLORS['PRIKS'] : COLORS[nextBlock];
+            ctx.fillRect(GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
+            ctx.strokeStyle = 'black';
+            ctx.strokeRect(GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
+
+            // Affichage de la prochaine ligne complète uniquement à moves % 10 === 9
+            if (moves % 10 === 9) {
+                for (let col = 0; col < GRID_SIZE; col++) {
+                    ctx.fillStyle = typeof nextLine[col] === 'object' ? COLORS['PRIKS'] : COLORS[nextLine[col]];
+                    ctx.fillRect(col * CELL_SIZE + 5, GRID_SIZE * CELL_SIZE + 45, 30, 30);
+                    ctx.strokeStyle = 'black';
+                    ctx.strokeRect(col * CELL_SIZE + 5, GRID_SIZE * CELL_SIZE + 45, 30, 30);
+                }
+            }
+
+            let infoText = `Score: ${score}  Coups: ${moves}/10  Chaînes: ${chains}/5  Bombes: ${bombs}`;
+            document.getElementById('game-info').textContent = infoText;
+
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+                ctx.fillRect(0, canvas.height / 2 - 40, canvas.width, 80);
+                ctx.fillStyle = 'white';
+                ctx.font = '30px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+                ctx.font = '20px Arial';
+                ctx.fillText('Appuyez sur R pour rejouer', canvas.width / 2, canvas.height / 2 + 30);
+            }
+        }
+
+        canvas.addEventListener('click', (e) => {
+            if (!gameOver) {
+                const col = Math.floor(e.offsetX / CELL_SIZE);
+                placeBlock(col, nextBlock);
+            }
+            draw();
+        });
+
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            if (!gameOver && bombs > 0) {
+                const col = Math.floor(e.offsetX / CELL_SIZE);
+                useBomb(col);
+            }
+            draw();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.key === 'r' || e.key === 'R') && gameOver) {
+                resetGame();
+                draw();
+            }
+        });
+
+        draw(); // Dessin initial
+    </script>
+</body>
+</html>
