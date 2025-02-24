@@ -18,7 +18,6 @@
         const GRID_SIZE = 8;
         const CELL_SIZE = 50;
 
-        // Couleurs de secours (portée globale)
         const COLORS = {
             'R': 'red',
             'B': 'blue',
@@ -30,7 +29,6 @@
             '_': 'white'
         };
 
-        // Chargement des images avec fallback
         const IMAGES = {
             'R': new Image(),
             'B': new Image(),
@@ -79,6 +77,7 @@
             score = 0;
             gameOver = false;
             bombsEarned = 1;
+            draw();
         }
 
         function checkBombBonus() {
@@ -153,17 +152,15 @@
 
                 affectedCols.forEach(col => {
                     let blox = [];
+                    // Rassemble tous les éléments dans l'ordre initial (haut vers bas)
                     for (let row = 0; row < GRID_SIZE; row++) {
                         if (grid[row][col] !== '_') {
                             blox.push(grid[row][col]);
                         }
                     }
+                    // Réinitialise la colonne et remplit depuis le haut
                     for (let row = 0; row < GRID_SIZE; row++) {
-                        if (row < blox.length) {
-                            grid[row][col] = blox[row];
-                        } else {
-                            grid[row][col] = '_';
-                        }
+                        grid[row][col] = row < blox.length ? blox[row] : '_';
                     }
                 });
             }
@@ -206,7 +203,12 @@
         function useBomb(col) {
             if (bombs <= 0 || gameOver) return false;
             bombs--;
-            let bombRow = Math.floor(event.offsetY / CELL_SIZE);
+            let bombRow;
+            try {
+                bombRow = Math.floor(event.offsetY / CELL_SIZE);
+            } catch (e) {
+                bombRow = GRID_SIZE - 1; // Fallback si event n'est pas défini
+            }
             if (bombRow < 0) bombRow = 0;
             if (bombRow >= GRID_SIZE) bombRow = GRID_SIZE - 1;
 
@@ -222,17 +224,18 @@
             }
             moves++;
             score += removedBlocks;
-            let blox = [];
-            for (let row = 0; row < GRID_SIZE; row++) {
-                if (grid[row][col] !== '_') {
-                    blox.push(grid[row][col]);
-                }
-            }
-            for (let row = 0; row < GRID_SIZE; row++) {
-                if (row < blox.length) {
-                    grid[row][col] = blox[row];
-                } else {
-                    grid[row][col] = '_';
+            // Réorganise toutes les colonnes affectées par la bombe (3x3)
+            for (let c = col - 1; c <= col + 1; c++) {
+                if (c >= 0 && c < GRID_SIZE) {
+                    let blox = [];
+                    for (let row = 0; row < GRID_SIZE; row++) {
+                        if (grid[row][c] !== '_') {
+                            blox.push(grid[row][c]);
+                        }
+                    }
+                    for (let row = 0; row < GRID_SIZE; row++) {
+                        grid[row][c] = row < blox.length ? blox[row] : '_';
+                    }
                 }
             }
             checkChains();
@@ -246,72 +249,76 @@
         }
 
         function draw() {
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            for (let r = 0; r < GRID_SIZE; r++) {
-                for (let c = 0; c < GRID_SIZE; c++) {
-                    if (grid[r][c] === '_') {
-                        ctx.fillStyle = COLORS['_'];
-                        ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
-                    } else if (typeof grid[r][c] === 'object' && grid[r][c].type === 'PRIKS') {
-                        if (IMAGES['PRIKS'].complete && IMAGES['PRIKS'].naturalWidth !== 0) {
-                            ctx.drawImage(IMAGES['PRIKS'], c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
-                        } else {
-                            ctx.fillStyle = COLORS['PRIKS'];
-                            ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
-                        }
-                        ctx.fillStyle = 'white';
-                        ctx.font = '20px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.fillText(grid[r][c].count, c * CELL_SIZE + CELL_SIZE / 2, r * CELL_SIZE + CELL_SIZE / 2 + 7);
-                    } else {
-                        if (IMAGES[grid[r][c]] && IMAGES[grid[r][c]].complete && IMAGES[grid[r][c]].naturalWidth !== 0) {
-                            ctx.drawImage(IMAGES[grid[r][c]], c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
-                        } else {
-                            ctx.fillStyle = COLORS[grid[r][c]];
-                            ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
-                        }
-                    }
-                    ctx.strokeStyle = 'lightgray';
-                    ctx.strokeRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-                }
-            }
-            let nextImg = typeof nextBlock === 'object' ? IMAGES['PRIKS'] : IMAGES[nextBlock];
-            if (nextImg && nextImg.complete && nextImg.naturalWidth !== 0) {
-                ctx.drawImage(nextImg, GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
-            } else {
-                ctx.fillStyle = COLORS[typeof nextBlock === 'object' ? 'PRIKS' : nextBlock];
-                ctx.fillRect(GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
-            }
-            ctx.strokeStyle = 'black';
-            ctx.strokeRect(GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
-
-            if (moves % 10 === 9) {
-                for (let col = 0; col < GRID_SIZE; col++) {
-                    let img = typeof nextLine[col] === 'object' ? IMAGES['PRIKS'] : IMAGES[nextLine[col]];
-                    if (img && img.complete && img.naturalWidth !== 0) {
-                        ctx.drawImage(img, col * CELL_SIZE + 5, GRID_SIZE * CELL_SIZE + 45, 30, 30);
-                    } else {
-                        ctx.fillStyle = COLORS[typeof nextLine[col] === 'object' ? 'PRIKS' : nextLine[col]];
-                        ctx.fillRect(col * CELL_SIZE + 5, GRID_SIZE * CELL_SIZE + 45, 30, 30);
-                    }
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(col * CELL_SIZE + 5, GRID_SIZE * CELL_SIZE + 45, 30, 30);
-                }
-            }
-
-            let infoText = `Score: ${score}  Coups: ${moves}/10  Chaînes: ${chains}/5  Bombes: ${bombs}`;
-            document.getElementById('game-info').textContent = infoText;
-
-            if (gameOver) {
-                ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
-                ctx.fillRect(0, canvas.height / 2 - 40, canvas.width, 80);
+            try {
                 ctx.fillStyle = 'white';
-                ctx.font = '30px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
-                ctx.font = '20px Arial';
-                ctx.fillText('Appuyez sur R pour rejouer', canvas.width / 2, canvas.height / 2 + 30);
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                for (let r = 0; r < GRID_SIZE; r++) {
+                    for (let c = 0; c < GRID_SIZE; c++) {
+                        if (grid[r][c] === '_') {
+                            ctx.fillStyle = COLORS['_'];
+                            ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+                        } else if (typeof grid[r][c] === 'object' && grid[r][c].type === 'PRIKS') {
+                            if (IMAGES['PRIKS'].complete && IMAGES['PRIKS'].naturalWidth !== 0) {
+                                ctx.drawImage(IMAGES['PRIKS'], c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+                            } else {
+                                ctx.fillStyle = COLORS['PRIKS'];
+                                ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+                            }
+                            ctx.fillStyle = 'white';
+                            ctx.font = '20px Arial';
+                            ctx.textAlign = 'center';
+                            ctx.fillText(grid[r][c].count, c * CELL_SIZE + CELL_SIZE / 2, r * CELL_SIZE + CELL_SIZE / 2 + 7);
+                        } else {
+                            if (IMAGES[grid[r][c]] && IMAGES[grid[r][c]].complete && IMAGES[grid[r][c]].naturalWidth !== 0) {
+                                ctx.drawImage(IMAGES[grid[r][c]], c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+                            } else {
+                                ctx.fillStyle = COLORS[grid[r][c]];
+                                ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+                            }
+                        }
+                        ctx.strokeStyle = 'lightgray';
+                        ctx.strokeRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    }
+                }
+                let nextImg = typeof nextBlock === 'object' ? IMAGES['PRIKS'] : IMAGES[nextBlock];
+                if (nextImg && nextImg.complete && nextImg.naturalWidth !== 0) {
+                    ctx.drawImage(nextImg, GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
+                } else {
+                    ctx.fillStyle = COLORS[typeof nextBlock === 'object' ? 'PRIKS' : nextBlock];
+                    ctx.fillRect(GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
+                }
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
+
+                if (moves % 10 === 9) {
+                    for (let col = 0; col < GRID_SIZE; col++) {
+                        let img = typeof nextLine[col] === 'object' ? IMAGES['PRIKS'] : IMAGES[nextLine[col]];
+                        if (img && img.complete && img.naturalWidth !== 0) {
+                            ctx.drawImage(img, col * CELL_SIZE + 5, GRID_SIZE * CELL_SIZE + 45, 30, 30);
+                        } else {
+                            ctx.fillStyle = COLORS[typeof nextLine[col] === 'object' ? 'PRIKS' : nextLine[col]];
+                            ctx.fillRect(col * CELL_SIZE + 5, GRID_SIZE * CELL_SIZE + 45, 30, 30);
+                        }
+                        ctx.strokeStyle = 'black';
+                        ctx.strokeRect(col * CELL_SIZE + 5, GRID_SIZE * CELL_SIZE + 45, 30, 30);
+                    }
+                }
+
+                let infoText = `Score: ${score}  Coups: ${moves}/10  Chaînes: ${chains}/5  Bombes: ${bombs}`;
+                document.getElementById('game-info').textContent = infoText;
+
+                if (gameOver) {
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+                    ctx.fillRect(0, canvas.height / 2 - 40, canvas.width, 80);
+                    ctx.fillStyle = 'white';
+                    ctx.font = '30px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+                    ctx.font = '20px Arial';
+                    ctx.fillText('Appuyez sur R pour rejouer', canvas.width / 2, canvas.height / 2 + 30);
+                }
+            } catch (e) {
+                console.error('Erreur dans draw():', e);
             }
         }
 
@@ -335,11 +342,15 @@
         document.addEventListener('keydown', (e) => {
             if ((e.key === 'r' || e.key === 'R') && gameOver) {
                 resetGame();
-                draw();
             }
+            draw();
         });
 
-        draw(); // Dessin initial
+        try {
+            draw();
+        } catch (e) {
+            console.error('Erreur au démarrage:', e);
+        }
     </script>
 </body>
 </html>
