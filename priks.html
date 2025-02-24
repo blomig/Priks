@@ -135,17 +135,17 @@
 
                 // Réorganise les colonnes affectées
                 affectedCols.forEach(col => {
-                    let colItems = [];
+                    let blox = [];
                     // Rassemble les éléments dans l'ordre initial (haut vers bas)
                     for (let row = 0; row < GRID_SIZE; row++) {
                         if (grid[row][col] !== '_') {
-                            colItems.push(grid[row][col]);
+                            blox.push(grid[row][col]);
                         }
                     }
                     // Remplit depuis le haut dans l'ordre initial
                     for (let row = 0; row < GRID_SIZE; row++) {
-                        if (row < colItems.length) {
-                            grid[row][col] = colItems[row];
+                        if (row < blox.length) {
+                            grid[row][col] = blox[row];
                         } else {
                             grid[row][col] = '_';
                         }
@@ -192,7 +192,7 @@
         function useBomb(col) {
             if (bombs <= 0 || gameOver) return false;
             bombs--;
-            // Trouve la ligne du clic (approximation via offsetY)
+            // Trouve la ligne du clic via offsetY
             let bombRow = Math.floor(event.offsetY / CELL_SIZE);
             if (bombRow < 0) bombRow = 0;
             if (bombRow >= GRID_SIZE) bombRow = GRID_SIZE - 1;
