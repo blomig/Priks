@@ -129,40 +129,31 @@
                     if (grid[r][c].count <= 0) grid[r][c] = '_';
                 });
 
-                // Étape 1 : Supprime la chaîne
+                // Supprime la chaîne
                 toRemove.forEach(([r, c]) => grid[r][c] = '_');
 
-                // Étape 2 : Réorganise les colonnes affectées (chute vers le haut)
+                // Réorganise les colonnes affectées
                 let affectedCols = new Set([...toRemove].map(([r, c]) => c));
-                affectedCols.forEach(col => {
-                    // Copie la colonne pour travailler dessus
-                    let colCopy = [...grid.map(row => row[col])];
-                    let bloxToMove = [];
-                    // Rassemble les Blox mobiles (non supprimés) dans l'ordre du bas vers le haut
-                    for (let row = GRID_SIZE - 1; row >= 0; row--) {
-                        if (colCopy[row] !== '_' && !toRemove.has(`${row},${col}`)) {
-                            bloxToMove.push(colCopy[row]);
-                        }
-                    }
-                    // Remplit la colonne depuis le haut avec les éléments mobiles
-                    let moveIndex = 0;
-                    for (let row = 0; row < GRID_SIZE; row++) {
-                        if (toRemove.has(`${row},${col}`)) {
-                            if (moveIndex < bloxToMove.length) {
-                                grid[row][col] = bloxToMove[moveIndex];
-                                moveIndex++;
-                            } else {
-                                grid[row][col] = '_';
-                            }
-                        }
-                    }
-                    // Remplit les positions restantes avec des trous si nécessaire
-                    for (let row = 0; row < GRID_SIZE; row++) {
-                        if (!toRemove.has(`${row},${col}`) && colCopy[row] === '_') {
-                            grid[row][col] = '_';
-                        }
-                    }
-                });
+                affectedCols.forEach(col => reorganizeColumn(col));
+            }
+        }
+
+        function reorganizeColumn(col) {
+            let colCopy = [...grid.map(row => row[col])];
+            let bloxToMove = [];
+            // Étape 1 : Rassemble les éléments non vides dans leur ordre exact
+            for (let row = GRID_SIZE - 1; row >= 0; row--) {
+                if (colCopy[row] !== '_') {
+                    bloxToMove.push(colCopy[row]);
+                }
+            }
+            // Étape 2 : Remplit la colonne depuis le haut
+            for (let row = 0; row < GRID_SIZE; row++) {
+                if (row < bloxToMove.length) {
+                    grid[row][col] = bloxToMove[row];
+                } else {
+                    grid[row][col] = '_';
+                }
             }
         }
 
@@ -192,6 +183,7 @@
                 }
                 grid[lastEmptyRow][col] = nextLine[col];
                 score += 1;
+                reorganizeColumn(col); // Réorganise après ajout
             }
             checkChains();
             checkBombBonus();
