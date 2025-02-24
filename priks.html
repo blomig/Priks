@@ -2,14 +2,14 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Priks - V1.1</title>
+    <title>Priks - V2</title>
     <style>
         canvas { border: 1px solid #ccc; }
         #game-info { margin-top: 10px; font-family: Arial, sans-serif; }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="400" height="530"></canvas> <!-- Hauteur ajustée -->
+    <canvas id="gameCanvas" width="400" height="530"></canvas>
     <div id="game-info"></div>
 
     <script>
@@ -30,7 +30,7 @@
 
         let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('_'));
         let nextBlock = randomBlock();
-        let nextLine = generateNextLine(); // Ligne complète initiale
+        let nextLine = generateNextLine();
         let moves = 0;
         let chains = 0;
         let bombs = 1;
@@ -62,7 +62,7 @@
         }
 
         function checkBombBonus() {
-            let newBombsEarned = Math.floor(score / 50) + 1; // +1 pour la bombe initiale
+            let newBombsEarned = Math.floor(score / 50) + 1;
             if (newBombsEarned > bombsEarned) {
                 bombs += (newBombsEarned - bombsEarned);
                 bombsEarned = newBombsEarned;
@@ -71,11 +71,11 @@
 
         function placeBlock(col, block) {
             if (gameOver) return false;
-            if (grid[GRID_SIZE - 1][col] !== '_') { // Ligne du bas occupée
+            if (grid[GRID_SIZE - 1][col] !== '_') {
                 gameOver = true;
                 return false;
             }
-            let lastEmptyRow = 0; // Par défaut, va au haut (ligne 0)
+            let lastEmptyRow = 0;
             for (let row = GRID_SIZE - 1; row >= 0; row--) {
                 if (grid[row][col] !== '_') {
                     lastEmptyRow = row + 1;
@@ -84,11 +84,11 @@
             }
             grid[lastEmptyRow][col] = block;
             moves++;
-            score += 1; // +1 pour chaque Blox joué
+            score += 1;
             checkChains();
             checkBombBonus();
             if (moves % 10 === 9) {
-                nextLine = generateNextLine(); // Génère la prochaine ligne à 9/10
+                nextLine = generateNextLine();
             }
             if (moves % 10 === 0) addFullLine();
             nextBlock = randomBlock();
@@ -99,7 +99,7 @@
             let toRemove = new Set();
             for (let r = 0; r < GRID_SIZE; r++) {
                 for (let c = 0; c < GRID_SIZE; c++) {
-                    if (grid[r][c] !== '_' && typeof grid[r][c] !== 'object') { // Pas un Priks
+                    if (grid[r][c] !== '_' && typeof grid[r][c] !== 'object') {
                         let chain = findChain(r, c, grid[r][c], new Set());
                         if (chain.size >= 5) chain.forEach(pos => toRemove.add(pos));
                     }
@@ -107,8 +107,10 @@
             }
             if (toRemove.size > 0) {
                 chains++;
-                score += 5; // +5 pour chaque chaîne de 5
+                score += 5;
                 checkBombBonus();
+
+                // Décrémente les Priks adjacents
                 let affectedPriks = new Set();
                 toRemove.forEach(([r, c]) => {
                     for (let dr = -1; dr <= 1; dr++) {
@@ -126,8 +128,30 @@
                     grid[r][c].count--;
                     if (grid[r][c].count <= 0) grid[r][c] = '_';
                 });
+
+                // Supprime la chaîne
+                toRemove.forEach(([r, c]) => grid[r][c] = '_');
+
+                // Réorganise les colonnes (chute vers le haut)
+                let affectedCols = new Set([...toRemove].map(([r, c]) => c));
+                affectedCols.forEach(col => {
+                    let newCol = [];
+                    // Rassemble les éléments restants (Blox et Priks fixes)
+                    for (let row = GRID_SIZE - 1; row >= 0; row--) {
+                        if (grid[row][col] !== '_') {
+                            newCol.push(grid[row][col]);
+                        }
+                    }
+                    // Remplit depuis le haut (ligne 0)
+                    for (let row = 0; row < GRID_SIZE; row++) {
+                        if (row < newCol.length) {
+                            grid[row][col] = newCol[row];
+                        } else {
+                            grid[row][col] = '_';
+                        }
+                    }
+                });
             }
-            toRemove.forEach(([r, c]) => grid[r][c] = '_');
         }
 
         function findChain(r, c, color, visited) {
@@ -143,7 +167,7 @@
 
         function addFullLine() {
             for (let col = 0; col < GRID_SIZE; col++) {
-                if (grid[GRID_SIZE - 1][col] !== '_') { // Ligne du bas occupée
+                if (grid[GRID_SIZE - 1][col] !== '_') {
                     gameOver = true;
                     return;
                 }
@@ -155,17 +179,17 @@
                     }
                 }
                 grid[lastEmptyRow][col] = nextLine[col];
-                score += 1; // +1 pour chaque Blox de la ligne complète
+                score += 1;
             }
             checkChains();
             checkBombBonus();
-            nextLine = generateNextLine(); // Génère une nouvelle ligne après ajout
+            nextLine = generateNextLine();
         }
 
         function useBomb(col) {
             if (bombs <= 0 || gameOver) return false;
-            bombs--; // Décrémente immédiatement
-            let bombRow = 0; // Par défaut, va au haut (ligne 0)
+            bombs--;
+            let bombRow = 0;
             for (let row = GRID_SIZE - 1; row >= 0; row--) {
                 if (grid[row][col] !== '_') {
                     bombRow = row + 1 < GRID_SIZE ? row + 1 : row;
@@ -187,7 +211,7 @@
             checkChains();
             checkBombBonus();
             if (moves % 10 === 9) {
-                nextLine = generateNextLine(); // Génère à 9/10
+                nextLine = generateNextLine();
             }
             if (moves % 10 === 0) addFullLine();
             nextBlock = randomBlock();
@@ -214,13 +238,11 @@
                     ctx.strokeRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                 }
             }
-            // Affichage du prochain Blox
             ctx.fillStyle = typeof nextBlock === 'object' ? COLORS['PRIKS'] : COLORS[nextBlock];
             ctx.fillRect(GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
             ctx.strokeStyle = 'black';
             ctx.strokeRect(GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
 
-            // Affichage de la prochaine ligne complète uniquement à moves % 10 === 9
             if (moves % 10 === 9) {
                 for (let col = 0; col < GRID_SIZE; col++) {
                     ctx.fillStyle = typeof nextLine[col] === 'object' ? COLORS['PRIKS'] : COLORS[nextLine[col]];
