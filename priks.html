@@ -129,35 +129,37 @@
                     if (grid[r][c].count <= 0) grid[r][c] = '_';
                 });
 
-                // Sauvegarde l'état initial des colonnes affectées
-                let affectedCols = new Set([...toRemove].map(([r, c]) => c));
-                let originalCols = {};
-                affectedCols.forEach(col => {
-                    originalCols[col] = [...grid.map(row => row[col])];
-                });
-
-                // Supprime la chaîne
+                // Étape 1 : Supprime la chaîne
                 toRemove.forEach(([r, c]) => grid[r][c] = '_');
 
-                // Réorganise les colonnes (chute vers le haut)
+                // Étape 2 : Réorganise les colonnes affectées (chute vers le haut)
+                let affectedCols = new Set([...toRemove].map(([r, c]) => c));
                 affectedCols.forEach(col => {
+                    // Copie la colonne pour travailler dessus
+                    let colCopy = [...grid.map(row => row[col])];
                     let bloxToMove = [];
-                    // Étape 1 : Rassemble les Blox mobiles dans leur ordre exact
+                    // Rassemble les Blox mobiles (non supprimés) dans l'ordre du bas vers le haut
                     for (let row = GRID_SIZE - 1; row >= 0; row--) {
-                        if (originalCols[col][row] !== '_' && !toRemove.has(`${row},${col}`)) {
-                            bloxToMove.push(originalCols[col][row]);
+                        if (colCopy[row] !== '_' && !toRemove.has(`${row},${col}`)) {
+                            bloxToMove.push(colCopy[row]);
                         }
                     }
-                    // Étape 2 : Remplit depuis le bas avec les Blox mobiles
-                    let insertIndex = bloxToMove.length - 1;
-                    for (let row = GRID_SIZE - 1; row >= 0; row--) {
-                        if (!toRemove.has(`${row},${col}`) && originalCols[col][row] !== '_') {
-                            grid[row][col] = originalCols[col][row]; // Garde les fixes
-                        } else if (insertIndex >= 0) {
-                            grid[row][col] = bloxToMove[insertIndex]; // Place les mobiles
-                            insertIndex--;
-                        } else {
-                            grid[row][col] = '_'; // Remplit avec des trous
+                    // Remplit la colonne depuis le haut avec les éléments mobiles
+                    let moveIndex = 0;
+                    for (let row = 0; row < GRID_SIZE; row++) {
+                        if (toRemove.has(`${row},${col}`)) {
+                            if (moveIndex < bloxToMove.length) {
+                                grid[row][col] = bloxToMove[moveIndex];
+                                moveIndex++;
+                            } else {
+                                grid[row][col] = '_';
+                            }
+                        }
+                    }
+                    // Remplit les positions restantes avec des trous si nécessaire
+                    for (let row = 0; row < GRID_SIZE; row++) {
+                        if (!toRemove.has(`${row},${col}`) && colCopy[row] === '_') {
+                            grid[row][col] = '_';
                         }
                     }
                 });
