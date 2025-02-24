@@ -141,22 +141,21 @@
 
                 // Réorganise les colonnes (chute vers le haut)
                 affectedCols.forEach(col => {
-                    let tempCol = originalCols[col];
-                    let newCol = [];
-                    // Étape 1 : Rassemble tous les éléments restants dans leur ordre initial
+                    let bloxToMove = [];
+                    // Étape 1 : Rassemble les Blox mobiles dans leur ordre exact
                     for (let row = GRID_SIZE - 1; row >= 0; row--) {
-                        if (tempCol[row] !== '_' && !toRemove.has(`${row},${col}`)) {
-                            newCol.unshift(tempCol[row]);
+                        if (originalCols[col][row] !== '_' && !toRemove.has(`${row},${col}`)) {
+                            bloxToMove.push(originalCols[col][row]);
                         }
                     }
-                    // Étape 2 : Remplit depuis le haut, en respectant les obstacles fixes
-                    let insertIndex = 0;
-                    for (let row = 0; row < GRID_SIZE; row++) {
-                        if (!toRemove.has(`${row},${col}`) && tempCol[row] !== '_') {
-                            grid[row][col] = tempCol[row]; // Garde les fixes
-                        } else if (insertIndex < newCol.length) {
-                            grid[row][col] = newCol[insertIndex]; // Place les mobiles
-                            insertIndex++;
+                    // Étape 2 : Remplit depuis le bas avec les Blox mobiles
+                    let insertIndex = bloxToMove.length - 1;
+                    for (let row = GRID_SIZE - 1; row >= 0; row--) {
+                        if (!toRemove.has(`${row},${col}`) && originalCols[col][row] !== '_') {
+                            grid[row][col] = originalCols[col][row]; // Garde les fixes
+                        } else if (insertIndex >= 0) {
+                            grid[row][col] = bloxToMove[insertIndex]; // Place les mobiles
+                            insertIndex--;
                         } else {
                             grid[row][col] = '_'; // Remplit avec des trous
                         }
