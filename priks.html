@@ -135,19 +135,23 @@
                 // Réorganise les colonnes (chute vers le haut)
                 let affectedCols = new Set([...toRemove].map(([r, c]) => c));
                 affectedCols.forEach(col => {
-                    let tempCol = [...grid.map(row => row[col])]; // Copie la colonne
-                    let newCol = [];
-                    // Rassemble les éléments mobiles (Blox) en respectant les obstacles fixes
+                    let bloxToMove = [];
+                    // Étape 1 : Rassemble les Blox mobiles (non fixes) depuis le bas
                     for (let row = GRID_SIZE - 1; row >= 0; row--) {
-                        if (tempCol[row] !== '_') {
-                            newCol.unshift(tempCol[row]); // Ajoute au début (vers le haut)
+                        if (grid[row][col] !== '_' && !toRemove.has(`${row},${col}`)) {
+                            bloxToMove.unshift(grid[row][col]);
                         }
                     }
-                    // Remplit la colonne depuis le haut, en respectant les positions fixes
+                    // Étape 2 : Reconstruit la colonne depuis le haut
+                    let newRowIndex = 0;
                     for (let row = 0; row < GRID_SIZE; row++) {
-                        if (row < newCol.length && (grid[row][col] === '_' || toRemove.has(`${row},${col}`))) {
-                            grid[row][col] = newCol.shift();
-                        } else if (row >= newCol.length) {
+                        if (!toRemove.has(`${row},${col}`) && grid[row][col] !== '_') {
+                            // Garde les éléments fixes (Priks ou Blox non supprimés)
+                            continue;
+                        } else if (newRowIndex < bloxToMove.length) {
+                            grid[row][col] = bloxToMove[newRowIndex];
+                            newRowIndex++;
+                        } else {
                             grid[row][col] = '_';
                         }
                     }
