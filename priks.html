@@ -135,17 +135,17 @@
 
                 // Réorganise les colonnes affectées
                 affectedCols.forEach(col => {
-                    let blox = [];
+                    let colItems = [];
                     // Rassemble les éléments non vides dans l'ordre du bas vers le haut
                     for (let row = GRID_SIZE - 1; row >= 0; row--) {
                         if (grid[row][col] !== '_') {
-                            blox.push(grid[row][col]);
+                            colItems.push(grid[row][col]);
                         }
                     }
                     // Remplit depuis le haut
                     for (let row = 0; row < GRID_SIZE; row++) {
-                        if (row < blox.length) {
-                            grid[row][col] = blox[row];
+                        if (row < colItems.length) {
+                            grid[row][col] = colItems[row];
                         } else {
                             grid[row][col] = '_';
                         }
@@ -172,7 +172,7 @@
                     return;
                 }
             }
-            // Ajoute un Blox par colonne en bas
+            // Ajoute un Blox/Priks par colonne
             for (let col = 0; col < GRID_SIZE; col++) {
                 let lastEmptyRow = 0;
                 for (let row = GRID_SIZE - 1; row >= 0; row--) {
