@@ -82,7 +82,7 @@
                     break;
                 }
             }
-            grid[lastEmptyRow][col] = block; // Place au plus bas
+            grid[lastEmptyRow][col] = block;
             moves++;
             score += 1;
             checkChains();
@@ -172,7 +172,7 @@
                     return;
                 }
             }
-            // Ajoute la ligne complète en bas
+            // Ajoute un Blox par colonne en bas
             for (let col = 0; col < GRID_SIZE; col++) {
                 let lastEmptyRow = 0;
                 for (let row = GRID_SIZE - 1; row >= 0; row--) {
@@ -183,22 +183,6 @@
                 }
                 grid[lastEmptyRow][col] = nextLine[col];
                 score += 1;
-            }
-            // Réorganise chaque colonne immédiatement
-            for (let col = 0; col < GRID_SIZE; col++) {
-                let blox = [];
-                for (let row = GRID_SIZE - 1; row >= 0; row--) {
-                    if (grid[row][col] !== '_') {
-                        blox.push(grid[row][col]);
-                    }
-                }
-                for (let row = 0; row < GRID_SIZE; row++) {
-                    if (row < blox.length) {
-                        grid[row][col] = blox[row];
-                    } else {
-                        grid[row][col] = '_';
-                    }
-                }
             }
             checkChains();
             checkBombBonus();
@@ -227,7 +211,7 @@
             }
             moves++;
             score += removedBlocks;
-            // Réorganise la colonne affectée par la bombe
+            // Réorganise la colonne après la bombe
             let blox = [];
             for (let row = GRID_SIZE - 1; row >= 0; row--) {
                 if (grid[row][col] !== '_') {
