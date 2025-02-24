@@ -82,8 +82,7 @@
                     break;
                 }
             }
-            grid[lastEmptyRow][col] = block;
-            reorganizeColumn(col); // Réorganise immédiatement
+            grid[lastEmptyRow][col] = block; // Place au plus bas
             moves++;
             score += 1;
             checkChains();
@@ -94,24 +93,6 @@
             if (moves % 10 === 0) addFullLine();
             nextBlock = randomBlock();
             return true;
-        }
-
-        function reorganizeColumn(col) {
-            let blox = [];
-            // Rassemble les éléments non vides dans l'ordre du bas vers le haut
-            for (let row = GRID_SIZE - 1; row >= 0; row--) {
-                if (grid[row][col] !== '_') {
-                    blox.push(grid[row][col]);
-                }
-            }
-            // Remplit depuis le haut
-            for (let row = 0; row < GRID_SIZE; row++) {
-                if (row < blox.length) {
-                    grid[row][col] = blox[row];
-                } else {
-                    grid[row][col] = '_';
-                }
-            }
         }
 
         function checkChains() {
@@ -153,7 +134,23 @@
                 toRemove.forEach(([r, c]) => grid[r][c] = '_');
 
                 // Réorganise les colonnes affectées
-                affectedCols.forEach(col => reorganizeColumn(col));
+                affectedCols.forEach(col => {
+                    let blox = [];
+                    // Rassemble les éléments non vides dans l'ordre du bas vers le haut
+                    for (let row = GRID_SIZE - 1; row >= 0; row--) {
+                        if (grid[row][col] !== '_') {
+                            blox.push(grid[row][col]);
+                        }
+                    }
+                    // Remplit depuis le haut
+                    for (let row = 0; row < GRID_SIZE; row++) {
+                        if (row < blox.length) {
+                            grid[row][col] = blox[row];
+                        } else {
+                            grid[row][col] = '_';
+                        }
+                    }
+                });
             }
         }
 
@@ -175,11 +172,33 @@
                     return;
                 }
             }
-            // Ajoute la ligne complète en bas et réorganise
+            // Ajoute la ligne complète en bas
             for (let col = 0; col < GRID_SIZE; col++) {
-                grid[GRID_SIZE - 1][col] = nextLine[col];
-                reorganizeColumn(col);
+                let lastEmptyRow = 0;
+                for (let row = GRID_SIZE - 1; row >= 0; row--) {
+                    if (grid[row][col] !== '_') {
+                        lastEmptyRow = row + 1;
+                        break;
+                    }
+                }
+                grid[lastEmptyRow][col] = nextLine[col];
                 score += 1;
+            }
+            // Réorganise chaque colonne immédiatement
+            for (let col = 0; col < GRID_SIZE; col++) {
+                let blox = [];
+                for (let row = GRID_SIZE - 1; row >= 0; row--) {
+                    if (grid[row][col] !== '_') {
+                        blox.push(grid[row][col]);
+                    }
+                }
+                for (let row = 0; row < GRID_SIZE; row++) {
+                    if (row < blox.length) {
+                        grid[row][col] = blox[row];
+                    } else {
+                        grid[row][col] = '_';
+                    }
+                }
             }
             checkChains();
             checkBombBonus();
@@ -208,7 +227,20 @@
             }
             moves++;
             score += removedBlocks;
-            reorganizeColumn(col); // Réorganise après la bombe
+            // Réorganise la colonne affectée par la bombe
+            let blox = [];
+            for (let row = GRID_SIZE - 1; row >= 0; row--) {
+                if (grid[row][col] !== '_') {
+                    blox.push(grid[row][col]);
+                }
+            }
+            for (let row = 0; row < GRID_SIZE; row++) {
+                if (row < blox.length) {
+                    grid[row][col] = blox[row];
+                } else {
+                    grid[row][col] = '_';
+                }
+            }
             checkChains();
             checkBombBonus();
             if (moves % 10 === 9) {
