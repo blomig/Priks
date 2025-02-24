@@ -135,28 +135,19 @@
                 // Réorganise les colonnes (chute vers le haut)
                 let affectedCols = new Set([...toRemove].map(([r, c]) => c));
                 affectedCols.forEach(col => {
+                    let tempCol = [...grid.map(row => row[col])]; // Copie la colonne
                     let newCol = [];
-                    let bloxToMove = [];
-                    // Étape 1 : Identifie les Priks fixes et les Blox mobiles
+                    // Rassemble les éléments mobiles (Blox) en respectant les obstacles fixes
                     for (let row = GRID_SIZE - 1; row >= 0; row--) {
-                        if (grid[row][col] !== '_') {
-                            if (typeof grid[row][col] === 'object' && grid[row][col].type === 'PRIKS') {
-                                // Ajoute les Blox accumulés avant le Priks
-                                newCol.push(...bloxToMove.reverse());
-                                bloxToMove = [];
-                                newCol.push(grid[row][col]); // Priks reste fixe
-                            } else {
-                                bloxToMove.push(grid[row][col]); // Blox à déplacer
-                            }
+                        if (tempCol[row] !== '_') {
+                            newCol.unshift(tempCol[row]); // Ajoute au début (vers le haut)
                         }
                     }
-                    // Ajoute les derniers Blox mobiles
-                    newCol.push(...bloxToMove.reverse());
-                    // Remplit depuis le bas avec les éléments fixes et mobiles
-                    for (let row = GRID_SIZE - 1; row >= 0; row--) {
-                        if (GRID_SIZE - 1 - row < newCol.length) {
-                            grid[row][col] = newCol[GRID_SIZE - 1 - row];
-                        } else {
+                    // Remplit la colonne depuis le haut, en respectant les positions fixes
+                    for (let row = 0; row < GRID_SIZE; row++) {
+                        if (row < newCol.length && (grid[row][col] === '_' || toRemove.has(`${row},${col}`))) {
+                            grid[row][col] = newCol.shift();
+                        } else if (row >= newCol.length) {
                             grid[row][col] = '_';
                         }
                     }
