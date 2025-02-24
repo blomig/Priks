@@ -136,16 +136,26 @@
                 let affectedCols = new Set([...toRemove].map(([r, c]) => c));
                 affectedCols.forEach(col => {
                     let newCol = [];
-                    // Rassemble les éléments restants (Blox et Priks fixes)
+                    let bloxToMove = [];
+                    // Étape 1 : Identifie les Priks fixes et les Blox mobiles
                     for (let row = GRID_SIZE - 1; row >= 0; row--) {
                         if (grid[row][col] !== '_') {
-                            newCol.push(grid[row][col]);
+                            if (typeof grid[row][col] === 'object' && grid[row][col].type === 'PRIKS') {
+                                // Ajoute les Blox accumulés avant le Priks
+                                newCol.push(...bloxToMove.reverse());
+                                bloxToMove = [];
+                                newCol.push(grid[row][col]); // Priks reste fixe
+                            } else {
+                                bloxToMove.push(grid[row][col]); // Blox à déplacer
+                            }
                         }
                     }
-                    // Remplit depuis le haut (ligne 0)
-                    for (let row = 0; row < GRID_SIZE; row++) {
-                        if (row < newCol.length) {
-                            grid[row][col] = newCol[row];
+                    // Ajoute les derniers Blox mobiles
+                    newCol.push(...bloxToMove.reverse());
+                    // Remplit depuis le bas avec les éléments fixes et mobiles
+                    for (let row = GRID_SIZE - 1; row >= 0; row--) {
+                        if (GRID_SIZE - 1 - row < newCol.length) {
+                            grid[row][col] = newCol[GRID_SIZE - 1 - row];
                         } else {
                             grid[row][col] = '_';
                         }
