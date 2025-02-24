@@ -129,30 +129,36 @@
                     if (grid[r][c].count <= 0) grid[r][c] = '_';
                 });
 
+                // Sauvegarde l'état initial des colonnes affectées
+                let affectedCols = new Set([...toRemove].map(([r, c]) => c));
+                let originalCols = {};
+                affectedCols.forEach(col => {
+                    originalCols[col] = [...grid.map(row => row[col])];
+                });
+
                 // Supprime la chaîne
                 toRemove.forEach(([r, c]) => grid[r][c] = '_');
 
                 // Réorganise les colonnes (chute vers le haut)
-                let affectedCols = new Set([...toRemove].map(([r, c]) => c));
                 affectedCols.forEach(col => {
-                    let bloxToMove = [];
-                    // Étape 1 : Rassemble les Blox mobiles (non fixes) depuis le bas
+                    let tempCol = originalCols[col];
+                    let newCol = [];
+                    // Étape 1 : Rassemble tous les éléments restants dans leur ordre initial
                     for (let row = GRID_SIZE - 1; row >= 0; row--) {
-                        if (grid[row][col] !== '_' && !toRemove.has(`${row},${col}`)) {
-                            bloxToMove.unshift(grid[row][col]);
+                        if (tempCol[row] !== '_' && !toRemove.has(`${row},${col}`)) {
+                            newCol.unshift(tempCol[row]);
                         }
                     }
-                    // Étape 2 : Reconstruit la colonne depuis le haut
-                    let newRowIndex = 0;
+                    // Étape 2 : Remplit depuis le haut, en respectant les obstacles fixes
+                    let insertIndex = 0;
                     for (let row = 0; row < GRID_SIZE; row++) {
-                        if (!toRemove.has(`${row},${col}`) && grid[row][col] !== '_') {
-                            // Garde les éléments fixes (Priks ou Blox non supprimés)
-                            continue;
-                        } else if (newRowIndex < bloxToMove.length) {
-                            grid[row][col] = bloxToMove[newRowIndex];
-                            newRowIndex++;
+                        if (!toRemove.has(`${row},${col}`) && tempCol[row] !== '_') {
+                            grid[row][col] = tempCol[row]; // Garde les fixes
+                        } else if (insertIndex < newCol.length) {
+                            grid[row][col] = newCol[insertIndex]; // Place les mobiles
+                            insertIndex++;
                         } else {
-                            grid[row][col] = '_';
+                            grid[row][col] = '_'; // Remplit avec des trous
                         }
                     }
                 });
