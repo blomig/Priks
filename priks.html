@@ -130,30 +130,27 @@
                 });
 
                 // Supprime la chaîne
+                let affectedCols = new Set([...toRemove].map(([r, c]) => c));
                 toRemove.forEach(([r, c]) => grid[r][c] = '_');
 
                 // Réorganise les colonnes affectées
-                let affectedCols = new Set([...toRemove].map(([r, c]) => c));
-                affectedCols.forEach(col => reorganizeColumn(col));
-            }
-        }
-
-        function reorganizeColumn(col) {
-            let colCopy = [...grid.map(row => row[col])];
-            let bloxToMove = [];
-            // Étape 1 : Rassemble les éléments non vides dans leur ordre exact
-            for (let row = GRID_SIZE - 1; row >= 0; row--) {
-                if (colCopy[row] !== '_') {
-                    bloxToMove.push(colCopy[row]);
-                }
-            }
-            // Étape 2 : Remplit la colonne depuis le haut
-            for (let row = 0; row < GRID_SIZE; row++) {
-                if (row < bloxToMove.length) {
-                    grid[row][col] = bloxToMove[row];
-                } else {
-                    grid[row][col] = '_';
-                }
+                affectedCols.forEach(col => {
+                    let colItems = [];
+                    // Rassemble les éléments non vides dans l'ordre du bas vers le haut
+                    for (let row = GRID_SIZE - 1; row >= 0; row--) {
+                        if (grid[row][col] !== '_') {
+                            colItems.push(grid[row][col]);
+                        }
+                    }
+                    // Remplit depuis le haut
+                    for (let row = 0; row < GRID_SIZE; row++) {
+                        if (row < colItems.length) {
+                            grid[row][col] = colItems[row];
+                        } else {
+                            grid[row][col] = '_';
+                        }
+                    }
+                });
             }
         }
 
@@ -183,7 +180,20 @@
                 }
                 grid[lastEmptyRow][col] = nextLine[col];
                 score += 1;
-                reorganizeColumn(col); // Réorganise après ajout
+                // Réorganise la colonne après ajout
+                let colItems = [];
+                for (let row = GRID_SIZE - 1; row >= 0; row--) {
+                    if (grid[row][col] !== '_') {
+                        colItems.push(grid[row][col]);
+                    }
+                }
+                for (let row = 0; row < GRID_SIZE; row++) {
+                    if (row < colItems.length) {
+                        grid[row][col] = colItems[row];
+                    } else {
+                        grid[row][col] = '_';
+                    }
+                }
             }
             checkChains();
             checkBombBonus();
