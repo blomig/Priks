@@ -83,9 +83,9 @@
                 }
             }
             grid[lastEmptyRow][col] = block;
+            reorganizeColumn(col); // Réorganise immédiatement
             moves++;
             score += 1;
-            reorganizeColumn(col);
             checkChains();
             checkBombBonus();
             if (moves % 10 === 9) {
@@ -175,11 +175,11 @@
                     return;
                 }
             }
-            // Ajoute la ligne complète en bas
+            // Ajoute la ligne complète en bas et réorganise
             for (let col = 0; col < GRID_SIZE; col++) {
                 grid[GRID_SIZE - 1][col] = nextLine[col];
+                reorganizeColumn(col);
                 score += 1;
-                reorganizeColumn(col); // Réorganise immédiatement chaque colonne
             }
             checkChains();
             checkBombBonus();
@@ -208,6 +208,7 @@
             }
             moves++;
             score += removedBlocks;
+            reorganizeColumn(col); // Réorganise après la bombe
             checkChains();
             checkBombBonus();
             if (moves % 10 === 9) {
