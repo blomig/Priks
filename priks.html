@@ -18,7 +18,19 @@
         const GRID_SIZE = 8;
         const CELL_SIZE = 50;
 
-        // Chargement des images
+        // Couleurs de secours (comme V1.1)
+        const COLORS = {
+            'R': 'red',
+            'B': 'blue',
+            'Y': 'yellow',
+            'G': 'green',
+            'O': 'orange',
+            'P': 'purple',
+            'PRIKS': 'gray',
+            '_': 'white'
+        };
+
+        // Chargement des images avec fallback
         const IMAGES = {
             'R': new Image(),
             'B': new Image(),
@@ -118,7 +130,6 @@
                 score += 5;
                 checkBombBonus();
 
-                // Décrémente les Priks adjacents
                 let affectedPriks = new Set();
                 toRemove.forEach(([r, c]) => {
                     for (let dr = -1; dr <= 1; dr++) {
@@ -137,20 +148,16 @@
                     if (grid[r][c].count <= 0) grid[r][c] = '_';
                 });
 
-                // Supprime la chaîne
                 let affectedCols = new Set([...toRemove].map(([r, c]) => c));
                 toRemove.forEach(([r, c]) => grid[r][c] = '_');
 
-                // Réorganise les colonnes affectées
                 affectedCols.forEach(col => {
                     let blox = [];
-                    // Rassemble dans l'ordre initial (haut vers bas)
                     for (let row = 0; row < GRID_SIZE; row++) {
                         if (grid[row][col] !== '_') {
                             blox.push(grid[row][col]);
                         }
                     }
-                    // Remplit depuis le haut
                     for (let row = 0; row < GRID_SIZE; row++) {
                         if (row < blox.length) {
                             grid[row][col] = blox[row];
@@ -247,27 +254,47 @@
                         ctx.fillStyle = COLORS['_'];
                         ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
                     } else if (typeof grid[r][c] === 'object' && grid[r][c].type === 'PRIKS') {
-                        ctx.drawImage(IMAGES['PRIKS'], c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+                        if (IMAGES['PRIKS'].complete && IMAGES['PRIKS'].naturalWidth !== 0) {
+                            ctx.drawImage(IMAGES['PRIKS'], c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+                        } else {
+                            ctx.fillStyle = COLORS['PRIKS'];
+                            ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+                        }
                         ctx.fillStyle = 'white';
                         ctx.font = '20px Arial';
                         ctx.textAlign = 'center';
                         ctx.fillText(grid[r][c].count, c * CELL_SIZE + CELL_SIZE / 2, r * CELL_SIZE + CELL_SIZE / 2 + 7);
                     } else {
-                        ctx.drawImage(IMAGES[grid[r][c]], c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+                        if (IMAGES[grid[r][c]] && IMAGES[grid[r][c]].complete && IMAGES[grid[r][c]].naturalWidth !== 0) {
+                            ctx.drawImage(IMAGES[grid[r][c]], c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+                        } else {
+                            ctx.fillStyle = COLORS[grid[r][c]];
+                            ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+                        }
                     }
                     ctx.strokeStyle = 'lightgray';
                     ctx.strokeRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                 }
             }
             let nextImg = typeof nextBlock === 'object' ? IMAGES['PRIKS'] : IMAGES[nextBlock];
-            ctx.drawImage(nextImg, GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
+            if (nextImg && nextImg.complete && nextImg.naturalWidth !== 0) {
+                ctx.drawImage(nextImg, GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
+            } else {
+                ctx.fillStyle = COLORS[typeof nextBlock === 'object' ? 'PRIKS' : nextBlock];
+                ctx.fillRect(GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
+            }
             ctx.strokeStyle = 'black';
             ctx.strokeRect(GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
 
             if (moves % 10 === 9) {
                 for (let col = 0; col < GRID_SIZE; col++) {
                     let img = typeof nextLine[col] === 'object' ? IMAGES['PRIKS'] : IMAGES[nextLine[col]];
-                    ctx.drawImage(img, col * CELL_SIZE + 5, GRID_SIZE * CELL_SIZE + 45, 30, 30);
+                    if (img && img.complete && img.naturalWidth !== 0) {
+                        ctx.drawImage(img, col * CELL_SIZE + 5, GRID_SIZE * CELL_SIZE + 45, 30, 30);
+                    } else {
+                        ctx.fillStyle = COLORS[typeof nextLine[col] === 'object' ? 'PRIKS' : nextLine[col]];
+                        ctx.fillRect(col * CELL_SIZE + 5, GRID_SIZE * CELL_SIZE + 45, 30, 30);
+                    }
                     ctx.strokeStyle = 'black';
                     ctx.strokeRect(col * CELL_SIZE + 5, GRID_SIZE * CELL_SIZE + 45, 30, 30);
                 }
