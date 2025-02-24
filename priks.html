@@ -135,17 +135,17 @@
 
                 // Réorganise les colonnes affectées
                 affectedCols.forEach(col => {
-                    let colItems = [];
-                    // Rassemble les éléments non vides dans l'ordre du bas vers le haut
-                    for (let row = GRID_SIZE - 1; row >= 0; row--) {
+                    let blox = [];
+                    // Rassemble les éléments non vides dans l'ordre du haut vers le bas
+                    for (let row = 0; row < GRID_SIZE; row++) {
                         if (grid[row][col] !== '_') {
-                            colItems.push(grid[row][col]);
+                            blox.push(grid[row][col]);
                         }
                     }
-                    // Remplit depuis le haut
+                    // Remplit depuis le haut dans l'ordre initial
                     for (let row = 0; row < GRID_SIZE; row++) {
-                        if (row < colItems.length) {
-                            grid[row][col] = colItems[row];
+                        if (row < blox.length) {
+                            grid[row][col] = blox[row];
                         } else {
                             grid[row][col] = '_';
                         }
@@ -213,7 +213,7 @@
             score += removedBlocks;
             // Réorganise la colonne après la bombe
             let blox = [];
-            for (let row = GRID_SIZE - 1; row >= 0; row--) {
+            for (let row = 0; row < GRID_SIZE; row++) {
                 if (grid[row][col] !== '_') {
                     blox.push(grid[row][col]);
                 }
