@@ -17,16 +17,24 @@
         const ctx = canvas.getContext('2d');
         const GRID_SIZE = 8;
         const CELL_SIZE = 50;
-        const COLORS = {
-            'R': 'red',
-            'B': 'blue',
-            'Y': 'yellow',
-            'G': 'green',
-            'O': 'orange',
-            'P': 'purple',
-            'PRIKS': 'gray',
-            '_': 'white'
+
+        // Chargement des images
+        const IMAGES = {
+            'R': new Image(),
+            'B': new Image(),
+            'Y': new Image(),
+            'G': new Image(),
+            'O': new Image(),
+            'P': new Image(),
+            'PRIKS': new Image()
         };
+        IMAGES['R'].src = 'red.png';
+        IMAGES['B'].src = 'blue.png';
+        IMAGES['Y'].src = 'yellow.png';
+        IMAGES['G'].src = 'green.png';
+        IMAGES['O'].src = 'orange.png';
+        IMAGES['P'].src = 'purple.png';
+        IMAGES['PRIKS'].src = 'priks.png';
 
         let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('_'));
         let nextBlock = randomBlock();
@@ -136,13 +144,13 @@
                 // Réorganise les colonnes affectées
                 affectedCols.forEach(col => {
                     let blox = [];
-                    // Rassemble les éléments dans l'ordre initial (haut vers bas)
+                    // Rassemble dans l'ordre initial (haut vers bas)
                     for (let row = 0; row < GRID_SIZE; row++) {
                         if (grid[row][col] !== '_') {
                             blox.push(grid[row][col]);
                         }
                     }
-                    // Remplit depuis le haut dans l'ordre initial
+                    // Remplit depuis le haut
                     for (let row = 0; row < GRID_SIZE; row++) {
                         if (row < blox.length) {
                             grid[row][col] = blox[row];
@@ -172,7 +180,6 @@
                     return;
                 }
             }
-            // Ajoute un Blox/Priks par colonne
             for (let col = 0; col < GRID_SIZE; col++) {
                 let lastEmptyRow = 0;
                 for (let row = GRID_SIZE - 1; row >= 0; row--) {
@@ -192,7 +199,6 @@
         function useBomb(col) {
             if (bombs <= 0 || gameOver) return false;
             bombs--;
-            // Trouve la ligne du clic via offsetY
             let bombRow = Math.floor(event.offsetY / CELL_SIZE);
             if (bombRow < 0) bombRow = 0;
             if (bombRow >= GRID_SIZE) bombRow = GRID_SIZE - 1;
@@ -209,7 +215,6 @@
             }
             moves++;
             score += removedBlocks;
-            // Réorganise la colonne après la bombe
             let blox = [];
             for (let row = 0; row < GRID_SIZE; row++) {
                 if (grid[row][col] !== '_') {
@@ -238,30 +243,31 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             for (let r = 0; r < GRID_SIZE; r++) {
                 for (let c = 0; c < GRID_SIZE; c++) {
-                    if (typeof grid[r][c] === 'object' && grid[r][c].type === 'PRIKS') {
-                        ctx.fillStyle = COLORS['PRIKS'];
+                    if (grid[r][c] === '_') {
+                        ctx.fillStyle = COLORS['_'];
                         ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+                    } else if (typeof grid[r][c] === 'object' && grid[r][c].type === 'PRIKS') {
+                        ctx.drawImage(IMAGES['PRIKS'], c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
                         ctx.fillStyle = 'white';
                         ctx.font = '20px Arial';
                         ctx.textAlign = 'center';
                         ctx.fillText(grid[r][c].count, c * CELL_SIZE + CELL_SIZE / 2, r * CELL_SIZE + CELL_SIZE / 2 + 7);
                     } else {
-                        ctx.fillStyle = COLORS[grid[r][c]];
-                        ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+                        ctx.drawImage(IMAGES[grid[r][c]], c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
                     }
                     ctx.strokeStyle = 'lightgray';
                     ctx.strokeRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                 }
             }
-            ctx.fillStyle = typeof nextBlock === 'object' ? COLORS['PRIKS'] : COLORS[nextBlock];
-            ctx.fillRect(GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
+            let nextImg = typeof nextBlock === 'object' ? IMAGES['PRIKS'] : IMAGES[nextBlock];
+            ctx.drawImage(nextImg, GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
             ctx.strokeStyle = 'black';
             ctx.strokeRect(GRID_SIZE * CELL_SIZE - 40, GRID_SIZE * CELL_SIZE + 10, 30, 30);
 
             if (moves % 10 === 9) {
                 for (let col = 0; col < GRID_SIZE; col++) {
-                    ctx.fillStyle = typeof nextLine[col] === 'object' ? COLORS['PRIKS'] : COLORS[nextLine[col]];
-                    ctx.fillRect(col * CELL_SIZE + 5, GRID_SIZE * CELL_SIZE + 45, 30, 30);
+                    let img = typeof nextLine[col] === 'object' ? IMAGES['PRIKS'] : IMAGES[nextLine[col]];
+                    ctx.drawImage(img, col * CELL_SIZE + 5, GRID_SIZE * CELL_SIZE + 45, 30, 30);
                     ctx.strokeStyle = 'black';
                     ctx.strokeRect(col * CELL_SIZE + 5, GRID_SIZE * CELL_SIZE + 45, 30, 30);
                 }
