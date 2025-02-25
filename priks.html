@@ -88,53 +88,106 @@
             }
         }
 
-        function placeBlock(col, block) {
-            if (gameOver) return false;
-            if (grid[GRID_SIZE - 1][col] !== '_') {
-                gameOver = true;
-                return false;
-            }
-            let lastEmptyRow = 0;
-            for (let row = GRID_SIZE - 1; row >= 0; row--) {
-                if (grid[row][col] !== '_') {
-                    lastEmptyRow = row + 1;
-                    break;
-                }
-            }
-            grid[lastEmptyRow][col] = block;
-            moves++;
-            score += 1;
-            checkChains();
-            checkBombBonus();
-            if (moves % 10 === 9) {
-                nextLine = generateNextLine();
-            }
-            if (moves % 10 === 0) addFullLine();
-            nextBlock = randomBlock();
-            return true;
+        async function placeBlock(col, block) {
+    if (gameOver) return false;
+    if (grid[GRID_SIZE - 1][col] !== '_') {
+        gameOver = true;
+        return false;
+    }
+    let lastEmptyRow = 0;
+    for (let row = GRID_SIZE - 1; row >= 0; row--) {
+        if (grid[row][col] !== '_') {
+            lastEmptyRow = row + 1;
+            break;
         }
+    }
+    grid[lastEmptyRow][col] = block;
+    moves++;
+    score += 1;
+    await checkChains(); // Attendre que les chaînes soient résolues
+    checkBombBonus();
+    if (moves % 10 === 9) {
+        nextLine = generateNextLine();
+    }
+    if (moves % 10 === 0) addFullLine();
+    nextBlock = randomBlock();
+    return true;
+}
+        
+function blinkBlocks(toRemove, callback) {
+    let blinkCount = 2; // Nombre de clignotements (2 allers-retours = 4 étapes)
+    let interval = 150; // Durée en ms entre chaque étape
+    let currentBlink = 0;
 
+    function toggleBlink() {
+        toRemove.forEach(([r, c]) => {
+            if (currentBlink % 2 === 0) {
+                ctx.globalAlpha = 0.2; // Réduit l'opacité
+                drawBlock(r, c);
+                ctx.globalAlpha = 1.0; // Réinitialise pour le reste
+            } else {
+                drawBlock(r, c); // Dessine normalement
+            }
+        });
+        draw(); // Redessine tout pour éviter les artefacts
+        currentBlink++;
+        if (currentBlink < blinkCount * 2) {
+            setTimeout(toggleBlink, interval);
+        } else {
+            callback(); // Passe à la suppression après le clignotement
+        }
+    }
+
+    function drawBlock(r, c) {
+        if (grid[r][c] === '_') return;
+        if (typeof grid[r][c] === 'object' && grid[r][c].type === 'PRIKS') {
+            if (IMAGES['PRIKS'].complete && IMAGES['PRIKS'].naturalWidth !== 0) {
+                ctx.drawImage(IMAGES['PRIKS'], c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+            } else {
+                ctx.fillStyle = COLORS['PRIKS'];
+                ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+            }
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(grid[r][c].count, c * CELL_SIZE + CELL_SIZE / 2, r * CELL_SIZE + CELL_SIZE / 2 + 7);
+        } else {
+            if (IMAGES[grid[r][c]] && IMAGES[grid[r][c]].complete && IMAGES[grid[r][c]].naturalWidth !== 0) {
+                ctx.drawImage(IMAGES[grid[r][c]], c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+            } else {
+                ctx.fillStyle = COLORS[grid[r][c]];
+                ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2);
+            }
+        }
+        ctx.strokeStyle = 'lightgray';
+        ctx.strokeRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+    }
+
+    toggleBlink(); // Démarre le clignotement
+}
         function checkChains() {
-            let chainsFound;
-            do {
-                chainsFound = false;
-                let toRemove = new Set();
-                for (let r = 0; r < GRID_SIZE; r++) {
-                    for (let c = 0; c < GRID_SIZE; c++) {
-                        if (grid[r][c] !== '_' && typeof grid[r][c] !== 'object') {
-                            let chain = findChain(r, c, grid[r][c], new Set());
-                            if (chain.size >= 5) {
-                                chain.forEach(pos => toRemove.add(pos));
-                                chainsFound = true;
-                            }
-                        }
+    let chainsFound;
+    do {
+        chainsFound = false;
+        let toRemove = new Set();
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                if (grid[r][c] !== '_' && typeof grid[r][c] !== 'object') {
+                    let chain = findChain(r, c, grid[r][c], new Set());
+                    if (chain.size >= 5) {
+                        chain.forEach(pos => toRemove.add(pos));
+                        chainsFound = true;
                     }
                 }
-                if (toRemove.size > 0) {
-                    chains++;
-                    score += 5;
-                    checkBombBonus();
+            }
+        }
+        if (toRemove.size > 0) {
+            chains++;
+            score += 5;
+            checkBombBonus();
 
+            return new Promise(resolve => {
+                blinkBlocks(toRemove, () => {
                     let affectedPriks = new Set();
                     toRemove.forEach(([r, c]) => {
                         for (let dr = -1; dr <= 1; dr++) {
@@ -167,10 +220,13 @@
                             grid[row][col] = row < blox.length ? blox[row] : '_';
                         }
                     });
-                }
-            } while (chainsFound); // Continue tant que des chaînes sont trouvées
+                    draw();
+                    resolve();
+                });
+            }).then(() => checkChains()); // Continue récursivement après le clignotement
         }
-
+    } while (chainsFound);
+}
         function findChain(r, c, color, visited) {
             let key = `${r},${c}`;
             if (visited.has(key) || r < 0 || r >= GRID_SIZE || c < 0 || c >= GRID_SIZE || grid[r][c] !== color) return new Set();
@@ -182,75 +238,76 @@
             return chain;
         }
 
-        function addFullLine() {
-            for (let col = 0; col < GRID_SIZE; col++) {
-                if (grid[GRID_SIZE - 1][col] !== '_') {
-                    gameOver = true;
-                    return;
-                }
-            }
-            for (let col = 0; col < GRID_SIZE; col++) {
-                let lastEmptyRow = 0;
-                for (let row = GRID_SIZE - 1; row >= 0; row--) {
-                    if (grid[row][col] !== '_') {
-                        lastEmptyRow = row + 1;
-                        break;
-                    }
-                }
-                grid[lastEmptyRow][col] = nextLine[col];
-                score += 1;
-            }
-            checkChains();
-            checkBombBonus();
-            nextLine = generateNextLine();
+        async function addFullLine() {
+    for (let col = 0; col < GRID_SIZE; col++) {
+        if (grid[GRID_SIZE - 1][col] !== '_') {
+            gameOver = true;
+            return;
         }
-
-        function useBomb(col) {
-            if (bombs <= 0 || gameOver) return false;
-            bombs--;
-            let bombRow;
-            try {
-                bombRow = Math.floor(event.offsetY / CELL_SIZE);
-            } catch (e) {
-                bombRow = GRID_SIZE - 1;
+    }
+    for (let col = 0; col < GRID_SIZE; col++) {
+        let lastEmptyRow = 0;
+        for (let row = GRID_SIZE - 1; row >= 0; row--) {
+            if (grid[row][col] !== '_') {
+                lastEmptyRow = row + 1;
+                break;
             }
-            if (bombRow < 0) bombRow = 0;
-            if (bombRow >= GRID_SIZE) bombRow = GRID_SIZE - 1;
-
-            let removedBlocks = 0;
-            for (let dr = -1; dr <= 1; dr++) {
-                for (let dc = -1; dc <= 1; dc++) {
-                    let nr = bombRow + dr, nc = col + dc;
-                    if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE && grid[nr][nc] !== '_') {
-                        grid[nr][nc] = '_';
-                        removedBlocks++;
-                    }
-                }
-            }
-            moves++;
-            score += removedBlocks;
-            for (let c = col - 1; c <= col + 1; c++) {
-                if (c >= 0 && c < GRID_SIZE) {
-                    let blox = [];
-                    for (let row = 0; row < GRID_SIZE; row++) {
-                        if (grid[row][c] !== '_') {
-                            blox.push(grid[row][c]);
-                        }
-                    }
-                    for (let row = 0; row < GRID_SIZE; row++) {
-                        grid[row][c] = row < blox.length ? blox[row] : '_';
-                    }
-                }
-            }
-            checkChains();
-            checkBombBonus();
-            if (moves % 10 === 9) {
-                nextLine = generateNextLine();
-            }
-            if (moves % 10 === 0) addFullLine();
-            nextBlock = randomBlock();
-            return true;
         }
+        grid[lastEmptyRow][col] = nextLine[col];
+        score += 1;
+    }
+    await checkChains();
+    checkBombBonus();
+    nextLine = generateNextLine();
+}
+
+        async function useBomb(col) {
+    if (bombs <= 0 || gameOver) return false;
+    bombs--;
+    let bombRow;
+    try {
+        bombRow = Math.floor(event.offsetY / CELL_SIZE);
+    } catch (e) {
+        bombRow = GRID_SIZE - 1;
+    }
+    if (bombRow < 0) bombRow = 0;
+    if (bombRow >= GRID_SIZE) bombRow = GRID_SIZE - 1;
+
+    let removedBlocks = 0;
+    for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+            let nr = bombRow + dr, nc = col + dc;
+            if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE && grid[nr][nc] !== '_') {
+                grid[nr][nc] = '_';
+                removedBlocks++;
+            }
+        }
+    }
+    moves++;
+    score += removedBlocks;
+    for (let c = col - 1; c <= col + 1; c++) {
+        if (c >= 0 && c < GRID_SIZE) {
+            let blox = [];
+            for (let row = 0; row < GRID_SIZE; row++) {
+                if (grid[row][c] !== '_') {
+                    blox.push(grid[row][c]);
+                }
+            }
+            for (let row = 0; row < GRID_SIZE; row++) {
+                grid[row][c] = row < blox.length ? blox[row] : '_';
+            }
+        }
+    }
+    await checkChains();
+    checkBombBonus();
+    if (moves % 10 === 9) {
+        nextLine = generateNextLine();
+    }
+    if (moves % 10 === 0) addFullLine();
+    nextBlock = randomBlock();
+    return true;
+}
+
 
         function draw() {
             try {
