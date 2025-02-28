@@ -24,6 +24,7 @@
         <div id="info">
             <p>Bombes restantes : <span id="bombCount">1</span></p>
             <p>Chaînes réussies : <span id="chainCount">0</span></p>
+            <p>Coups joués : <span id="moveCount">0</span></p>
             <p>Utilisez ← et → pour déplacer, Espace pour placer, B pour une bombe</p>
         </div>
     </div>
@@ -32,30 +33,28 @@
         const ctx = canvas.getContext("2d");
         const gridSize = 8;
         const cellSize = canvas.width / gridSize;
-        const previewHeight = cellSize; // Hauteur pour la prévisualisation sous la grille
+        const previewHeight = cellSize;
         let grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
         let bombCount = 1;
         let chainCount = 0;
         let moveCount = 0;
         let nextBlock = null;
-        let blockPosition = 0; // Position actuelle du Blox sous la grille (colonne)
+        let blockPosition = 0;
 
         const colors = ["red", "blue", "green", "yellow", "purple", "orange"];
         const priksColor = "gray";
 
         // Générer un nouveau Blox
         function getNewBlock() {
-            if (Math.random() < 0.1) return priksColor; // 10% de chance d'avoir un Priks
+            if (Math.random() < 0.1) return priksColor;
             return colors[Math.floor(Math.random() * colors.length)];
         }
 
-        // Initialiser le prochain Blox
         if (!nextBlock) nextBlock = getNewBlock();
 
         // Dessiner la grille et le prochain Blox
         function drawGrid() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // Grille principale
             for (let row = 0; row < gridSize; row++) {
                 for (let col = 0; col < gridSize; col++) {
                     ctx.strokeRect(col * cellSize, row * cellSize, cellSize, cellSize);
@@ -65,7 +64,6 @@
                     }
                 }
             }
-            // Zone de prévisualisation
             ctx.strokeRect(0, gridSize * cellSize, canvas.width, previewHeight);
             ctx.fillStyle = nextBlock;
             ctx.fillRect(blockPosition * cellSize + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
@@ -73,38 +71,97 @@
 
         // Ajouter un Blox dans une colonne
         function addBlock(col) {
-            if (grid[0][col]) {
+            let row = gridSize - 1;
+            while (row >= 0 && !grid[row][col]) row--;
+            row++; // Position juste au-dessus du dernier Blox
+            if (row >= gridSize) { // Colonne pleine
                 endGame();
                 return;
             }
-            let row = gridSize - 1;
-            while (row > 0 && !grid[row][col]) row--;
-            if (grid[row][col]) row++;
             grid[row][col] = nextBlock;
             moveCount++;
             nextBlock = getNewBlock();
-            blockPosition = 0; // Réinitialiser la position après placement
+            blockPosition = 0;
             checkChains();
-            if (moveCount % 10 === 0) addRandomLine();
+            if (moveCount % 10 === 0 && moveCount > 0) {
+                addRandomLine();
+            }
             drawGrid();
             updateUI();
         }
 
-        // Ajouter une ligne complète avec 1 Priks
+        // Ajouter une ligne complète avec 1 Priks, chaque Blox montant jusqu'à une case occupée
         function addRandomLine() {
-            for (let row = 0; row < gridSize - 1; row++) {
-                grid[row] = grid[row + 1].slice();
-            }
             let newLine = colors.map(() => colors[Math.floor(Math.random() * colors.length)]);
             let priksCol = Math.floor(Math.random() * gridSize);
             newLine[priksCol] = priksColor;
-            grid[gridSize - 1] = newLine;
-            if (grid[0].some(cell => cell !== null)) endGame();
+
+            // Placer chaque Blox de la ligne dans sa colonne
+            for (let col = 0; col < gridSize; col++) {
+                let row = gridSize - 1;
+                while (row >= 0 && !grid[row][col]) row--;
+                row++; // Position juste au-dessus du dernier Blox
+                if (row >= gridSize) { // Si la colonne est pleine
+                    endGame();
+                    return;
+                }
+                grid[row][col] = newLine[col];
+            }
+            drawGrid();
         }
 
-        // Vérifier les chaînes (à compléter plus tard)
+        // Vérifier et supprimer les chaînes de 5 ou plus
         function checkChains() {
-            // Logique de détection des chaînes à implémenter
+            let visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
+            let toRemove = [];
+
+            function dfs(row, col, color, group) {
+                if (row < 0 || row >= gridSize || col < 0 || col >= gridSize || visited[row][col] || grid[row][col] !== color) {
+                    return;
+                }
+                visited[row][col] = true;
+                group.push([row, col]);
+                dfs(row - 1, col, color, group); // Haut
+                dfs(row + 1, col, color, group); // Bas
+                dfs(row, col - 1, color, group); // Gauche
+                dfs(row, col + 1, color, group); // Droite
+                dfs(row - 1, col - 1, color, group); // Diagonale haut-gauche
+                dfs(row - 1, col + 1, color, group); // Diagonale haut-droite
+                dfs(row + 1, col - 1, color, group); // Diagonale bas-gauche
+                dfs(row + 1, col + 1, color, group); // Diagonale bas-droite
+            }
+
+            for (let row = 0; row < gridSize; row++) {
+                for (let col = 0; col < gridSize; col++) {
+                    if (grid[row][col] && grid[row][col] !== priksColor && !visited[row][col]) {
+                        let group = [];
+                        dfs(row, col, grid[row][col], group);
+                        if (group.length >= 5) {
+                            toRemove = toRemove.concat(group);
+                        }
+                    }
+                }
+            }
+
+            if (toRemove.length > 0) {
+                toRemove.forEach(([row, col]) => grid[row][col] = null);
+                chainCount++;
+                if (chainCount % 5 === 0) bombCount++;
+                applyGravity();
+            }
+        }
+
+        // Appliquer la gravité inversée (vers le haut)
+        function applyGravity() {
+            for (let col = 0; col < gridSize; col++) {
+                let newCol = [];
+                for (let row = 0; row < gridSize; row++) {
+                    if (grid[row][col]) newCol.push(grid[row][col]);
+                }
+                for (let row = 0; row < gridSize; row++) {
+                    grid[row][col] = (row < newCol.length) ? newCol[row] : null;
+                }
+            }
         }
 
         // Utiliser une bombe
@@ -119,6 +176,7 @@
                     grid[r][c] = null;
                 }
             }
+            applyGravity();
             drawGrid();
             updateUI();
         }
@@ -127,6 +185,7 @@
         function updateUI() {
             document.getElementById("bombCount").textContent = bombCount;
             document.getElementById("chainCount").textContent = chainCount;
+            document.getElementById("moveCount").textContent = moveCount;
         }
 
         // Fin du jeu
@@ -154,7 +213,7 @@
                     drawGrid();
                     break;
                 case " ":
-                    event.preventDefault(); // Éviter le défilement de la page
+                    event.preventDefault();
                     addBlock(blockPosition);
                     break;
                 case "b":
@@ -164,8 +223,8 @@
             }
         });
 
-        // Dessiner la grille initiale
         drawGrid();
+        updateUI();
     </script>
 </body>
 </html>
