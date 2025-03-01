@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Priks hop</title>
+    <title>Priks Hoop</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -120,6 +120,7 @@
                 grid[row][col] = nextLine[col];
             }
             drawGrid();
+            console.log("Grille après ajout de la ligne :", grid.map(row => row.slice())); // Débogage
             checkChains();
         }
 
@@ -152,7 +153,7 @@
                         if (grid[row][col] && grid[row][col] !== priksColor && !visited[row][col]) {
                             let group = [];
                             dfs(row, col, grid[row][col], group);
-                            if (group.length >= 5) { // Condition explicite : 5 ou plus
+                            if (group.length >= 5) {
                                 toRemove = toRemove.concat(group);
                             }
                         }
