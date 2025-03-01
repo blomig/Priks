@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Priks anim</title>
+    <title>Priks animBlox</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -66,7 +66,7 @@
         if (!nextLine) nextLine = getNewLine();
 
         // Dessiner la grille, le prochain Blox et la prochaine ligne
-        function drawGrid() {
+        function drawGrid(movingBlocks = []) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (let row = 0; row < gridSize; row++) {
                 for (let col = 0; col < gridSize; col++) {
@@ -86,29 +86,55 @@
                     ctx.fillRect(col * cellSize + 2, (gridSize + 1) * cellSize + 2, cellSize - 4, cellSize - 4);
                 }
             }
+            // Dessiner les Blox en mouvement (si fournis)
+            movingBlocks.forEach(({ x, y, color }) => {
+                ctx.fillStyle = color;
+                ctx.fillRect(x + 2, y + 2, cellSize - 4, cellSize - 4);
+            });
         }
 
-        // Faire clignoter les Blox avant suppression
-        async function blinkBlocks(blocks) {
-            const blinkCount = 3; // Nombre de clignotements
-            const blinkDuration = 150; // Durée en ms par clignotement (150ms x 2 états = 300ms par cycle)
+        // Animation pour un Blox joué
+        async function animateBlock(col, startY, endRow) {
+            const startRow = gridSize; // Position sous la grille
+            const endY = endRow * cellSize;
+            const duration = 100; // 100ms pour traverser la grille
+            const distance = startY - endY;
+            const steps = 10; // Nombre d’étapes pour l’animation
+            const stepDuration = duration / steps;
+            const stepDistance = distance / steps;
 
-            for (let i = 0; i < blinkCount; i++) {
-                // État "off" (transparent)
-                blocks.forEach(([row, col]) => {
-                    ctx.clearRect(col * cellSize + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
-                    ctx.strokeRect(col * cellSize, row * cellSize, cellSize, cellSize); // Garder la bordure visible
-                });
-                await new Promise(resolve => setTimeout(resolve, blinkDuration));
-
-                // État "on" (couleur normale)
-                drawGrid(); // Redessiner toute la grille pour restaurer les couleurs
-                await new Promise(resolve => setTimeout(resolve, blinkDuration));
+            let currentY = startY;
+            for (let i = 0; i <= steps; i++) {
+                drawGrid([{ x: col * cellSize, y: currentY, color: nextBlock }]);
+                currentY -= stepDistance;
+                await new Promise(resolve => setTimeout(resolve, stepDuration));
             }
         }
 
-        // Ajouter un Blox dans une colonne
-        function addBlock(col) {
+        // Animation pour la gravité inversée
+        async function animateGravity(movingBlocks) {
+            const duration = 100; // 100ms pour un petit mouvement
+            const steps = 10;
+            const stepDuration = duration / steps;
+            const animatedBlocks = movingBlocks.map(({ startRow, endRow, col, color }) => ({
+                x: col * cellSize,
+                y: startRow * cellSize,
+                targetY: endRow * cellSize,
+                color,
+                stepDistance: (startRow * cellSize - endRow * cellSize) / steps
+            }));
+
+            for (let i = 0; i <= steps; i++) {
+                animatedBlocks.forEach(block => {
+                    block.y -= block.stepDistance;
+                });
+                drawGrid(animatedBlocks);
+                await new Promise(resolve => setTimeout(resolve, stepDuration));
+            }
+        }
+
+        // Ajouter un Blox dans une colonne avec animation
+        async function addBlock(col) {
             let row = gridSize - 1;
             while (row >= 0 && !grid[row][col]) row--;
             row++;
@@ -116,11 +142,12 @@
                 endGame();
                 return;
             }
+            await animateBlock(col, gridSize * cellSize, row); // Animation depuis le bas
             grid[row][col] = nextBlock;
             moveCount++;
             nextBlock = getNewBlock();
             blockPosition = 0;
-            checkChains();
+            await checkChains();
             if (moveCount % 10 === 0 && moveCount > 0) {
                 addRandomLine();
                 nextLine = getNewLine();
@@ -143,6 +170,22 @@
             }
             drawGrid();
             checkChains();
+        }
+
+        // Faire clignoter les Blox avant suppression
+        async function blinkBlocks(blocks) {
+            const blinkCount = 3;
+            const blinkDuration = 150;
+
+            for (let i = 0; i < blinkCount; i++) {
+                blocks.forEach(([row, col]) => {
+                    ctx.clearRect(col * cellSize + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
+                    ctx.strokeRect(col * cellSize, row * cellSize, cellSize, cellSize);
+                });
+                await new Promise(resolve => setTimeout(resolve, blinkDuration));
+                drawGrid();
+                await new Promise(resolve => setTimeout(resolve, blinkDuration));
+            }
         }
 
         // Vérifier et supprimer les chaînes de 5 ou plus en cascade
@@ -183,35 +226,42 @@
 
                 if (toRemove.length > 0) {
                     chainsRemoved = true;
-                    // Faire clignoter les Blox avant de les supprimer
                     await blinkBlocks(toRemove);
-                    // Supprimer les Blox après l’effet
                     toRemove.forEach(([row, col]) => {
                         grid[row][col] = null;
                     });
                     chainCount++;
                     if (chainCount % 5 === 0) bombCount++;
-                    applyGravity();
+                    await animateGravity(calculateGravityMoves());
                     drawGrid();
                 }
             } while (chainsRemoved);
         }
 
-        // Appliquer la gravité inversée (vers le haut)
-        function applyGravity() {
+        // Calculer les mouvements de gravité pour l’animation
+        function calculateGravityMoves() {
+            let moves = [];
             for (let col = 0; col < gridSize; col++) {
                 let newCol = [];
                 for (let row = 0; row < gridSize; row++) {
-                    if (grid[row][col]) newCol.push(grid[row][col]);
+                    if (grid[row][col]) newCol.push({ row, color: grid[row][col] });
+                }
+                for (let i = 0; i < newCol.length; i++) {
+                    let startRow = newCol[i].row;
+                    let endRow = i;
+                    if (startRow !== endRow) {
+                        moves.push({ startRow, endRow, col, color: newCol[i].color });
+                    }
                 }
                 for (let row = 0; row < gridSize; row++) {
-                    grid[row][col] = (row < newCol.length) ? newCol[row] : null;
+                    grid[row][col] = (row < newCol.length) ? newCol[row].color : null;
                 }
             }
+            return moves;
         }
 
         // Utiliser une bombe
-        function useBomb(col) {
+        async function useBomb(col) {
             if (bombCount <= 0) return;
             let row = gridSize - 1;
             while (row > 0 && !grid[row][col]) row--;
@@ -222,8 +272,8 @@
                     grid[r][c] = null;
                 }
             }
-            applyGravity();
-            checkChains();
+            await animateGravity(calculateGravityMoves());
+            await checkChains();
             drawGrid();
             updateUI();
         }
