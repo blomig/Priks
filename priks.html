@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Priks</title>
+    <title>Priks hop</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -152,15 +152,15 @@
                         if (grid[row][col] && grid[row][col] !== priksColor && !visited[row][col]) {
                             let group = [];
                             dfs(row, col, grid[row][col], group);
-                            if (group.length >= 5) { // Supprimer uniquement si 5 ou plus
+                            if (group.length >= 5) { // Condition explicite : 5 ou plus
                                 toRemove = toRemove.concat(group);
-                                chainsRemoved = true;
                             }
                         }
                     }
                 }
 
                 if (toRemove.length > 0) {
+                    chainsRemoved = true;
                     toRemove.forEach(([row, col]) => {
                         grid[row][col] = null;
                     });
