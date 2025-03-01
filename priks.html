@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Priks canon à blox</title>
+    <title>Priks bombe anime</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -146,6 +146,19 @@
             }
             if (isBombSelected) {
                 await animateBlock(col, gridSize * cellSize, row, true);
+                // Collecter les Blox à supprimer pour l’animation
+                let toRemove = [];
+                for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
+                    for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
+                        if (grid[r][c]) {
+                            toRemove.push([r, c]);
+                        }
+                    }
+                }
+                if (toRemove.length > 0) {
+                    await blinkBlocks(toRemove); // Clignotement avant suppression
+                }
+                // Appliquer la suppression après l’animation
                 for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
                     for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
                         grid[r][c] = null;
@@ -166,7 +179,6 @@
                     nextLine = getNewLine();
                 }
             }
-            // Ne pas réinitialiser blockPosition ici, il reste où le dernier Blox/bombe a été envoyé
             drawGrid();
             updateUI();
         }
