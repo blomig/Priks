@@ -123,49 +123,53 @@
             checkChains(); // Vérifier les chaînes après l’ajout
         }
 
-        // Vérifier et supprimer les chaînes de 5 ou plus
+        // Vérifier et supprimer les chaînes de 5 ou plus en cascade
         function checkChains() {
-            let visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
-            let toRemove = [];
+            let chainsRemoved;
+            do {
+                chainsRemoved = false;
+                let visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
+                let toRemove = [];
 
-            function dfs(row, col, color, group) {
-                if (row < 0 || row >= gridSize || col < 0 || col >= gridSize || visited[row][col] || grid[row][col] !== color) {
-                    return;
+                function dfs(row, col, color, group) {
+                    if (row < 0 || row >= gridSize || col < 0 || col >= gridSize || visited[row][col] || grid[row][col] !== color) {
+                        return;
+                    }
+                    visited[row][col] = true;
+                    group.push([row, col]);
+                    dfs(row - 1, col, color, group); // Haut
+                    dfs(row + 1, col, color, group); // Bas
+                    dfs(row, col - 1, color, group); // Gauche
+                    dfs(row, col + 1, color, group); // Droite
+                    dfs(row - 1, col - 1, color, group); // Diagonale haut-gauche
+                    dfs(row - 1, col + 1, color, group); // Diagonale haut-droite
+                    dfs(row + 1, col - 1, color, group); // Diagonale bas-gauche
+                    dfs(row + 1, col + 1, color, group); // Diagonale bas-droite
                 }
-                visited[row][col] = true;
-                group.push([row, col]);
-                // Explorer tous les voisins (8 directions)
-                dfs(row - 1, col, color, group); // Haut
-                dfs(row + 1, col, color, group); // Bas
-                dfs(row, col - 1, color, group); // Gauche
-                dfs(row, col + 1, color, group); // Droite
-                dfs(row - 1, col - 1, color, group); // Diagonale haut-gauche
-                dfs(row - 1, col + 1, color, group); // Diagonale haut-droite
-                dfs(row + 1, col - 1, color, group); // Diagonale bas-gauche
-                dfs(row + 1, col + 1, color, group); // Diagonale bas-droite
-            }
 
-            for (let row = 0; row < gridSize; row++) {
-                for (let col = 0; col < gridSize; col++) {
-                    if (grid[row][col] && grid[row][col] !== priksColor && !visited[row][col]) {
-                        let group = [];
-                        dfs(row, col, grid[row][col], group);
-                        if (group.length >= 5) {
-                            toRemove = toRemove.concat(group);
+                for (let row = 0; row < gridSize; row++) {
+                    for (let col = 0; col < gridSize; col++) {
+                        if (grid[row][col] && grid[row][col] !== priksColor && !visited[row][col]) {
+                            let group = [];
+                            dfs(row, col, grid[row][col], group);
+                            if (group.length >= 5) {
+                                toRemove = toRemove.concat(group);
+                            }
                         }
                     }
                 }
-            }
 
-            if (toRemove.length > 0) {
-                toRemove.forEach(([row, col]) => {
-                    grid[row][col] = null;
-                });
-                chainCount++;
-                if (chainCount % 5 === 0) bombCount++;
-                applyGravity();
-                drawGrid();
-            }
+                if (toRemove.length > 0) {
+                    toRemove.forEach(([row, col]) => {
+                        grid[row][col] = null;
+                    });
+                    chainsRemoved = true;
+                    chainCount++;
+                    if (chainCount % 5 === 0) bombCount++;
+                    applyGravity();
+                    drawGrid();
+                }
+            } while (chainsRemoved); // Continuer tant que des chaînes sont supprimées
         }
 
         // Appliquer la gravité inversée (vers le haut)
@@ -194,6 +198,7 @@
                 }
             }
             applyGravity();
+            checkChains(); // Vérifier les chaînes après une bombe aussi
             drawGrid();
             updateUI();
         }
