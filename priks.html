@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Priks score 2</title>
+    <title>Priks Bombe</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -25,7 +25,7 @@
             <p>Bombes restantes : <span id="bombCount">1</span></p>
             <p>Score : <span id="score">0</span></p>
             <p>Coups joués : <span id="moveCount">0</span></p>
-            <p>Utilisez ← et → pour déplacer, Espace pour placer, B pour une bombe</p>
+            <p>Utilisez ← et → pour déplacer, Espace pour placer, B pour sélectionner une bombe</p>
         </div>
     </div>
     <script>
@@ -42,9 +42,11 @@
         let nextBlock = null;
         let blockPosition = 0;
         let nextLine = null;
+        let isBombSelected = false; // Nouvelle variable pour suivre l’état de la bombe
 
         const colors = ["red", "blue", "green", "yellow", "purple", "orange"];
         const priksColor = "gray";
+        const bombColor = "black"; // Couleur pour représenter la bombe
 
         // Générer un nouveau Blox
         function getNewBlock() {
@@ -66,7 +68,7 @@
         if (!nextBlock) nextBlock = getNewBlock();
         if (!nextLine) nextLine = getNewLine();
 
-        // Dessiner la grille, le prochain Blox et la prochaine ligne
+        // Dessiner la grille, le prochain Blox ou la bombe, et la prochaine ligne
         function drawGrid(movingBlocks = []) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (let row = 0; row < gridSize; row++) {
@@ -79,7 +81,8 @@
                 }
             }
             ctx.strokeRect(0, gridSize * cellSize, canvas.width, previewHeight);
-            ctx.fillStyle = nextBlock;
+            // Afficher soit le nextBlock, soit la bombe si sélectionnée
+            ctx.fillStyle = isBombSelected ? bombColor : nextBlock;
             ctx.fillRect(blockPosition * cellSize + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
             if (moveCount % 10 === 9) {
                 for (let col = 0; col < gridSize; col++) {
@@ -93,8 +96,8 @@
             });
         }
 
-        // Animation pour un Blox joué
-        async function animateBlock(col, startY, endRow) {
+        // Animation pour un Blox ou une bombe jouée
+        async function animateBlock(col, startY, endRow, isBomb = false) {
             const startRow = gridSize;
             const endY = endRow * cellSize;
             const duration = 100;
@@ -103,8 +106,9 @@
             const stepDistance = (startY - endY) / steps;
 
             let currentY = startY;
+            const color = isBomb ? bombColor : nextBlock;
             for (let i = 0; i <= steps; i++) {
-                drawGrid([{ x: col * cellSize, y: currentY, color: nextBlock }]);
+                drawGrid([{ x: col * cellSize, y: currentY, color }]);
                 currentY -= stepDistance;
                 await new Promise(resolve => setTimeout(resolve, stepDuration));
             }
@@ -132,7 +136,7 @@
             }
         }
 
-        // Ajouter un Blox dans une colonne avec animation
+        // Ajouter un Blox ou une bombe dans une colonne avec animation
         async function addBlock(col) {
             let row = gridSize - 1;
             while (row >= 0 && !grid[row][col]) row--;
@@ -141,16 +145,31 @@
                 endGame();
                 return;
             }
-            await animateBlock(col, gridSize * cellSize, row);
-            grid[row][col] = nextBlock;
-            moveCount++;
-            nextBlock = getNewBlock();
-            blockPosition = 0;
-            await checkChains();
-            if (moveCount % 10 === 0 && moveCount > 0) {
-                addRandomLine();
-                nextLine = getNewLine();
+            if (isBombSelected) {
+                // Lancer une bombe
+                await animateBlock(col, gridSize * cellSize, row, true);
+                for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
+                    for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
+                        grid[r][c] = null;
+                    }
+                }
+                bombCount--;
+                isBombSelected = false;
+                await animateGravity(calculateGravityMoves());
+                await checkChains();
+            } else {
+                // Lancer un Blox normal
+                await animateBlock(col, gridSize * cellSize, row);
+                grid[row][col] = nextBlock;
+                moveCount++;
+                nextBlock = getNewBlock();
+                await checkChains();
+                if (moveCount % 10 === 0 && moveCount > 0) {
+                    addRandomLine();
+                    nextLine = getNewLine();
+                }
             }
+            blockPosition = 0;
             drawGrid();
             updateUI();
         }
@@ -190,7 +209,7 @@
         // Vérifier et supprimer les chaînes de 5 ou plus en cascade
         async function checkChains() {
             let chainsRemoved;
-            let isGravityChain = false; // Détecter les chaînes secondaires
+            let isGravityChain = false;
             do {
                 chainsRemoved = false;
                 let visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
@@ -219,13 +238,12 @@
                             dfs(row, col, grid[row][col], group);
                             if (group.length >= 5) {
                                 toRemove = toRemove.concat(group);
-                                // Calcul du score pour cette chaîne
                                 if (isGravityChain) {
-                                    score += 10; // Chaîne par gravité = 10 points
+                                    score += 10;
                                 } else if (group.length > 5) {
-                                    score += 10; // Chaîne > 5 = 10 points
+                                    score += 10;
                                 } else {
-                                    score += 5; // Chaîne = 5 = 5 points
+                                    score += 5;
                                 }
                             }
                         }
@@ -240,11 +258,11 @@
                     });
                     chainCount++;
                     if (chainCount % 5 === 0) bombCount++;
-                    isGravityChain = true; // Prochaines chaînes sont dues à la gravité
+                    isGravityChain = true;
                     await animateGravity(calculateGravityMoves());
                     drawGrid();
                 } else {
-                    isGravityChain = false; // Réinitialiser si aucune chaîne
+                    isGravityChain = false;
                 }
             } while (chainsRemoved);
         }
@@ -271,24 +289,6 @@
             return moves;
         }
 
-        // Utiliser une bombe
-        async function useBomb(col) {
-            if (bombCount <= 0) return;
-            let row = gridSize - 1;
-            while (row > 0 && !grid[row][col]) row--;
-            if (grid[row][col]) row++;
-            bombCount--;
-            for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
-                for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
-                    grid[r][c] = null;
-                }
-            }
-            await animateGravity(calculateGravityMoves());
-            await checkChains();
-            drawGrid();
-            updateUI();
-        }
-
         // Mettre à jour l'interface
         function updateUI() {
             document.getElementById("bombCount").textContent = bombCount;
@@ -306,6 +306,7 @@
             moveCount = 0;
             nextBlock = getNewBlock();
             nextLine = getNewLine();
+            isBombSelected = false; // Réinitialiser l’état de la bombe
             blockPosition = 0;
             drawGrid();
             updateUI();
@@ -328,7 +329,10 @@
                     break;
                 case "b":
                 case "B":
-                    useBomb(blockPosition);
+                    if (bombCount > 0 && !isBombSelected) {
+                        isBombSelected = true;
+                        drawGrid();
+                    }
                     break;
             }
         });
