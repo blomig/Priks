@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Priks beta</title>
+    <title>Priks anim</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -53,12 +53,12 @@
 
         // Générer une nouvelle ligne de 8 Blox
         function getNewLine() {
-            let newLine = Array(gridSize); // Crée un tableau de 8 éléments
+            let newLine = Array(gridSize);
             for (let i = 0; i < gridSize; i++) {
                 newLine[i] = colors[Math.floor(Math.random() * colors.length)];
             }
             let priksCol = Math.floor(Math.random() * gridSize);
-            newLine[priksCol] = priksColor; // Remplace une position par un Priks
+            newLine[priksCol] = priksColor;
             return newLine;
         }
 
@@ -85,6 +85,25 @@
                     ctx.fillStyle = nextLine[col];
                     ctx.fillRect(col * cellSize + 2, (gridSize + 1) * cellSize + 2, cellSize - 4, cellSize - 4);
                 }
+            }
+        }
+
+        // Faire clignoter les Blox avant suppression
+        async function blinkBlocks(blocks) {
+            const blinkCount = 3; // Nombre de clignotements
+            const blinkDuration = 150; // Durée en ms par clignotement (150ms x 2 états = 300ms par cycle)
+
+            for (let i = 0; i < blinkCount; i++) {
+                // État "off" (transparent)
+                blocks.forEach(([row, col]) => {
+                    ctx.clearRect(col * cellSize + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
+                    ctx.strokeRect(col * cellSize, row * cellSize, cellSize, cellSize); // Garder la bordure visible
+                });
+                await new Promise(resolve => setTimeout(resolve, blinkDuration));
+
+                // État "on" (couleur normale)
+                drawGrid(); // Redessiner toute la grille pour restaurer les couleurs
+                await new Promise(resolve => setTimeout(resolve, blinkDuration));
             }
         }
 
@@ -127,7 +146,7 @@
         }
 
         // Vérifier et supprimer les chaînes de 5 ou plus en cascade
-        function checkChains() {
+        async function checkChains() {
             let chainsRemoved;
             do {
                 chainsRemoved = false;
@@ -164,6 +183,9 @@
 
                 if (toRemove.length > 0) {
                     chainsRemoved = true;
+                    // Faire clignoter les Blox avant de les supprimer
+                    await blinkBlocks(toRemove);
+                    // Supprimer les Blox après l’effet
                     toRemove.forEach(([row, col]) => {
                         grid[row][col] = null;
                     });
