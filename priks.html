@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Priks Hoop</title>
+    <title>Priks avec console</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -119,9 +119,12 @@
                 }
                 grid[row][col] = nextLine[col];
             }
+            console.log("Avant drawGrid - Ligne ajoutée :", nextLine);
+            console.log("Grille après ajout de la ligne :", grid.map(row => row.slice()));
             drawGrid();
-            console.log("Grille après ajout de la ligne :", grid.map(row => row.slice())); // Débogage
+            console.log("Grille après checkChains (avant exécution) :", grid.map(row => row.slice()));
             checkChains();
+            console.log("Grille après checkChains (après exécution) :", grid.map(row => row.slice()));
         }
 
         // Vérifier et supprimer les chaînes de 5 ou plus en cascade
