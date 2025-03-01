@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Priks animBlox</title>
+    <title>Priks avec Score</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -23,7 +23,7 @@
         <canvas id="gameCanvas" width="320" height="400"></canvas>
         <div id="info">
             <p>Bombes restantes : <span id="bombCount">1</span></p>
-            <p>Chaînes réussies : <span id="chainCount">0</span></p>
+            <p>Score : <span id="score">0</span></p>
             <p>Coups joués : <span id="moveCount">0</span></p>
             <p>Utilisez ← et → pour déplacer, Espace pour placer, B pour une bombe</p>
         </div>
@@ -36,7 +36,8 @@
         const previewHeight = cellSize * 2;
         let grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
         let bombCount = 1;
-        let chainCount = 0;
+        let chainCount = 0; // Toujours utilisé pour les bombes, mais plus affiché
+        let score = 0; // Nouveau score
         let moveCount = 0;
         let nextBlock = null;
         let blockPosition = 0;
@@ -86,7 +87,6 @@
                     ctx.fillRect(col * cellSize + 2, (gridSize + 1) * cellSize + 2, cellSize - 4, cellSize - 4);
                 }
             }
-            // Dessiner les Blox en mouvement (si fournis)
             movingBlocks.forEach(({ x, y, color }) => {
                 ctx.fillStyle = color;
                 ctx.fillRect(x + 2, y + 2, cellSize - 4, cellSize - 4);
@@ -95,13 +95,12 @@
 
         // Animation pour un Blox joué
         async function animateBlock(col, startY, endRow) {
-            const startRow = gridSize; // Position sous la grille
+            const startRow = gridSize;
             const endY = endRow * cellSize;
-            const duration = 100; // 100ms pour traverser la grille
-            const distance = startY - endY;
-            const steps = 10; // Nombre d’étapes pour l’animation
+            const duration = 100;
+            const steps = 10;
             const stepDuration = duration / steps;
-            const stepDistance = distance / steps;
+            const stepDistance = (startY - endY) / steps;
 
             let currentY = startY;
             for (let i = 0; i <= steps; i++) {
@@ -113,7 +112,7 @@
 
         // Animation pour la gravité inversée
         async function animateGravity(movingBlocks) {
-            const duration = 100; // 100ms pour un petit mouvement
+            const duration = 100;
             const steps = 10;
             const stepDuration = duration / steps;
             const animatedBlocks = movingBlocks.map(({ startRow, endRow, col, color }) => ({
@@ -142,7 +141,7 @@
                 endGame();
                 return;
             }
-            await animateBlock(col, gridSize * cellSize, row); // Animation depuis le bas
+            await animateBlock(col, gridSize * cellSize, row);
             grid[row][col] = nextBlock;
             moveCount++;
             nextBlock = getNewBlock();
@@ -191,6 +190,7 @@
         // Vérifier et supprimer les chaînes de 5 ou plus en cascade
         async function checkChains() {
             let chainsRemoved;
+            let isGravityChain = false; // Pour détecter les chaînes secondaires
             do {
                 chainsRemoved = false;
                 let visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
@@ -232,8 +232,22 @@
                     });
                     chainCount++;
                     if (chainCount % 5 === 0) bombCount++;
+                    // Calcul du score
+                    toRemove.forEach(group => {
+                        const chainSize = toRemove.length / (toRemove.length / group.length); // Taille de chaque groupe
+                        if (isGravityChain) {
+                            score += 10; // Chaîne par gravité = 10 points
+                        } else if (chainSize > 5) {
+                            score += 10; // Chaîne > 5 = 10 points
+                        } else {
+                            score += 5; // Chaîne = 5 = 5 points
+                        }
+                    });
+                    isGravityChain = true; // Prochaines chaînes sont dues à la gravité
                     await animateGravity(calculateGravityMoves());
                     drawGrid();
+                } else {
+                    isGravityChain = false; // Réinitialiser si aucune chaîne n’est trouvée
                 }
             } while (chainsRemoved);
         }
@@ -281,16 +295,17 @@
         // Mettre à jour l'interface
         function updateUI() {
             document.getElementById("bombCount").textContent = bombCount;
-            document.getElementById("chainCount").textContent = chainCount;
+            document.getElementById("score").textContent = score; // Afficher le score
             document.getElementById("moveCount").textContent = moveCount;
         }
 
         // Fin du jeu
         function endGame() {
-            alert("Jeu terminé !");
+            alert("Jeu terminé ! Score final : " + score);
             grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
             bombCount = 1;
             chainCount = 0;
+            score = 0; // Réinitialiser le score
             moveCount = 0;
             nextBlock = getNewBlock();
             nextLine = getNewLine();
