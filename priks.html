@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Priks avec Score</title>
+    <title>Priks score 2</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -36,8 +36,8 @@
         const previewHeight = cellSize * 2;
         let grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
         let bombCount = 1;
-        let chainCount = 0; // Toujours utilisé pour les bombes, mais plus affiché
-        let score = 0; // Nouveau score
+        let chainCount = 0;
+        let score = 0;
         let moveCount = 0;
         let nextBlock = null;
         let blockPosition = 0;
@@ -190,7 +190,7 @@
         // Vérifier et supprimer les chaînes de 5 ou plus en cascade
         async function checkChains() {
             let chainsRemoved;
-            let isGravityChain = false; // Pour détecter les chaînes secondaires
+            let isGravityChain = false; // Détecter les chaînes secondaires
             do {
                 chainsRemoved = false;
                 let visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
@@ -219,6 +219,14 @@
                             dfs(row, col, grid[row][col], group);
                             if (group.length >= 5) {
                                 toRemove = toRemove.concat(group);
+                                // Calcul du score pour cette chaîne
+                                if (isGravityChain) {
+                                    score += 10; // Chaîne par gravité = 10 points
+                                } else if (group.length > 5) {
+                                    score += 10; // Chaîne > 5 = 10 points
+                                } else {
+                                    score += 5; // Chaîne = 5 = 5 points
+                                }
                             }
                         }
                     }
@@ -232,22 +240,11 @@
                     });
                     chainCount++;
                     if (chainCount % 5 === 0) bombCount++;
-                    // Calcul du score
-                    toRemove.forEach(group => {
-                        const chainSize = toRemove.length / (toRemove.length / group.length); // Taille de chaque groupe
-                        if (isGravityChain) {
-                            score += 10; // Chaîne par gravité = 10 points
-                        } else if (chainSize > 5) {
-                            score += 10; // Chaîne > 5 = 10 points
-                        } else {
-                            score += 5; // Chaîne = 5 = 5 points
-                        }
-                    });
                     isGravityChain = true; // Prochaines chaînes sont dues à la gravité
                     await animateGravity(calculateGravityMoves());
                     drawGrid();
                 } else {
-                    isGravityChain = false; // Réinitialiser si aucune chaîne n’est trouvée
+                    isGravityChain = false; // Réinitialiser si aucune chaîne
                 }
             } while (chainsRemoved);
         }
@@ -295,7 +292,7 @@
         // Mettre à jour l'interface
         function updateUI() {
             document.getElementById("bombCount").textContent = bombCount;
-            document.getElementById("score").textContent = score; // Afficher le score
+            document.getElementById("score").textContent = score;
             document.getElementById("moveCount").textContent = moveCount;
         }
 
@@ -305,7 +302,7 @@
             grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
             bombCount = 1;
             chainCount = 0;
-            score = 0; // Réinitialiser le score
+            score = 0;
             moveCount = 0;
             nextBlock = getNewBlock();
             nextLine = getNewLine();
