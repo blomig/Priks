@@ -120,7 +120,7 @@
                 grid[row][col] = nextLine[col];
             }
             drawGrid();
-            checkChains(); // Vérifier les chaînes après l’ajout
+            checkChains();
         }
 
         // Vérifier et supprimer les chaînes de 5 ou plus en cascade
@@ -137,14 +137,14 @@
                     }
                     visited[row][col] = true;
                     group.push([row, col]);
-                    dfs(row - 1, col, color, group); // Haut
-                    dfs(row + 1, col, color, group); // Bas
-                    dfs(row, col - 1, color, group); // Gauche
-                    dfs(row, col + 1, color, group); // Droite
-                    dfs(row - 1, col - 1, color, group); // Diagonale haut-gauche
-                    dfs(row - 1, col + 1, color, group); // Diagonale haut-droite
-                    dfs(row + 1, col - 1, color, group); // Diagonale bas-gauche
-                    dfs(row + 1, col + 1, color, group); // Diagonale bas-droite
+                    dfs(row - 1, col, color, group);
+                    dfs(row + 1, col, color, group);
+                    dfs(row, col - 1, color, group);
+                    dfs(row, col + 1, color, group);
+                    dfs(row - 1, col - 1, color, group);
+                    dfs(row - 1, col + 1, color, group);
+                    dfs(row + 1, col - 1, color, group);
+                    dfs(row + 1, col + 1, color, group);
                 }
 
                 for (let row = 0; row < gridSize; row++) {
@@ -152,8 +152,9 @@
                         if (grid[row][col] && grid[row][col] !== priksColor && !visited[row][col]) {
                             let group = [];
                             dfs(row, col, grid[row][col], group);
-                            if (group.length >= 5) {
+                            if (group.length >= 5) { // Supprimer uniquement si 5 ou plus
                                 toRemove = toRemove.concat(group);
+                                chainsRemoved = true;
                             }
                         }
                     }
@@ -163,13 +164,12 @@
                     toRemove.forEach(([row, col]) => {
                         grid[row][col] = null;
                     });
-                    chainsRemoved = true;
                     chainCount++;
                     if (chainCount % 5 === 0) bombCount++;
                     applyGravity();
                     drawGrid();
                 }
-            } while (chainsRemoved); // Continuer tant que des chaînes sont supprimées
+            } while (chainsRemoved);
         }
 
         // Appliquer la gravité inversée (vers le haut)
@@ -198,7 +198,7 @@
                 }
             }
             applyGravity();
-            checkChains(); // Vérifier les chaînes après une bombe aussi
+            checkChains();
             drawGrid();
             updateUI();
         }
