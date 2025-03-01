@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Priks Bombe</title>
+    <title>Priks canon à blox</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -42,11 +42,11 @@
         let nextBlock = null;
         let blockPosition = 0;
         let nextLine = null;
-        let isBombSelected = false; // Nouvelle variable pour suivre l’état de la bombe
+        let isBombSelected = false;
 
         const colors = ["red", "blue", "green", "yellow", "purple", "orange"];
         const priksColor = "gray";
-        const bombColor = "black"; // Couleur pour représenter la bombe
+        const bombColor = "black";
 
         // Générer un nouveau Blox
         function getNewBlock() {
@@ -81,7 +81,6 @@
                 }
             }
             ctx.strokeRect(0, gridSize * cellSize, canvas.width, previewHeight);
-            // Afficher soit le nextBlock, soit la bombe si sélectionnée
             ctx.fillStyle = isBombSelected ? bombColor : nextBlock;
             ctx.fillRect(blockPosition * cellSize + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
             if (moveCount % 10 === 9) {
@@ -146,7 +145,6 @@
                 return;
             }
             if (isBombSelected) {
-                // Lancer une bombe
                 await animateBlock(col, gridSize * cellSize, row, true);
                 for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
                     for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
@@ -158,7 +156,6 @@
                 await animateGravity(calculateGravityMoves());
                 await checkChains();
             } else {
-                // Lancer un Blox normal
                 await animateBlock(col, gridSize * cellSize, row);
                 grid[row][col] = nextBlock;
                 moveCount++;
@@ -169,7 +166,7 @@
                     nextLine = getNewLine();
                 }
             }
-            blockPosition = 0;
+            // Ne pas réinitialiser blockPosition ici, il reste où le dernier Blox/bombe a été envoyé
             drawGrid();
             updateUI();
         }
@@ -306,7 +303,7 @@
             moveCount = 0;
             nextBlock = getNewBlock();
             nextLine = getNewLine();
-            isBombSelected = false; // Réinitialiser l’état de la bombe
+            isBombSelected = false;
             blockPosition = 0;
             drawGrid();
             updateUI();
