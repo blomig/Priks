@@ -33,7 +33,7 @@
         const ctx = canvas.getContext("2d");
         const gridSize = 8;
         const cellSize = canvas.width / gridSize;
-        const previewHeight = cellSize * 2; // Deux lignes : prochain Blox + prochaine ligne
+        const previewHeight = cellSize * 2;
         let grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
         let bombCount = 1;
         let chainCount = 0;
@@ -60,12 +60,11 @@
         }
 
         if (!nextBlock) nextBlock = getNewBlock();
-        if (!nextLine) nextLine = getNewLine(); // Initialiser la première ligne
+        if (!nextLine) nextLine = getNewLine();
 
-        // Dessiner la grille, le prochain Blox et la prochaine ligne (si tour 9)
+        // Dessiner la grille, le prochain Blox et la prochaine ligne
         function drawGrid() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // Grille principale
             for (let row = 0; row < gridSize; row++) {
                 for (let col = 0; col < gridSize; col++) {
                     ctx.strokeRect(col * cellSize, row * cellSize, cellSize, cellSize);
@@ -75,12 +74,9 @@
                     }
                 }
             }
-            // Zone de prévisualisation
             ctx.strokeRect(0, gridSize * cellSize, canvas.width, previewHeight);
-            // Prochain Blox
             ctx.fillStyle = nextBlock;
             ctx.fillRect(blockPosition * cellSize + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
-            // Prochaine ligne (affichée au tour 9)
             if (moveCount % 10 === 9) {
                 for (let col = 0; col < gridSize; col++) {
                     ctx.fillStyle = nextLine[col];
@@ -105,7 +101,7 @@
             checkChains();
             if (moveCount % 10 === 0 && moveCount > 0) {
                 addRandomLine();
-                nextLine = getNewLine(); // Générer la prochaine ligne après utilisation
+                nextLine = getNewLine();
             }
             drawGrid();
             updateUI();
@@ -123,6 +119,7 @@
                 }
                 grid[row][col] = nextLine[col];
             }
+            checkChains(); // Vérifier les chaînes après l’ajout de la ligne
             drawGrid();
         }
 
@@ -131,27 +128,31 @@
             let visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
             let toRemove = [];
 
-            function dfs(row, col, color, group) {
-                if (row < 0 || row >= gridSize || col < 0 || col >= gridSize || visited[row][col] || grid[row][col] !== color) {
-                    return;
+            function dfs(row, col, color) {
+                let group = [];
+                function explore(r, c) {
+                    if (r < 0 || r >= gridSize || c < 0 || c >= gridSize || visited[r][c] || grid[r][c] !== color) {
+                        return;
+                    }
+                    visited[r][c] = true;
+                    group.push([r, c]);
+                    explore(r - 1, c); // Haut
+                    explore(r + 1, c); // Bas
+                    explore(r, c - 1); // Gauche
+                    explore(r, c + 1); // Droite
+                    explore(r - 1, c - 1); // Diagonale haut-gauche
+                    explore(r - 1, c + 1); // Diagonale haut-droite
+                    explore(r + 1, c - 1); // Diagonale bas-gauche
+                    explore(r + 1, c + 1); // Diagonale bas-droite
                 }
-                visited[row][col] = true;
-                group.push([row, col]);
-                dfs(row - 1, col, color, group);
-                dfs(row + 1, col, color, group);
-                dfs(row, col - 1, color, group);
-                dfs(row, col + 1, color, group);
-                dfs(row - 1, col - 1, color, group);
-                dfs(row - 1, col + 1, color, group);
-                dfs(row + 1, col - 1, color, group);
-                dfs(row + 1, col + 1, color, group);
+                explore(row, col);
+                return group;
             }
 
             for (let row = 0; row < gridSize; row++) {
                 for (let col = 0; col < gridSize; col++) {
                     if (grid[row][col] && grid[row][col] !== priksColor && !visited[row][col]) {
-                        let group = [];
-                        dfs(row, col, grid[row][col], group);
+                        let group = dfs(row, col, grid[row][col]);
                         if (group.length >= 5) {
                             toRemove = toRemove.concat(group);
                         }
@@ -164,6 +165,7 @@
                 chainCount++;
                 if (chainCount % 5 === 0) bombCount++;
                 applyGravity();
+                drawGrid(); // Mise à jour visuelle après suppression
             }
         }
 
