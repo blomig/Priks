@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Priks bombe anime</title>
+    <title>Priks V2</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -16,6 +16,13 @@
         #info {
             margin-top: 10px;
         }
+        #rules {
+            font-size: 0.9em; /* Police légèrement plus petite */
+            margin-top: 5px;
+            max-width: 600px; /* Limite la largeur pour la lisibilité */
+            margin-left: auto;
+            margin-right: auto;
+        }
     </style>
 </head>
 <body>
@@ -26,6 +33,7 @@
             <p>Score : <span id="score">0</span></p>
             <p>Coups joués : <span id="moveCount">0</span></p>
             <p>Utilisez ← et → pour déplacer, Espace pour placer, B pour sélectionner une bombe</p>
+            <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés. Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 5 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
         </div>
     </div>
     <script>
@@ -146,7 +154,6 @@
             }
             if (isBombSelected) {
                 await animateBlock(col, gridSize * cellSize, row, true);
-                // Collecter les Blox à supprimer pour l’animation
                 let toRemove = [];
                 for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
                     for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
@@ -156,9 +163,8 @@
                     }
                 }
                 if (toRemove.length > 0) {
-                    await blinkBlocks(toRemove); // Clignotement avant suppression
+                    await blinkBlocks(toRemove);
                 }
-                // Appliquer la suppression après l’animation
                 for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
                     for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
                         grid[r][c] = null;
