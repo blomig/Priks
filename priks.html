@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Priks avec console</title>
+    <title>Priks beta</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -51,11 +51,14 @@
             return colors[Math.floor(Math.random() * colors.length)];
         }
 
-        // Générer une nouvelle ligne
+        // Générer une nouvelle ligne de 8 Blox
         function getNewLine() {
-            let newLine = colors.map(() => colors[Math.floor(Math.random() * colors.length)]);
+            let newLine = Array(gridSize); // Crée un tableau de 8 éléments
+            for (let i = 0; i < gridSize; i++) {
+                newLine[i] = colors[Math.floor(Math.random() * colors.length)];
+            }
             let priksCol = Math.floor(Math.random() * gridSize);
-            newLine[priksCol] = priksColor;
+            newLine[priksCol] = priksColor; // Remplace une position par un Priks
             return newLine;
         }
 
@@ -119,12 +122,8 @@
                 }
                 grid[row][col] = nextLine[col];
             }
-            console.log("Avant drawGrid - Ligne ajoutée :", nextLine);
-            console.log("Grille après ajout de la ligne :", grid.map(row => row.slice()));
             drawGrid();
-            console.log("Grille après checkChains (avant exécution) :", grid.map(row => row.slice()));
             checkChains();
-            console.log("Grille après checkChains (après exécution) :", grid.map(row => row.slice()));
         }
 
         // Vérifier et supprimer les chaînes de 5 ou plus en cascade
