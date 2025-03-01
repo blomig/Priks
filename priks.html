@@ -119,8 +119,8 @@
                 }
                 grid[row][col] = nextLine[col];
             }
-            checkChains(); // Vérifier les chaînes après l’ajout de la ligne
-            drawGrid();
+            drawGrid(); // Dessiner immédiatement après l’insertion
+            checkChains(); // Vérifier les chaînes après l’ajout
         }
 
         // Vérifier et supprimer les chaînes de 5 ou plus
@@ -161,11 +161,13 @@
             }
 
             if (toRemove.length > 0) {
-                toRemove.forEach(([row, col]) => grid[row][col] = null);
+                toRemove.forEach(([row, col]) => {
+                    grid[row][col] = null;
+                });
                 chainCount++;
                 if (chainCount % 5 === 0) bombCount++;
                 applyGravity();
-                drawGrid(); // Mise à jour visuelle après suppression
+                drawGrid();
             }
         }
 
