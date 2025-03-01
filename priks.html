@@ -20,7 +20,7 @@
 </head>
 <body>
     <div id="gameContainer">
-        <canvas id="gameCanvas" width="320" height="360"></canvas>
+        <canvas id="gameCanvas" width="320" height="400"></canvas>
         <div id="info">
             <p>Bombes restantes : <span id="bombCount">1</span></p>
             <p>Chaînes réussies : <span id="chainCount">0</span></p>
@@ -33,13 +33,14 @@
         const ctx = canvas.getContext("2d");
         const gridSize = 8;
         const cellSize = canvas.width / gridSize;
-        const previewHeight = cellSize;
+        const previewHeight = cellSize * 2; // Deux lignes : prochain Blox + prochaine ligne
         let grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
         let bombCount = 1;
         let chainCount = 0;
         let moveCount = 0;
         let nextBlock = null;
         let blockPosition = 0;
+        let nextLine = null;
 
         const colors = ["red", "blue", "green", "yellow", "purple", "orange"];
         const priksColor = "gray";
@@ -50,11 +51,21 @@
             return colors[Math.floor(Math.random() * colors.length)];
         }
 
-        if (!nextBlock) nextBlock = getNewBlock();
+        // Générer une nouvelle ligne
+        function getNewLine() {
+            let newLine = colors.map(() => colors[Math.floor(Math.random() * colors.length)]);
+            let priksCol = Math.floor(Math.random() * gridSize);
+            newLine[priksCol] = priksColor;
+            return newLine;
+        }
 
-        // Dessiner la grille et le prochain Blox
+        if (!nextBlock) nextBlock = getNewBlock();
+        if (!nextLine) nextLine = getNewLine(); // Initialiser la première ligne
+
+        // Dessiner la grille, le prochain Blox et la prochaine ligne (si tour 9)
         function drawGrid() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Grille principale
             for (let row = 0; row < gridSize; row++) {
                 for (let col = 0; col < gridSize; col++) {
                     ctx.strokeRect(col * cellSize, row * cellSize, cellSize, cellSize);
@@ -64,17 +75,26 @@
                     }
                 }
             }
+            // Zone de prévisualisation
             ctx.strokeRect(0, gridSize * cellSize, canvas.width, previewHeight);
+            // Prochain Blox
             ctx.fillStyle = nextBlock;
             ctx.fillRect(blockPosition * cellSize + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
+            // Prochaine ligne (affichée au tour 9)
+            if (moveCount % 10 === 9) {
+                for (let col = 0; col < gridSize; col++) {
+                    ctx.fillStyle = nextLine[col];
+                    ctx.fillRect(col * cellSize + 2, (gridSize + 1) * cellSize + 2, cellSize - 4, cellSize - 4);
+                }
+            }
         }
 
         // Ajouter un Blox dans une colonne
         function addBlock(col) {
             let row = gridSize - 1;
             while (row >= 0 && !grid[row][col]) row--;
-            row++; // Position juste au-dessus du dernier Blox
-            if (row >= gridSize) { // Colonne pleine
+            row++;
+            if (row >= gridSize) {
                 endGame();
                 return;
             }
@@ -85,27 +105,23 @@
             checkChains();
             if (moveCount % 10 === 0 && moveCount > 0) {
                 addRandomLine();
+                nextLine = getNewLine(); // Générer la prochaine ligne après utilisation
             }
             drawGrid();
             updateUI();
         }
 
-        // Ajouter une ligne complète avec 1 Priks, chaque Blox montant jusqu'à une case occupée
+        // Ajouter la ligne complète avec 1 Priks
         function addRandomLine() {
-            let newLine = colors.map(() => colors[Math.floor(Math.random() * colors.length)]);
-            let priksCol = Math.floor(Math.random() * gridSize);
-            newLine[priksCol] = priksColor;
-
-            // Placer chaque Blox de la ligne dans sa colonne
             for (let col = 0; col < gridSize; col++) {
                 let row = gridSize - 1;
                 while (row >= 0 && !grid[row][col]) row--;
-                row++; // Position juste au-dessus du dernier Blox
-                if (row >= gridSize) { // Si la colonne est pleine
+                row++;
+                if (row >= gridSize) {
                     endGame();
                     return;
                 }
-                grid[row][col] = newLine[col];
+                grid[row][col] = nextLine[col];
             }
             drawGrid();
         }
@@ -121,14 +137,14 @@
                 }
                 visited[row][col] = true;
                 group.push([row, col]);
-                dfs(row - 1, col, color, group); // Haut
-                dfs(row + 1, col, color, group); // Bas
-                dfs(row, col - 1, color, group); // Gauche
-                dfs(row, col + 1, color, group); // Droite
-                dfs(row - 1, col - 1, color, group); // Diagonale haut-gauche
-                dfs(row - 1, col + 1, color, group); // Diagonale haut-droite
-                dfs(row + 1, col - 1, color, group); // Diagonale bas-gauche
-                dfs(row + 1, col + 1, color, group); // Diagonale bas-droite
+                dfs(row - 1, col, color, group);
+                dfs(row + 1, col, color, group);
+                dfs(row, col - 1, color, group);
+                dfs(row, col + 1, color, group);
+                dfs(row - 1, col - 1, color, group);
+                dfs(row - 1, col + 1, color, group);
+                dfs(row + 1, col - 1, color, group);
+                dfs(row + 1, col + 1, color, group);
             }
 
             for (let row = 0; row < gridSize; row++) {
@@ -196,6 +212,7 @@
             chainCount = 0;
             moveCount = 0;
             nextBlock = getNewBlock();
+            nextLine = getNewLine();
             blockPosition = 0;
             drawGrid();
             updateUI();
