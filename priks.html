@@ -119,7 +119,7 @@
                 }
                 grid[row][col] = nextLine[col];
             }
-            drawGrid(); // Dessiner immédiatement après l’insertion
+            drawGrid();
             checkChains(); // Vérifier les chaînes après l’ajout
         }
 
@@ -128,31 +128,28 @@
             let visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
             let toRemove = [];
 
-            function dfs(row, col, color) {
-                let group = [];
-                function explore(r, c) {
-                    if (r < 0 || r >= gridSize || c < 0 || c >= gridSize || visited[r][c] || grid[r][c] !== color) {
-                        return;
-                    }
-                    visited[r][c] = true;
-                    group.push([r, c]);
-                    explore(r - 1, c); // Haut
-                    explore(r + 1, c); // Bas
-                    explore(r, c - 1); // Gauche
-                    explore(r, c + 1); // Droite
-                    explore(r - 1, c - 1); // Diagonale haut-gauche
-                    explore(r - 1, c + 1); // Diagonale haut-droite
-                    explore(r + 1, c - 1); // Diagonale bas-gauche
-                    explore(r + 1, c + 1); // Diagonale bas-droite
+            function dfs(row, col, color, group) {
+                if (row < 0 || row >= gridSize || col < 0 || col >= gridSize || visited[row][col] || grid[row][col] !== color) {
+                    return;
                 }
-                explore(row, col);
-                return group;
+                visited[row][col] = true;
+                group.push([row, col]);
+                // Explorer tous les voisins (8 directions)
+                dfs(row - 1, col, color, group); // Haut
+                dfs(row + 1, col, color, group); // Bas
+                dfs(row, col - 1, color, group); // Gauche
+                dfs(row, col + 1, color, group); // Droite
+                dfs(row - 1, col - 1, color, group); // Diagonale haut-gauche
+                dfs(row - 1, col + 1, color, group); // Diagonale haut-droite
+                dfs(row + 1, col - 1, color, group); // Diagonale bas-gauche
+                dfs(row + 1, col + 1, color, group); // Diagonale bas-droite
             }
 
             for (let row = 0; row < gridSize; row++) {
                 for (let col = 0; col < gridSize; col++) {
                     if (grid[row][col] && grid[row][col] !== priksColor && !visited[row][col]) {
-                        let group = dfs(row, col, grid[row][col]);
+                        let group = [];
+                        dfs(row, col, grid[row][col], group);
                         if (group.length >= 5) {
                             toRemove = toRemove.concat(group);
                         }
