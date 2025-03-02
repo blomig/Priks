@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Priks</title>
+    <title>Priks V3</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -47,7 +47,7 @@
         }
         #highScores {
             position: absolute;
-            right: calc(50% - 400px); /* Décalé de 100px supplémentaires vers la droite */
+            right: calc(50% - 400px);
             top: 0;
             width: 150px;
             text-align: left;
@@ -72,7 +72,7 @@
         </div>
         <div id="info">
             <p>Utilisez ← et → pour déplacer, Espace pour placer, B pour sélectionner une bombe</p>
-            <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés. Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 5 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
+            <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés sauf par bombes ou chaînes adjacentes (3→2→1→disparition). Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 5 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
         </div>
         <div id="underGrid">
             <div id="scoreDisplay">Score : <span id="score">0</span></div>
@@ -116,7 +116,7 @@
 
         // Générer un nouveau Blox
         function getNewBlock() {
-            if (Math.random() < 0.1) return priksColor;
+            if (Math.random() < 0.1) return [priksColor, 3]; // Priks avec compteur 3
             return colors[Math.floor(Math.random() * colors.length)];
         }
 
@@ -127,7 +127,7 @@
                 newLine[i] = colors[Math.floor(Math.random() * colors.length)];
             }
             let priksCol = Math.floor(Math.random() * gridSize);
-            newLine[priksCol] = priksColor;
+            newLine[priksCol] = [priksColor, 3]; // Priks avec compteur 3
             return newLine;
         }
 
@@ -169,36 +169,79 @@
             }
         }
 
-        // Dessiner la grille avec images
+        // Dessiner la grille avec images et compteurs pour les Priks
         function drawGrid(movingBlocks = []) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (let row = 0; row < gridSize; row++) {
                 for (let col = 0; col < gridSize; col++) {
                     ctx.strokeRect(col * cellSize + 40, row * cellSize, cellSize, cellSize);
-                    if (grid[row][col] && images[grid[row][col]]) {
-                        ctx.drawImage(images[grid[row][col]], col * cellSize + 40 + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
+                    if (grid[row][col]) {
+                        const block = grid[row][col];
+                        const color = Array.isArray(block) ? block[0] : block;
+                        if (images[color] && images[color].complete) {
+                            ctx.drawImage(images[color], col * cellSize + 40 + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
+                            if (Array.isArray(block) && block[0] === priksColor) {
+                                ctx.fillStyle = "white";
+                                ctx.font = "16px Arial";
+                                ctx.textAlign = "center";
+                                ctx.textBaseline = "middle";
+                                ctx.fillText(block[1], col * cellSize + 40 + cellSize / 2, row * cellSize + cellSize / 2);
+                            }
+                        }
                     }
                 }
             }
             ctx.strokeRect(40, gridSize * cellSize, 320, previewHeight);
-            const previewImage = isBombSelected ? images[bombColor] : images[nextBlock];
+            const previewImage = isBombSelected ? images[bombColor] : images[nextBlock] && (Array.isArray(nextBlock) ? images[nextBlock[0]] : images[nextBlock]);
             if (previewImage && previewImage.complete) {
                 ctx.drawImage(previewImage, blockPosition * cellSize + 40 + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
+                if (Array.isArray(nextBlock) && nextBlock[0] === priksColor) {
+                    ctx.fillStyle = "white";
+                    ctx.font = "16px Arial";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(nextBlock[1], blockPosition * cellSize + 40 + cellSize / 2, gridSize * cellSize + cellSize / 2);
+                }
             }
             if (moveCount % 10 === 9) {
                 for (let col = 0; col < gridSize; col++) {
-                    if (images[nextLine[col]] && images[nextLine[col]].complete) {
-                        ctx.drawImage(images[nextLine[col]], col * cellSize + 40 + 2, (gridSize + 1) * cellSize + 2, cellSize - 4, cellSize - 4);
+                    const lineBlock = nextLine[col];
+                    const lineColor = Array.isArray(lineBlock) ? lineBlock[0] : lineBlock;
+                    if (images[lineColor] && images[lineColor].complete) {
+                        ctx.drawImage(images[lineColor], col * cellSize + 40 + 2, (gridSize + 1) * cellSize + 2, cellSize - 4, cellSize - 4);
+                        if (Array.isArray(lineBlock) && lineBlock[0] === priksColor) {
+                            ctx.fillStyle = "white";
+                            ctx.font = "16px Arial";
+                            ctx.textAlign = "center";
+                            ctx.textBaseline = "middle";
+                            ctx.fillText(lineBlock[1], col * cellSize + 40 + cellSize / 2, (gridSize + 1) * cellSize + cellSize / 2);
+                        }
                     }
                 }
             }
             movingBlocks.forEach(({ x, y, color }) => {
-                if (images[color] && images[color].complete) {
-                    ctx.drawImage(images[color], x + 2, y + 2, cellSize - 4, cellSize - 4);
+                const moveColor = Array.isArray(color) ? color[0] : color;
+                if (images[moveColor] && images[moveColor].complete) {
+                    ctx.drawImage(images[moveColor], x + 2, y + 2, cellSize - 4, cellSize - 4);
+                    if (Array.isArray(color) && color[0] === priksColor) {
+                        ctx.fillStyle = "white";
+                        ctx.font = "16px Arial";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.fillText(color[1], x + cellSize / 2, y + cellSize / 2);
+                    }
                 }
             });
             if (images[nextNextBlock] && images[nextNextBlock].complete) {
-                ctx.drawImage(images[nextNextBlock], 2, gridSize * cellSize + 2, 36, 36);
+                const nextNextColor = Array.isArray(nextNextBlock) ? nextNextBlock[0] : nextNextBlock;
+                ctx.drawImage(images[nextNextColor], 2, gridSize * cellSize + 2, 36, 36);
+                if (Array.isArray(nextNextBlock) && nextNextBlock[0] === priksColor) {
+                    ctx.fillStyle = "white";
+                    ctx.font = "16px Arial";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(nextNextBlock[1], 2 + 18, gridSize * cellSize + 20);
+                }
             }
         }
 
@@ -321,7 +364,7 @@
             }
         }
 
-        // Vérifier et supprimer les chaînes de 5 ou plus en cascade
+        // Vérifier et supprimer les chaînes de 5 ou plus en cascade, avec mise à jour des Priks
         async function checkChains() {
             let chainsRemoved;
             let isGravityChain = false;
@@ -331,7 +374,7 @@
                 let toRemove = [];
 
                 function dfs(row, col, color, group) {
-                    if (row < 0 || row >= gridSize || col < 0 || col >= gridSize || visited[row][col] || grid[row][col] !== color) {
+                    if (row < 0 || row >= gridSize || col < 0 || col >= gridSize || visited[row][col] || (Array.isArray(grid[row][col]) ? grid[row][col][0] : grid[row][col]) !== color) {
                         return;
                     }
                     visited[row][col] = true;
@@ -348,18 +391,12 @@
 
                 for (let row = 0; row < gridSize; row++) {
                     for (let col = 0; col < gridSize; col++) {
-                        if (grid[row][col] && grid[row][col] !== priksColor && !visited[row][col]) {
+                        if (grid[row][col] && !visited[row][col] && (!Array.isArray(grid[row][col]) || grid[row][col][0] !== priksColor)) {
                             let group = [];
-                            dfs(row, col, grid[row][col], group);
+                            const color = Array.isArray(grid[row][col]) ? grid[row][col][0] : grid[row][col];
+                            dfs(row, col, color, group);
                             if (group.length >= 5) {
                                 toRemove = toRemove.concat(group);
-                                if (isGravityChain) {
-                                    score += 10;
-                                } else if (group.length > 5) {
-                                    score += 10;
-                                } else {
-                                    score += 5;
-                                }
                             }
                         }
                     }
@@ -368,9 +405,39 @@
                 if (toRemove.length > 0) {
                     chainsRemoved = true;
                     await blinkBlocks(toRemove);
+
+                    // Mettre à jour les Priks adjacents
+                    let priksToRemove = [];
+                    toRemove.forEach(([row, col]) => {
+                        const directions = [
+                            [-1, 0], [1, 0], [0, -1], [0, 1], // Haut, bas, gauche, droite
+                            [-1, -1], [-1, 1], [1, -1], [1, 1] // Diagonales
+                        ];
+                        directions.forEach(([dr, dc]) => {
+                            const r = row + dr;
+                            const c = col + dc;
+                            if (r >= 0 && r < gridSize && c >= 0 && c < gridSize && grid[r][c] && Array.isArray(grid[r][c]) && grid[r][c][0] === priksColor) {
+                                grid[r][c][1]--; // Diminuer le compteur
+                                if (grid[r][c][1] <= 0) {
+                                    priksToRemove.push([r, c]);
+                                }
+                            }
+                        });
+                    });
+
+                    // Supprimer les Blox de la chaîne
                     toRemove.forEach(([row, col]) => {
                         grid[row][col] = null;
                     });
+
+                    // Supprimer les Priks dont le compteur atteint 0
+                    if (priksToRemove.length > 0) {
+                        await blinkBlocks(priksToRemove);
+                        priksToRemove.forEach(([row, col]) => {
+                            grid[row][col] = null;
+                        });
+                    }
+
                     chainCount++;
                     if (chainCount % 5 === 0) bombCount++;
                     isGravityChain = true;
