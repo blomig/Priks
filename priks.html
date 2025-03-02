@@ -116,7 +116,7 @@
 
         // Générer un nouveau Blox
         function getNewBlock() {
-            if (Math.random() < 0.1) return [priksColor, 5]; // Priks avec compteur 5
+            if (Math.random() < 0.1) return [priksColor, 5];
             return colors[Math.floor(Math.random() * colors.length)];
         }
 
@@ -127,7 +127,7 @@
                 newLine[i] = colors[Math.floor(Math.random() * colors.length)];
             }
             let priksCol = Math.floor(Math.random() * gridSize);
-            newLine[priksCol] = [priksColor, 5]; // Priks avec compteur 5
+            newLine[priksCol] = [priksColor, 5];
             return newLine;
         }
 
@@ -392,12 +392,20 @@
 
                 for (let row = 0; row < gridSize; row++) {
                     for (let col = 0; col < gridSize; col++) {
-                        if (grid[row][col] && !visited[row][col] && (!Array.isArray(grid[row][col]) || grid[row][col][0] !== priksColor)) {
+                        if (grid[row][col] && !visited[row][col] && !Array.isArray(grid[row][col])) { // Ne pas inclure les Priks dans les chaînes
                             let group = [];
-                            const color = Array.isArray(grid[row][col]) ? grid[row][col][0] : grid[row][col];
+                            const color = grid[row][col];
                             dfs(row, col, color, group);
                             if (group.length >= 5) {
                                 toRemove = toRemove.concat(group);
+                                // Ajouter les points ici pour chaque chaîne
+                                if (isGravityChain) {
+                                    score += 10;
+                                } else if (group.length > 5) {
+                                    score += 10;
+                                } else {
+                                    score += 5;
+                                }
                             }
                         }
                     }
