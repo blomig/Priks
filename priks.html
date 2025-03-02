@@ -72,7 +72,7 @@
         </div>
         <div id="info">
             <p>Utilisez ← et → pour déplacer, Espace pour placer, B pour sélectionner une bombe</p>
-            <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés sauf par bombes ou chaînes adjacentes (3→2→1→disparition). Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 5 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
+            <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés sauf par bombes ou chaînes adjacentes (5→4→3→2→1→disparition). Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 5 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
         </div>
         <div id="underGrid">
             <div id="scoreDisplay">Score : <span id="score">0</span></div>
@@ -116,7 +116,7 @@
 
         // Générer un nouveau Blox
         function getNewBlock() {
-            if (Math.random() < 0.1) return [priksColor, 3]; // Priks avec compteur 3
+            if (Math.random() < 0.1) return [priksColor, 5]; // Priks avec compteur 5
             return colors[Math.floor(Math.random() * colors.length)];
         }
 
@@ -127,7 +127,7 @@
                 newLine[i] = colors[Math.floor(Math.random() * colors.length)];
             }
             let priksCol = Math.floor(Math.random() * gridSize);
-            newLine[priksCol] = [priksColor, 3]; // Priks avec compteur 3
+            newLine[priksCol] = [priksColor, 5]; // Priks avec compteur 5
             return newLine;
         }
 
@@ -192,15 +192,16 @@
                 }
             }
             ctx.strokeRect(40, gridSize * cellSize, 320, previewHeight);
-            const previewImage = isBombSelected ? images[bombColor] : images[nextBlock] && (Array.isArray(nextBlock) ? images[nextBlock[0]] : images[nextBlock]);
-            if (previewImage && previewImage.complete) {
-                ctx.drawImage(previewImage, blockPosition * cellSize + 40 + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
-                if (Array.isArray(nextBlock) && nextBlock[0] === priksColor) {
+            const previewBlock = isBombSelected ? bombColor : nextBlock;
+            const previewColor = Array.isArray(previewBlock) ? previewBlock[0] : previewBlock;
+            if (images[previewColor] && images[previewColor].complete) {
+                ctx.drawImage(images[previewColor], blockPosition * cellSize + 40 + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
+                if (Array.isArray(previewBlock) && previewBlock[0] === priksColor) {
                     ctx.fillStyle = "white";
                     ctx.font = "16px Arial";
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
-                    ctx.fillText(nextBlock[1], blockPosition * cellSize + 40 + cellSize / 2, gridSize * cellSize + cellSize / 2);
+                    ctx.fillText(previewBlock[1], blockPosition * cellSize + 40 + cellSize / 2, gridSize * cellSize + cellSize / 2);
                 }
             }
             if (moveCount % 10 === 9) {
@@ -232,8 +233,8 @@
                     }
                 }
             });
-            if (images[nextNextBlock] && images[nextNextBlock].complete) {
-                const nextNextColor = Array.isArray(nextNextBlock) ? nextNextBlock[0] : nextNextBlock;
+            const nextNextColor = Array.isArray(nextNextBlock) ? nextNextBlock[0] : nextNextBlock;
+            if (images[nextNextColor] && images[nextNextColor].complete) {
                 ctx.drawImage(images[nextNextColor], 2, gridSize * cellSize + 2, 36, 36);
                 if (Array.isArray(nextNextBlock) && nextNextBlock[0] === priksColor) {
                     ctx.fillStyle = "white";
@@ -410,14 +411,14 @@
                     let priksToRemove = [];
                     toRemove.forEach(([row, col]) => {
                         const directions = [
-                            [-1, 0], [1, 0], [0, -1], [0, 1], // Haut, bas, gauche, droite
-                            [-1, -1], [-1, 1], [1, -1], [1, 1] // Diagonales
+                            [-1, 0], [1, 0], [0, -1], [0, 1],
+                            [-1, -1], [-1, 1], [1, -1], [1, 1]
                         ];
                         directions.forEach(([dr, dc]) => {
                             const r = row + dr;
                             const c = col + dc;
                             if (r >= 0 && r < gridSize && c >= 0 && c < gridSize && grid[r][c] && Array.isArray(grid[r][c]) && grid[r][c][0] === priksColor) {
-                                grid[r][c][1]--; // Diminuer le compteur
+                                grid[r][c][1]--;
                                 if (grid[r][c][1] <= 0) {
                                     priksToRemove.push([r, c]);
                                 }
