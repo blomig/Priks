@@ -12,6 +12,7 @@
         #gameContainer {
             text-align: center;
             font-family: Arial, sans-serif;
+            position: relative; /* Pour positionner la prévisualisation */
         }
         #info {
             margin-top: 10px;
@@ -26,11 +27,11 @@
         #underGrid {
             display: flex;
             justify-content: space-between;
-            width: 320px; /* Même largeur que le canvas */
+            width: 320px;
             margin: 5px auto 0;
         }
         #scoreDisplay {
-            font-size: 1.5em; /* Score plus gros */
+            font-size: 1.5em;
         }
         #bombDisplay {
             display: flex;
@@ -42,13 +43,22 @@
             margin-right: 5px;
         }
         #bombCount {
-            font-size: 1.5em; /* Chiffre des bombes plus gros */
+            font-size: 1.5em;
+        }
+        #nextNextPreview {
+            position: absolute;
+            left: calc(50% - 180px); /* À gauche du canvas (320/2 + 36 + marge) */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
         }
     </style>
 </head>
 <body>
     <div id="gameContainer">
         <canvas id="gameCanvas" width="320" height="400"></canvas>
+        <div id="nextNextPreview"></div> <!-- Zone pour le prochain Blox -->
         <div id="info">
             <p>Utilisez ← et → pour déplacer, Espace pour placer, B pour sélectionner une bombe</p>
             <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés. Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 5 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
@@ -73,6 +83,7 @@
         let score = 0;
         let moveCount = 0;
         let nextBlock = null;
+        let nextNextBlock = null; // Nouveau : Blox suivant
         let blockPosition = 0;
         let nextLine = null;
         let isBombSelected = false;
@@ -110,6 +121,7 @@
         }
 
         if (!nextBlock) nextBlock = getNewBlock();
+        if (!nextNextBlock) nextNextBlock = getNewBlock(); // Initialiser le prochain Blox
         if (!nextLine) nextLine = getNewLine();
 
         // Dessiner la grille avec images
@@ -140,6 +152,13 @@
                     ctx.drawImage(images[color], x + 2, y + 2, cellSize - 4, cellSize - 4);
                 }
             });
+            // Dessiner le prochain Blox à gauche
+            const nextNextCanvas = document.getElementById("nextNextPreview");
+            const nextNextCtx = nextNextCanvas.getContext("2d");
+            nextNextCtx.clearRect(0, 0, 36, 36);
+            if (images[nextNextBlock] && images[nextNextBlock].complete) {
+                nextNextCtx.drawImage(images[nextNextBlock], 0, 0, 36, 36);
+            }
         }
 
         // Animation pour un Blox ou une bombe jouée
@@ -217,7 +236,8 @@
                 await animateBlock(col, gridSize * cellSize, row);
                 grid[row][col] = nextBlock;
                 moveCount++;
-                nextBlock = getNewBlock();
+                nextBlock = nextNextBlock; // Décaler la file d’attente
+                nextNextBlock = getNewBlock(); // Générer le suivant
                 await checkChains();
                 if (moveCount % 10 === 0 && moveCount > 0) {
                     addRandomLine();
@@ -347,7 +367,6 @@
         function updateUI() {
             document.getElementById("bombCount").textContent = bombCount;
             document.getElementById("score").textContent = score;
-            // Plus de mise à jour pour moveCount
         }
 
         // Fin du jeu
@@ -359,6 +378,7 @@
             score = 0;
             moveCount = 0;
             nextBlock = getNewBlock();
+            nextNextBlock = getNewBlock();
             nextLine = getNewLine();
             isBombSelected = false;
             blockPosition = 0;
@@ -409,6 +429,12 @@
                 checkImagesLoaded();
             };
         });
+
+        // Ajouter un canvas pour la prévisualisation à gauche
+        const nextNextCanvas = document.createElement("canvas");
+        nextNextCanvas.width = 36;
+        nextNextCanvas.height = 36;
+        document.getElementById("nextNextPreview").appendChild(nextNextCanvas);
     </script>
 </body>
 </html>
