@@ -392,13 +392,12 @@
 
                 for (let row = 0; row < gridSize; row++) {
                     for (let col = 0; col < gridSize; col++) {
-                        if (grid[row][col] && !visited[row][col] && !Array.isArray(grid[row][col])) { // Ne pas inclure les Priks dans les chaînes
+                        if (grid[row][col] && !visited[row][col] && !Array.isArray(grid[row][col])) {
                             let group = [];
                             const color = grid[row][col];
                             dfs(row, col, color, group);
                             if (group.length >= 5) {
                                 toRemove = toRemove.concat(group);
-                                // Ajouter les points ici pour chaque chaîne
                                 if (isGravityChain) {
                                     score += 10;
                                 } else if (group.length > 5) {
@@ -415,7 +414,8 @@
                     chainsRemoved = true;
                     await blinkBlocks(toRemove);
 
-                    // Mettre à jour les Priks adjacents
+                    // Mettre à jour les Priks adjacents (une seule fois par chaîne)
+                    let priksAffected = new Set(); // Utiliser un Set pour éviter les doublons
                     let priksToRemove = [];
                     toRemove.forEach(([row, col]) => {
                         const directions = [
@@ -426,9 +426,13 @@
                             const r = row + dr;
                             const c = col + dc;
                             if (r >= 0 && r < gridSize && c >= 0 && c < gridSize && grid[r][c] && Array.isArray(grid[r][c]) && grid[r][c][0] === priksColor) {
-                                grid[r][c][1]--;
-                                if (grid[r][c][1] <= 0) {
-                                    priksToRemove.push([r, c]);
+                                const key = `${r},${c}`;
+                                if (!priksAffected.has(key)) {
+                                    priksAffected.add(key);
+                                    grid[r][c][1]--;
+                                    if (grid[r][c][1] <= 0) {
+                                        priksToRemove.push([r, c]);
+                                    }
                                 }
                             }
                         });
