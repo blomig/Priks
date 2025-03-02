@@ -12,7 +12,6 @@
         #gameContainer {
             text-align: center;
             font-family: Arial, sans-serif;
-            position: relative;
         }
         #info {
             margin-top: 10px;
@@ -49,7 +48,7 @@
 </head>
 <body>
     <div id="gameContainer">
-        <canvas id="gameCanvas" width="320" height="400"></canvas>
+        <canvas id="gameCanvas" width="360" height="400"></canvas> <!-- Élargir à 360px pour laisser de la place à gauche -->
         <div id="info">
             <p>Utilisez ← et → pour déplacer, Espace pour placer, B pour sélectionner une bombe</p>
             <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés. Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 5 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
@@ -66,7 +65,7 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const gridSize = 8;
-        const cellSize = canvas.width / gridSize;
+        const cellSize = 320 / gridSize; // Ajusté pour la grille principale (320px)
         const previewHeight = cellSize * 2;
         let grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
         let bombCount = 1;
@@ -74,7 +73,7 @@
         let score = 0;
         let moveCount = 0;
         let nextBlock = null;
-        let nextNextBlock = null; // Blox suivant
+        let nextNextBlock = null;
         let blockPosition = 0;
         let nextLine = null;
         let isBombSelected = false;
@@ -115,26 +114,27 @@
         if (!nextNextBlock) nextNextBlock = getNewBlock();
         if (!nextLine) nextLine = getNewLine();
 
-        // Dessiner la grille avec images, incluant la prévisualisation à gauche
+        // Dessiner la grille avec images
         function drawGrid(movingBlocks = []) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Grille principale décalée à droite pour laisser de la place à gauche
             for (let row = 0; row < gridSize; row++) {
                 for (let col = 0; col < gridSize; col++) {
-                    ctx.strokeRect(col * cellSize, row * cellSize, cellSize, cellSize);
+                    ctx.strokeRect(col * cellSize + 40, row * cellSize, cellSize, cellSize); // Décalage de 40px
                     if (grid[row][col] && images[grid[row][col]]) {
-                        ctx.drawImage(images[grid[row][col]], col * cellSize + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
+                        ctx.drawImage(images[grid[row][col]], col * cellSize + 40 + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
                     }
                 }
             }
-            ctx.strokeRect(0, gridSize * cellSize, canvas.width, previewHeight);
+            ctx.strokeRect(40, gridSize * cellSize, 320, previewHeight); // Zone de prévisualisation sous la grille
             const previewImage = isBombSelected ? images[bombColor] : images[nextBlock];
             if (previewImage && previewImage.complete) {
-                ctx.drawImage(previewImage, blockPosition * cellSize + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
+                ctx.drawImage(previewImage, blockPosition * cellSize + 40 + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
             }
             if (moveCount % 10 === 9) {
                 for (let col = 0; col < gridSize; col++) {
                     if (images[nextLine[col]] && images[nextLine[col]].complete) {
-                        ctx.drawImage(images[nextLine[col]], col * cellSize + 2, (gridSize + 1) * cellSize + 2, cellSize - 4, cellSize - 4);
+                        ctx.drawImage(images[nextLine[col]], col * cellSize + 40 + 2, (gridSize + 1) * cellSize + 2, cellSize - 4, cellSize - 4);
                     }
                 }
             }
@@ -143,9 +143,9 @@
                     ctx.drawImage(images[color], x + 2, y + 2, cellSize - 4, cellSize - 4);
                 }
             });
-            // Dessiner le prochain Blox à gauche du canvas
+            // Dessiner le prochain Blox à gauche dans la zone élargie
             if (images[nextNextBlock] && images[nextNextBlock].complete) {
-                ctx.drawImage(images[nextNextBlock], -50, canvas.height / 2 - 18, 36, 36); // Position à gauche
+                ctx.drawImage(images[nextNextBlock], 2, canvas.height / 2 - 18, 36, 36); // À gauche, centré verticalement
             }
         }
 
@@ -161,7 +161,7 @@
             let currentY = startY;
             const color = isBomb ? bombColor : nextBlock;
             for (let i = 0; i <= steps; i++) {
-                drawGrid([{ x: col * cellSize, y: currentY, color }]);
+                drawGrid([{ x: col * cellSize + 40, y: currentY, color }]); // Décalage de 40px
                 currentY -= stepDistance;
                 await new Promise(resolve => setTimeout(resolve, stepDuration));
             }
@@ -173,7 +173,7 @@
             const steps = 10;
             const stepDuration = duration / steps;
             const animatedBlocks = movingBlocks.map(({ startRow, endRow, col, color }) => ({
-                x: col * cellSize,
+                x: col * cellSize + 40, // Décalage de 40px
                 y: startRow * cellSize,
                 targetY: endRow * cellSize,
                 color,
@@ -259,8 +259,8 @@
 
             for (let i = 0; i < blinkCount; i++) {
                 blocks.forEach(([row, col]) => {
-                    ctx.clearRect(col * cellSize + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
-                    ctx.strokeRect(col * cellSize, row * cellSize, cellSize, cellSize);
+                    ctx.clearRect(col * cellSize + 40 + 2, row * cellSize + 2, cellSize - 4, cellSize - 4); // Décalage de 40px
+                    ctx.strokeRect(col * cellSize + 40, row * cellSize, cellSize, cellSize);
                 });
                 await new Promise(resolve => setTimeout(resolve, blinkDuration));
                 drawGrid();
