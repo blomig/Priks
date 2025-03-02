@@ -12,6 +12,7 @@
         #gameContainer {
             text-align: center;
             font-family: Arial, sans-serif;
+            position: relative;
         }
         #info {
             margin-top: 10px;
@@ -44,11 +45,31 @@
         #bombCount {
             font-size: 1.5em;
         }
+        #highScores {
+            position: absolute;
+            right: calc(50% - 250px); /* À droite du canvas (320/2 + marge) */
+            top: 0;
+            width: 150px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+        #highScores h3 {
+            margin: 0 0 5px 0;
+        }
+        #highScores ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
     <div id="gameContainer">
         <canvas id="gameCanvas" width="360" height="400"></canvas>
+        <div id="highScores">
+            <h3>Meilleurs Scores</h3>
+            <ul id="highScoreList"></ul>
+        </div>
         <div id="info">
             <p>Utilisez ← et → pour déplacer, Espace pour placer, B pour sélectionner une bombe</p>
             <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés. Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 5 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
@@ -114,6 +135,40 @@
         if (!nextNextBlock) nextNextBlock = getNewBlock();
         if (!nextLine) nextLine = getNewLine();
 
+        // Charger et afficher les hiscores
+        function loadHighScores() {
+            const highScores = JSON.parse(localStorage.getItem("priksHighScores")) || [];
+            return highScores.length ? highScores : [["AAAAA", 0], ["BBBBB", 0], ["CCCCC", 0], ["DDDDD", 0], ["EEEEE", 0], ["FFFFF", 0], ["GGGGG", 0], ["HHHHH", 0], ["IIIII", 0], ["JJJJJ", 0]];
+        }
+
+        function saveHighScores(highScores) {
+            localStorage.setItem("priksHighScores", JSON.stringify(highScores));
+        }
+
+        function updateHighScoresDisplay() {
+            const highScores = loadHighScores();
+            const list = document.getElementById("highScoreList");
+            list.innerHTML = "";
+            highScores.forEach(([name, score]) => {
+                const li = document.createElement("li");
+                li.textContent = `${name} : ${score}`;
+                list.appendChild(li);
+            });
+        }
+
+        function addHighScore(score) {
+            let highScores = loadHighScores();
+            let name = prompt("Nouveau highscore ! Entrez vos initiales (5 lettres max) :", "AAAAA");
+            if (name) {
+                name = name.slice(0, 5).padEnd(5, " ").toUpperCase(); // Limite à 5 lettres, complète avec espaces
+                highScores.push([name, score]);
+                highScores.sort((a, b) => b[1] - a[1]); // Tri décroissant par score
+                highScores = highScores.slice(0, 10); // Garder les 10 premiers
+                saveHighScores(highScores);
+                updateHighScoresDisplay();
+            }
+        }
+
         // Dessiner la grille avec images
         function drawGrid(movingBlocks = []) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -142,9 +197,8 @@
                     ctx.drawImage(images[color], x + 2, y + 2, cellSize - 4, cellSize - 4);
                 }
             });
-            // Dessiner le prochain Blox à gauche, aligné avec le canon
             if (images[nextNextBlock] && images[nextNextBlock].complete) {
-                ctx.drawImage(images[nextNextBlock], 2, gridSize * cellSize + 2, 36, 36); // Aligné avec le "next blox"
+                ctx.drawImage(images[nextNextBlock], 2, gridSize * cellSize + 2, 36, 36);
             }
         }
 
@@ -356,8 +410,12 @@
             document.getElementById("score").textContent = score;
         }
 
-        // Fin du jeu
+        // Fin du jeu avec gestion des hiscores
         function endGame() {
+            const highScores = loadHighScores();
+            if (score > highScores[9][1]) { // Si le score dépasse le 10e
+                addHighScore(score);
+            }
             alert("Jeu terminé ! Score final : " + score);
             grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
             bombCount = 1;
@@ -404,6 +462,7 @@
         function checkImagesLoaded() {
             imagesLoaded++;
             if (imagesLoaded === totalImages) {
+                updateHighScoresDisplay(); // Afficher les hiscores au démarrage
                 drawGrid();
                 updateUI();
             }
