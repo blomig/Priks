@@ -47,7 +47,7 @@
         }
         #highScores {
             position: absolute;
-            right: calc(50% - 250px); /* À droite du canvas (320/2 + marge) */
+            right: calc(50% - 300px); /* Décalé plus à droite pour être hors de la grille */
             top: 0;
             width: 150px;
             text-align: left;
@@ -160,10 +160,10 @@
             let highScores = loadHighScores();
             let name = prompt("Nouveau highscore ! Entrez vos initiales (5 lettres max) :", "AAAAA");
             if (name) {
-                name = name.slice(0, 5).padEnd(5, " ").toUpperCase(); // Limite à 5 lettres, complète avec espaces
+                name = name.slice(0, 5).padEnd(5, " ").toUpperCase();
                 highScores.push([name, score]);
-                highScores.sort((a, b) => b[1] - a[1]); // Tri décroissant par score
-                highScores = highScores.slice(0, 10); // Garder les 10 premiers
+                highScores.sort((a, b) => b[1] - a[1]);
+                highScores = highScores.slice(0, 10);
                 saveHighScores(highScores);
                 updateHighScoresDisplay();
             }
@@ -413,7 +413,7 @@
         // Fin du jeu avec gestion des hiscores
         function endGame() {
             const highScores = loadHighScores();
-            if (score > highScores[9][1]) { // Si le score dépasse le 10e
+            if (score > highScores[9][1]) {
                 addHighScore(score);
             }
             alert("Jeu terminé ! Score final : " + score);
@@ -462,7 +462,7 @@
         function checkImagesLoaded() {
             imagesLoaded++;
             if (imagesLoaded === totalImages) {
-                updateHighScoresDisplay(); // Afficher les hiscores au démarrage
+                updateHighScoresDisplay();
                 drawGrid();
                 updateUI();
             }
