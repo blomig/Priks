@@ -48,7 +48,7 @@
 </head>
 <body>
     <div id="gameContainer">
-        <canvas id="gameCanvas" width="360" height="400"></canvas> <!-- Élargir à 360px pour laisser de la place à gauche -->
+        <canvas id="gameCanvas" width="360" height="400"></canvas>
         <div id="info">
             <p>Utilisez ← et → pour déplacer, Espace pour placer, B pour sélectionner une bombe</p>
             <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés. Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 5 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
@@ -65,7 +65,7 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const gridSize = 8;
-        const cellSize = 320 / gridSize; // Ajusté pour la grille principale (320px)
+        const cellSize = 320 / gridSize;
         const previewHeight = cellSize * 2;
         let grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
         let bombCount = 1;
@@ -117,16 +117,15 @@
         // Dessiner la grille avec images
         function drawGrid(movingBlocks = []) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // Grille principale décalée à droite pour laisser de la place à gauche
             for (let row = 0; row < gridSize; row++) {
                 for (let col = 0; col < gridSize; col++) {
-                    ctx.strokeRect(col * cellSize + 40, row * cellSize, cellSize, cellSize); // Décalage de 40px
+                    ctx.strokeRect(col * cellSize + 40, row * cellSize, cellSize, cellSize);
                     if (grid[row][col] && images[grid[row][col]]) {
                         ctx.drawImage(images[grid[row][col]], col * cellSize + 40 + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
                     }
                 }
             }
-            ctx.strokeRect(40, gridSize * cellSize, 320, previewHeight); // Zone de prévisualisation sous la grille
+            ctx.strokeRect(40, gridSize * cellSize, 320, previewHeight);
             const previewImage = isBombSelected ? images[bombColor] : images[nextBlock];
             if (previewImage && previewImage.complete) {
                 ctx.drawImage(previewImage, blockPosition * cellSize + 40 + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
@@ -143,9 +142,9 @@
                     ctx.drawImage(images[color], x + 2, y + 2, cellSize - 4, cellSize - 4);
                 }
             });
-            // Dessiner le prochain Blox à gauche dans la zone élargie
+            // Dessiner le prochain Blox à gauche, aligné avec le canon
             if (images[nextNextBlock] && images[nextNextBlock].complete) {
-                ctx.drawImage(images[nextNextBlock], 2, canvas.height / 2 - 18, 36, 36); // À gauche, centré verticalement
+                ctx.drawImage(images[nextNextBlock], 2, gridSize * cellSize + 2, 36, 36); // Aligné avec le "next blox"
             }
         }
 
@@ -161,7 +160,7 @@
             let currentY = startY;
             const color = isBomb ? bombColor : nextBlock;
             for (let i = 0; i <= steps; i++) {
-                drawGrid([{ x: col * cellSize + 40, y: currentY, color }]); // Décalage de 40px
+                drawGrid([{ x: col * cellSize + 40, y: currentY, color }]);
                 currentY -= stepDistance;
                 await new Promise(resolve => setTimeout(resolve, stepDuration));
             }
@@ -173,7 +172,7 @@
             const steps = 10;
             const stepDuration = duration / steps;
             const animatedBlocks = movingBlocks.map(({ startRow, endRow, col, color }) => ({
-                x: col * cellSize + 40, // Décalage de 40px
+                x: col * cellSize + 40,
                 y: startRow * cellSize,
                 targetY: endRow * cellSize,
                 color,
@@ -259,7 +258,7 @@
 
             for (let i = 0; i < blinkCount; i++) {
                 blocks.forEach(([row, col]) => {
-                    ctx.clearRect(col * cellSize + 40 + 2, row * cellSize + 2, cellSize - 4, cellSize - 4); // Décalage de 40px
+                    ctx.clearRect(col * cellSize + 40 + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
                     ctx.strokeRect(col * cellSize + 40, row * cellSize, cellSize, cellSize);
                 });
                 await new Promise(resolve => setTimeout(resolve, blinkDuration));
