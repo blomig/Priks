@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Priks V2</title>
+    <title>Priks V2 images</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -17,9 +17,9 @@
             margin-top: 10px;
         }
         #rules {
-            font-size: 0.9em; /* Police légèrement plus petite */
+            font-size: 0.9em;
             margin-top: 5px;
-            max-width: 600px; /* Limite la largeur pour la lisibilité */
+            max-width: 600px;
             margin-left: auto;
             margin-right: auto;
         }
@@ -54,7 +54,18 @@
 
         const colors = ["red", "blue", "green", "yellow", "purple", "orange"];
         const priksColor = "gray";
-        const bombColor = "black";
+        const bombColor = "bomb";
+
+        // Charger les images
+        const images = {};
+        colors.forEach(color => {
+            images[color] = new Image();
+            images[color].src = `${color}.png`; // Exemple : "red.png"
+        });
+        images[priksColor] = new Image();
+        images[priksColor].src = "priks.png";
+        images[bombColor] = new Image();
+        images[bombColor].src = "bomb.png";
 
         // Générer un nouveau Blox
         function getNewBlock() {
@@ -76,30 +87,33 @@
         if (!nextBlock) nextBlock = getNewBlock();
         if (!nextLine) nextLine = getNewLine();
 
-        // Dessiner la grille, le prochain Blox ou la bombe, et la prochaine ligne
+        // Dessiner la grille avec images
         function drawGrid(movingBlocks = []) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (let row = 0; row < gridSize; row++) {
                 for (let col = 0; col < gridSize; col++) {
                     ctx.strokeRect(col * cellSize, row * cellSize, cellSize, cellSize);
-                    if (grid[row][col]) {
-                        ctx.fillStyle = grid[row][col];
-                        ctx.fillRect(col * cellSize + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
+                    if (grid[row][col] && images[grid[row][col]]) {
+                        ctx.drawImage(images[grid[row][col]], col * cellSize + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
                     }
                 }
             }
             ctx.strokeRect(0, gridSize * cellSize, canvas.width, previewHeight);
-            ctx.fillStyle = isBombSelected ? bombColor : nextBlock;
-            ctx.fillRect(blockPosition * cellSize + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
+            const previewImage = isBombSelected ? images[bombColor] : images[nextBlock];
+            if (previewImage) {
+                ctx.drawImage(previewImage, blockPosition * cellSize + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
+            }
             if (moveCount % 10 === 9) {
                 for (let col = 0; col < gridSize; col++) {
-                    ctx.fillStyle = nextLine[col];
-                    ctx.fillRect(col * cellSize + 2, (gridSize + 1) * cellSize + 2, cellSize - 4, cellSize - 4);
+                    if (images[nextLine[col]]) {
+                        ctx.drawImage(images[nextLine[col]], col * cellSize + 2, (gridSize + 1) * cellSize + 2, cellSize - 4, cellSize - 4);
+                    }
                 }
             }
             movingBlocks.forEach(({ x, y, color }) => {
-                ctx.fillStyle = color;
-                ctx.fillRect(x + 2, y + 2, cellSize - 4, cellSize - 4);
+                if (images[color]) {
+                    ctx.drawImage(images[color], x + 2, y + 2, cellSize - 4, cellSize - 4);
+                }
             });
         }
 
@@ -352,8 +366,19 @@
             }
         });
 
-        drawGrid();
-        updateUI();
+        // Attendre que les images soient chargées avant de dessiner
+        let imagesLoaded = 0;
+        const totalImages = colors.length + 2; // Couleurs + Priks + Bombe
+        Object.values(images).forEach(img => {
+            img.onload = () => {
+                imagesLoaded++;
+                if (imagesLoaded === totalImages) {
+                    drawGrid();
+                    updateUI();
+                }
+            };
+            img.onerror = () => console.error(`Erreur de chargement de l'image : ${img.src}`);
+        });
     </script>
 </body>
 </html>
