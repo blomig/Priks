@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Priks V2 images</title>
+    <title>Priks</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -23,17 +23,42 @@
             margin-left: auto;
             margin-right: auto;
         }
+        #underGrid {
+            display: flex;
+            justify-content: space-between;
+            width: 320px; /* Même largeur que le canvas */
+            margin: 5px auto 0;
+        }
+        #scoreDisplay {
+            font-size: 1.5em; /* Score plus gros */
+        }
+        #bombDisplay {
+            display: flex;
+            align-items: center;
+        }
+        #bombDisplay img {
+            width: 36px;
+            height: 36px;
+            margin-right: 5px;
+        }
+        #bombCount {
+            font-size: 1.5em; /* Chiffre des bombes plus gros */
+        }
     </style>
 </head>
 <body>
     <div id="gameContainer">
         <canvas id="gameCanvas" width="320" height="400"></canvas>
         <div id="info">
-            <p>Bombes restantes : <span id="bombCount">1</span></p>
-            <p>Score : <span id="score">0</span></p>
-            <p>Coups joués : <span id="moveCount">0</span></p>
             <p>Utilisez ← et → pour déplacer, Espace pour placer, B pour sélectionner une bombe</p>
             <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés. Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 5 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
+        </div>
+        <div id="underGrid">
+            <div id="scoreDisplay">Score : <span id="score">0</span></div>
+            <div id="bombDisplay">
+                <img src="bomb.png" alt="Bombes" id="bombIcon">
+                <span id="bombCount">1</span>
+            </div>
         </div>
     </div>
     <script>
@@ -60,7 +85,7 @@
         const images = {};
         colors.forEach(color => {
             images[color] = new Image();
-            images[color].src = `${color}.png`; // Exemple : "red.png"
+            images[color].src = `${color}.png`;
         });
         images[priksColor] = new Image();
         images[priksColor].src = "priks.png";
@@ -100,18 +125,18 @@
             }
             ctx.strokeRect(0, gridSize * cellSize, canvas.width, previewHeight);
             const previewImage = isBombSelected ? images[bombColor] : images[nextBlock];
-            if (previewImage) {
+            if (previewImage && previewImage.complete) {
                 ctx.drawImage(previewImage, blockPosition * cellSize + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
             }
             if (moveCount % 10 === 9) {
                 for (let col = 0; col < gridSize; col++) {
-                    if (images[nextLine[col]]) {
+                    if (images[nextLine[col]] && images[nextLine[col]].complete) {
                         ctx.drawImage(images[nextLine[col]], col * cellSize + 2, (gridSize + 1) * cellSize + 2, cellSize - 4, cellSize - 4);
                     }
                 }
             }
             movingBlocks.forEach(({ x, y, color }) => {
-                if (images[color]) {
+                if (images[color] && images[color].complete) {
                     ctx.drawImage(images[color], x + 2, y + 2, cellSize - 4, cellSize - 4);
                 }
             });
@@ -322,7 +347,7 @@
         function updateUI() {
             document.getElementById("bombCount").textContent = bombCount;
             document.getElementById("score").textContent = score;
-            document.getElementById("moveCount").textContent = moveCount;
+            // Plus de mise à jour pour moveCount
         }
 
         // Fin du jeu
@@ -366,18 +391,23 @@
             }
         });
 
-        // Attendre que les images soient chargées avant de dessiner
+        // Attendre que toutes les images soient chargées avant de démarrer
         let imagesLoaded = 0;
-        const totalImages = colors.length + 2; // Couleurs + Priks + Bombe
+        const totalImages = colors.length + 2;
+        function checkImagesLoaded() {
+            imagesLoaded++;
+            if (imagesLoaded === totalImages) {
+                drawGrid();
+                updateUI();
+            }
+        }
+
         Object.values(images).forEach(img => {
-            img.onload = () => {
-                imagesLoaded++;
-                if (imagesLoaded === totalImages) {
-                    drawGrid();
-                    updateUI();
-                }
+            img.onload = checkImagesLoaded;
+            img.onerror = () => {
+                console.error(`Erreur de chargement de l'image : ${img.src}`);
+                checkImagesLoaded();
             };
-            img.onerror = () => console.error(`Erreur de chargement de l'image : ${img.src}`);
         });
     </script>
 </body>
