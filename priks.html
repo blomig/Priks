@@ -69,7 +69,6 @@
             margin: 0;
         }
     </style>
-    <!-- Firebase SDK Compat (versions compatibles avec scripts classiques) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
@@ -96,15 +95,13 @@
         </div>
     </div>
     <script>
-        // Remplace avec TON firebaseConfig (obtenu dans Firebase > Projet "Priks" > Web App)
         const firebaseConfig = {
-            apiKey: "AIzaSyAwtyhvT3G0Y1ObAhbuBcqBJ3IjOtl8H6Q",
-  authDomain: "priks-fe08e.firebaseapp.com",
-  projectId: "priks-fe08e",
-  storageBucket: "priks-fe08e.firebasestorage.app",
-  messagingSenderId: "422049089148",
-  appId: "1:422049089148:web:07c66837e0c65fcfc0ebf9",
-  measurementId: "G-LGQRDVH3FE"
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -317,10 +314,10 @@
 
         async function addBlock(col) {
             let row = gridSize - 1;
-            while (row >= 0 && !grid[row][col]) row--;
-            row++;
-            if (row >= gridSize) {
-                endGame();
+            while (row >= 0 && grid[row][col]) row--; // Cherche la première case vide en partant du bas
+            row++; // Position où placer le blox
+            if (row >= gridSize) { // Si aucune place (colonne pleine)
+                await endGame(); // Termine la partie immédiatement
                 return;
             }
             if (isBombSelected) {
@@ -353,8 +350,12 @@
                 nextNextBlock = getNewBlock();
                 await checkChains();
                 if (moveCount % 10 === 0 && moveCount > 0) {
-                    addRandomLine();
-                    nextLine = getNewLine();
+                    await addRandomLine(); // Await pour gérer la fin de partie
+                    const gameOver = grid[gridSize - 1].some(cell => cell !== null); // Vérifie si la ligne du haut est pleine
+                    if (gameOver) {
+                        await endGame();
+                        return;
+                    }
                 }
             }
             drawGrid();
@@ -364,16 +365,16 @@
         async function addRandomLine() {
             for (let col = 0; col < gridSize; col++) {
                 let row = gridSize - 1;
-                while (row >= 0 && !grid[row][col]) row--;
-                row++;
-                if (row >= gridSize) {
-                    endGame();
+                while (row >= 0 && grid[row][col]) row--; // Cherche la première case vide
+                row++; // Position où placer le blox
+                if (row >= gridSize) { // Si une colonne est pleine
+                    await endGame(); // Termine la partie immédiatement
                     return;
                 }
                 grid[row][col] = nextLine[col];
             }
             drawGrid();
-            checkChains();
+            await checkChains();
         }
 
         async function blinkBlocks(blocks) {
@@ -580,7 +581,7 @@
             console.log(`Images chargées : ${imagesLoaded}/${totalImages}`);
             if (imagesLoaded === totalImages) {
                 console.log("Toutes les images sont chargées, démarrage du jeu");
-                drawGrid(); // Dessiner la grille dès que les images sont prêtes
+                drawGrid();
                 updateUI();
                 updateHighScoresDisplay().catch(error => console.error("Erreur initiale de chargement des hiscores :", error));
             }
@@ -590,7 +591,7 @@
             img.onload = checkImagesLoaded;
             img.onerror = () => {
                 console.error(`Erreur de chargement de l'image : ${img.src}`);
-                checkImagesLoaded(); // Continuer même en cas d’erreur
+                checkImagesLoaded();
             };
         });
     </script>
