@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Pour mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Priks V3</title>
     <style>
         canvas {
@@ -43,7 +43,7 @@
             width: 36px;
             height: 36px;
             margin-right: 5px;
-            cursor: pointer; /* Indique que c’est cliquable */
+            cursor: pointer;
         }
         #bombCount {
             font-size: 1.5em;
@@ -69,6 +69,9 @@
             margin: 0;
         }
     </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
 </head>
 <body>
     <div id="gameContainer">
@@ -93,6 +96,33 @@
         </div>
     </div>
     <script>
+        // Initialisation Firebase (remplace avec tes propres configs)
+        const firebaseConfig = {
+            // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAwtyhvT3G0Y1ObAhbuBcqBJ3IjOtl8H6Q",
+  authDomain: "priks-fe08e.firebaseapp.com",
+  projectId: "priks-fe08e",
+  storageBucket: "priks-fe08e.firebasestorage.app",
+  messagingSenderId: "422049089148",
+  appId: "1:422049089148:web:07c66837e0c65fcfc0ebf9",
+  measurementId: "G-LGQRDVH3FE"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const gridSize = 8;
@@ -113,7 +143,6 @@
         const priksColor = "gray";
         const bombColor = "bomb";
 
-        // Charger les images
         const images = {};
         colors.forEach(color => {
             images[color] = new Image();
@@ -124,13 +153,11 @@
         images[bombColor] = new Image();
         images[bombColor].src = "bomb.png";
 
-        // Générer un nouveau Blox
         function getNewBlock() {
             if (Math.random() < 0.1) return [priksColor, 5];
             return colors[Math.floor(Math.random() * colors.length)];
         }
 
-        // Générer une nouvelle ligne de 8 Blox
         function getNewLine() {
             let newLine = Array(gridSize);
             for (let i = 0; i < gridSize; i++) {
@@ -145,18 +172,15 @@
         if (!nextNextBlock) nextNextBlock = getNewBlock();
         if (!nextLine) nextLine = getNewLine();
 
-        // Charger et afficher les hiscores
-        function loadHighScores() {
-            const highScores = JSON.parse(localStorage.getItem("priksHighScores")) || [];
+        // Charger les hiscores depuis Firestore
+        async function loadHighScores() {
+            const snapshot = await db.collection("hiscores").orderBy("score", "desc").limit(10).get();
+            const highScores = snapshot.docs.map(doc => [doc.data().name, doc.data().score]);
             return highScores.length ? highScores : [["AAAAA", 0], ["BBBBB", 0], ["CCCCC", 0], ["DDDDD", 0], ["EEEEE", 0], ["FFFFF", 0], ["GGGGG", 0], ["HHHHH", 0], ["IIIII", 0], ["JJJJJ", 0]];
         }
 
-        function saveHighScores(highScores) {
-            localStorage.setItem("priksHighScores", JSON.stringify(highScores));
-        }
-
-        function updateHighScoresDisplay() {
-            const highScores = loadHighScores();
+        async function updateHighScoresDisplay() {
+            const highScores = await loadHighScores();
             const list = document.getElementById("highScoreList");
             list.innerHTML = "";
             highScores.forEach(([name, score]) => {
@@ -166,20 +190,18 @@
             });
         }
 
-        function addHighScore(score) {
-            let highScores = loadHighScores();
-            let name = prompt("Nouveau highscore ! Entrez vos initiales (5 lettres max) :", "AAAAA");
-            if (name) {
-                name = name.slice(0, 5).padEnd(5, " ").toUpperCase();
-                highScores.push([name, score]);
-                highScores.sort((a, b) => b[1] - a[1]);
-                highScores = highScores.slice(0, 10);
-                saveHighScores(highScores);
-                updateHighScoresDisplay();
+        async function addHighScore(score) {
+            const highScores = await loadHighScores();
+            if (score > highScores[9][1]) {
+                let name = prompt("Nouveau highscore ! Entrez vos initiales (5 lettres max) :", "AAAAA");
+                if (name) {
+                    name = name.slice(0, 5).padEnd(5, " ").toUpperCase();
+                    await db.collection("hiscores").add({ name, score });
+                    await updateHighScoresDisplay();
+                }
             }
         }
 
-        // Dessiner la grille avec images et compteurs pour les Priks
         function drawGrid(movingBlocks = []) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (let row = 0; row < gridSize; row++) {
@@ -256,7 +278,6 @@
             }
         }
 
-        // Animation pour un Blox ou une bombe jouée
         async function animateBlock(col, startY, endRow, isBomb = false) {
             const startRow = gridSize;
             const endY = endRow * cellSize;
@@ -274,7 +295,6 @@
             }
         }
 
-        // Animation pour la gravité inversée
         async function animateGravity(movingBlocks) {
             const duration = 100;
             const steps = 10;
@@ -296,7 +316,6 @@
             }
         }
 
-        // Ajouter un Blox ou une bombe dans une colonne avec animation
         async function addBlock(col) {
             let row = gridSize - 1;
             while (row >= 0 && !grid[row][col]) row--;
@@ -343,8 +362,7 @@
             updateUI();
         }
 
-        // Ajouter la ligne complète avec 1 Priks
-        function addRandomLine() {
+        async function addRandomLine() {
             for (let col = 0; col < gridSize; col++) {
                 let row = gridSize - 1;
                 while (row >= 0 && !grid[row][col]) row--;
@@ -359,7 +377,6 @@
             checkChains();
         }
 
-        // Faire clignoter les Blox avant suppression
         async function blinkBlocks(blocks) {
             const blinkCount = 3;
             const blinkDuration = 150;
@@ -375,7 +392,6 @@
             }
         }
 
-        // Vérifier et supprimer les chaînes de 5 ou plus en cascade, avec mise à jour des Priks
         async function checkChains() {
             let chainsRemoved;
             let isGravityChain = false;
@@ -469,7 +485,6 @@
             } while (chainsRemoved);
         }
 
-        // Calculer les mouvements de gravité pour l’animation
         function calculateGravityMoves() {
             let moves = [];
             for (let col = 0; col < gridSize; col++) {
@@ -491,7 +506,6 @@
             return moves;
         }
 
-        // Mettre à jour l'interface
         function updateUI() {
             document.getElementById("bombCount").textContent = bombCount;
             document.getElementById("score").textContent = score;
@@ -499,12 +513,8 @@
             document.getElementById("chainsRemaining").textContent = `Chaînes restantes : ${chainsToNextBomb}`;
         }
 
-        // Fin du jeu avec gestion des hiscores
-        function endGame() {
-            const highScores = loadHighScores();
-            if (score > highScores[9][1]) {
-                addHighScore(score);
-            }
+        async function endGame() {
+            await addHighScore(score);
             alert("Jeu terminé ! Score final : " + score);
             grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
             bombCount = 1;
@@ -520,7 +530,6 @@
             updateUI();
         }
 
-        // Gestion des touches du clavier (optionnel sur mobile)
         document.addEventListener("keydown", (event) => {
             switch (event.key) {
                 case "ArrowLeft":
@@ -545,22 +554,19 @@
             }
         });
 
-        // Gestion des clics/touch sur le canvas (colonnes)
         canvas.addEventListener("click", (event) => {
             const rect = canvas.getBoundingClientRect();
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
-            // Vérifier si le clic est dans la grille (y < 320) ou la zone de prévisualisation (ignoré ici)
             if (y < gridSize * cellSize) {
-                const col = Math.floor((x - 40) / cellSize); // Décalage de 40px à gauche
+                const col = Math.floor((x - 40) / cellSize);
                 if (col >= 0 && col < gridSize) {
-                    blockPosition = col; // Déplacer le curseur
-                    addBlock(col); // Placer le blox ou la bombe
+                    blockPosition = col;
+                    addBlock(col);
                 }
             }
         });
 
-        // Gestion du clic sur l’icône de bombe
         document.getElementById("bombIcon").addEventListener("click", () => {
             if (bombCount > 0 && !isBombSelected) {
                 isBombSelected = true;
@@ -568,7 +574,6 @@
             }
         });
 
-        // Attendre que toutes les images soient chargées avant de démarrer
         let imagesLoaded = 0;
         const totalImages = colors.length + 2;
         function checkImagesLoaded() {
