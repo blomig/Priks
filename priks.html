@@ -36,6 +36,7 @@
         #bombDisplay {
             display: flex;
             align-items: center;
+            flex-direction: column; /* Pour empiler bombe et texte */
         }
         #bombDisplay img {
             width: 36px;
@@ -44,6 +45,10 @@
         }
         #bombCount {
             font-size: 1.5em;
+        }
+        #chainsRemaining {
+            font-size: 0.8em; /* Petits caractères */
+            margin-top: 2px;
         }
         #highScores {
             position: absolute;
@@ -72,13 +77,16 @@
         </div>
         <div id="info">
             <p>Utilisez ← et → pour déplacer, Espace pour placer, B pour sélectionner une bombe</p>
-            <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés sauf par bombes ou chaînes adjacentes (5→4→3→2→1→disparition). Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 5 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
+            <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés sauf par bombes ou chaînes adjacentes (5→4→3→2→1→disparition). Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 10 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
         </div>
         <div id="underGrid">
             <div id="scoreDisplay">Score : <span id="score">0</span></div>
             <div id="bombDisplay">
-                <img src="bomb.png" alt="Bombes" id="bombIcon">
-                <span id="bombCount">1</span>
+                <div style="display: flex; align-items: center;">
+                    <img src="bomb.png" alt="Bombes" id="bombIcon">
+                    <span id="bombCount">1</span>
+                </div>
+                <span id="chainsRemaining">Chaînes restantes : 10</span>
             </div>
         </div>
     </div>
@@ -415,7 +423,7 @@
                     await blinkBlocks(toRemove);
 
                     // Mettre à jour les Priks adjacents (une seule fois par chaîne)
-                    let priksAffected = new Set(); // Utiliser un Set pour éviter les doublons
+                    let priksAffected = new Set();
                     let priksToRemove = [];
                     toRemove.forEach(([row, col]) => {
                         const directions = [
@@ -452,7 +460,7 @@
                     }
 
                     chainCount++;
-                    if (chainCount % 5 === 0) bombCount++;
+                    if (chainCount % 10 === 0) bombCount++; // Changé de 5 à 10
                     isGravityChain = true;
                     await animateGravity(calculateGravityMoves());
                     drawGrid();
@@ -488,6 +496,8 @@
         function updateUI() {
             document.getElementById("bombCount").textContent = bombCount;
             document.getElementById("score").textContent = score;
+            const chainsToNextBomb = 10 - (chainCount % 10); // Calcul des chaînes restantes
+            document.getElementById("chainsRemaining").textContent = `Chaînes restantes : ${chainsToNextBomb}`;
         }
 
         // Fin du jeu avec gestion des hiscores
