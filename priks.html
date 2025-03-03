@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Pour mobile -->
     <title>Priks V3</title>
     <style>
         canvas {
@@ -36,18 +37,19 @@
         #bombDisplay {
             display: flex;
             align-items: center;
-            flex-direction: column; /* Pour empiler bombe et texte */
+            flex-direction: column;
         }
         #bombDisplay img {
             width: 36px;
             height: 36px;
             margin-right: 5px;
+            cursor: pointer; /* Indique que c’est cliquable */
         }
         #bombCount {
             font-size: 1.5em;
         }
         #chainsRemaining {
-            font-size: 0.8em; /* Petits caractères */
+            font-size: 0.8em;
             margin-top: 2px;
         }
         #highScores {
@@ -76,7 +78,7 @@
             <ul id="highScoreList"></ul>
         </div>
         <div id="info">
-            <p>Utilisez ← et → pour déplacer, Espace pour placer, B pour sélectionner une bombe</p>
+            <p>Utilisez ← et → (ou cliquez/touchez une colonne) pour déplacer, Espace (ou clic colonne) pour placer, B (ou clic bombe) pour sélectionner une bombe</p>
             <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés sauf par bombes ou chaînes adjacentes (5→4→3→2→1→disparition). Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 10 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
         </div>
         <div id="underGrid">
@@ -422,7 +424,6 @@
                     chainsRemoved = true;
                     await blinkBlocks(toRemove);
 
-                    // Mettre à jour les Priks adjacents (une seule fois par chaîne)
                     let priksAffected = new Set();
                     let priksToRemove = [];
                     toRemove.forEach(([row, col]) => {
@@ -446,12 +447,10 @@
                         });
                     });
 
-                    // Supprimer les Blox de la chaîne
                     toRemove.forEach(([row, col]) => {
                         grid[row][col] = null;
                     });
 
-                    // Supprimer les Priks dont le compteur atteint 0
                     if (priksToRemove.length > 0) {
                         await blinkBlocks(priksToRemove);
                         priksToRemove.forEach(([row, col]) => {
@@ -460,7 +459,7 @@
                     }
 
                     chainCount++;
-                    if (chainCount % 10 === 0) bombCount++; // Changé de 5 à 10
+                    if (chainCount % 10 === 0) bombCount++;
                     isGravityChain = true;
                     await animateGravity(calculateGravityMoves());
                     drawGrid();
@@ -496,7 +495,7 @@
         function updateUI() {
             document.getElementById("bombCount").textContent = bombCount;
             document.getElementById("score").textContent = score;
-            const chainsToNextBomb = 10 - (chainCount % 10); // Calcul des chaînes restantes
+            const chainsToNextBomb = 10 - (chainCount % 10);
             document.getElementById("chainsRemaining").textContent = `Chaînes restantes : ${chainsToNextBomb}`;
         }
 
@@ -521,7 +520,7 @@
             updateUI();
         }
 
-        // Gestion des touches du clavier
+        // Gestion des touches du clavier (optionnel sur mobile)
         document.addEventListener("keydown", (event) => {
             switch (event.key) {
                 case "ArrowLeft":
@@ -543,6 +542,29 @@
                         drawGrid();
                     }
                     break;
+            }
+        });
+
+        // Gestion des clics/touch sur le canvas (colonnes)
+        canvas.addEventListener("click", (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            // Vérifier si le clic est dans la grille (y < 320) ou la zone de prévisualisation (ignoré ici)
+            if (y < gridSize * cellSize) {
+                const col = Math.floor((x - 40) / cellSize); // Décalage de 40px à gauche
+                if (col >= 0 && col < gridSize) {
+                    blockPosition = col; // Déplacer le curseur
+                    addBlock(col); // Placer le blox ou la bombe
+                }
+            }
+        });
+
+        // Gestion du clic sur l’icône de bombe
+        document.getElementById("bombIcon").addEventListener("click", () => {
+            if (bombCount > 0 && !isBombSelected) {
+                isBombSelected = true;
+                drawGrid();
             }
         });
 
