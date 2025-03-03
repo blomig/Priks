@@ -98,27 +98,13 @@
     <script>
         // Remplace avec TON firebaseConfig (obtenu dans Firebase > Projet "Priks" > Web App)
         const firebaseConfig = {
-            // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyAwtyhvT3G0Y1ObAhbuBcqBJ3IjOtl8H6Q",
+            apiKey: "AIzaSyAwtyhvT3G0Y1ObAhbuBcqBJ3IjOtl8H6Q",
   authDomain: "priks-fe08e.firebaseapp.com",
   projectId: "priks-fe08e",
   storageBucket: "priks-fe08e.firebasestorage.app",
   messagingSenderId: "422049089148",
   appId: "1:422049089148:web:07c66837e0c65fcfc0ebf9",
   measurementId: "G-LGQRDVH3FE"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
