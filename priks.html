@@ -313,11 +313,10 @@
         }
 
         async function addBlock(col) {
-            let row = gridSize - 1;
-            while (row >= 0 && grid[row][col]) row--; // Cherche la première case vide en partant du bas
-            row++; // Position où placer le blox
-            if (row >= gridSize) { // Si aucune place (colonne pleine)
-                await endGame(); // Termine la partie immédiatement
+            let row = 0; // Commence en bas
+            while (row < gridSize && grid[row][col] !== null) row++; // Cherche la première case vide
+            if (row >= gridSize) { // Si aucune case vide (colonne pleine)
+                await endGame();
                 return;
             }
             if (isBombSelected) {
@@ -350,12 +349,7 @@
                 nextNextBlock = getNewBlock();
                 await checkChains();
                 if (moveCount % 10 === 0 && moveCount > 0) {
-                    await addRandomLine(); // Await pour gérer la fin de partie
-                    const gameOver = grid[gridSize - 1].some(cell => cell !== null); // Vérifie si la ligne du haut est pleine
-                    if (gameOver) {
-                        await endGame();
-                        return;
-                    }
+                    await addRandomLine();
                 }
             }
             drawGrid();
@@ -363,15 +357,19 @@
         }
 
         async function addRandomLine() {
+            let gameOver = false;
             for (let col = 0; col < gridSize; col++) {
-                let row = gridSize - 1;
-                while (row >= 0 && grid[row][col]) row--; // Cherche la première case vide
-                row++; // Position où placer le blox
+                let row = 0;
+                while (row < gridSize && grid[row][col] !== null) row++;
                 if (row >= gridSize) { // Si une colonne est pleine
-                    await endGame(); // Termine la partie immédiatement
-                    return;
+                    gameOver = true;
+                    break;
                 }
                 grid[row][col] = nextLine[col];
+            }
+            if (gameOver) {
+                await endGame();
+                return;
             }
             drawGrid();
             await checkChains();
