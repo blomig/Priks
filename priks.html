@@ -69,9 +69,9 @@
             margin: 0;
         }
     </style>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
+    <!-- Firebase SDK Compat (versions compatibles avec scripts classiques) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <div id="gameContainer">
@@ -96,7 +96,7 @@
         </div>
     </div>
     <script>
-        // Initialisation Firebase (remplace avec tes propres configs)
+        // Remplace avec TON firebaseConfig (obtenu dans Firebase > Projet "Priks" > Web App)
         const firebaseConfig = {
             // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
@@ -147,11 +147,14 @@ const analytics = getAnalytics(app);
         colors.forEach(color => {
             images[color] = new Image();
             images[color].src = `${color}.png`;
+            console.log(`Chargement de ${color}.png`);
         });
         images[priksColor] = new Image();
         images[priksColor].src = "priks.png";
+        console.log("Chargement de priks.png");
         images[bombColor] = new Image();
         images[bombColor].src = "bomb.png";
+        console.log("Chargement de bomb.png");
 
         function getNewBlock() {
             if (Math.random() < 0.1) return [priksColor, 5];
@@ -172,11 +175,16 @@ const analytics = getAnalytics(app);
         if (!nextNextBlock) nextNextBlock = getNewBlock();
         if (!nextLine) nextLine = getNewLine();
 
-        // Charger les hiscores depuis Firestore
         async function loadHighScores() {
-            const snapshot = await db.collection("hiscores").orderBy("score", "desc").limit(10).get();
-            const highScores = snapshot.docs.map(doc => [doc.data().name, doc.data().score]);
-            return highScores.length ? highScores : [["AAAAA", 0], ["BBBBB", 0], ["CCCCC", 0], ["DDDDD", 0], ["EEEEE", 0], ["FFFFF", 0], ["GGGGG", 0], ["HHHHH", 0], ["IIIII", 0], ["JJJJJ", 0]];
+            try {
+                const snapshot = await db.collection("hiscores").orderBy("score", "desc").limit(10).get();
+                const highScores = snapshot.docs.map(doc => [doc.data().name, doc.data().score]);
+                console.log("Hiscores chargés :", highScores);
+                return highScores.length ? highScores : [["AAAAA", 0], ["BBBBB", 0], ["CCCCC", 0], ["DDDDD", 0], ["EEEEE", 0], ["FFFFF", 0], ["GGGGG", 0], ["HHHHH", 0], ["IIIII", 0], ["JJJJJ", 0]];
+            } catch (error) {
+                console.error("Erreur lors du chargement des hiscores :", error);
+                return [["AAAAA", 0], ["BBBBB", 0], ["CCCCC", 0], ["DDDDD", 0], ["EEEEE", 0], ["FFFFF", 0], ["GGGGG", 0], ["HHHHH", 0], ["IIIII", 0], ["JJJJJ", 0]];
+            }
         }
 
         async function updateHighScoresDisplay() {
@@ -196,8 +204,13 @@ const analytics = getAnalytics(app);
                 let name = prompt("Nouveau highscore ! Entrez vos initiales (5 lettres max) :", "AAAAA");
                 if (name) {
                     name = name.slice(0, 5).padEnd(5, " ").toUpperCase();
-                    await db.collection("hiscores").add({ name, score });
-                    await updateHighScoresDisplay();
+                    try {
+                        await db.collection("hiscores").add({ name, score });
+                        console.log(`Score ajouté : ${name} - ${score}`);
+                        await updateHighScoresDisplay();
+                    } catch (error) {
+                        console.error("Erreur lors de l’ajout du score :", error);
+                    }
                 }
             }
         }
@@ -578,10 +591,12 @@ const analytics = getAnalytics(app);
         const totalImages = colors.length + 2;
         function checkImagesLoaded() {
             imagesLoaded++;
+            console.log(`Images chargées : ${imagesLoaded}/${totalImages}`);
             if (imagesLoaded === totalImages) {
-                updateHighScoresDisplay();
-                drawGrid();
+                console.log("Toutes les images sont chargées, démarrage du jeu");
+                drawGrid(); // Dessiner la grille dès que les images sont prêtes
                 updateUI();
+                updateHighScoresDisplay().catch(error => console.error("Erreur initiale de chargement des hiscores :", error));
             }
         }
 
@@ -589,7 +604,7 @@ const analytics = getAnalytics(app);
             img.onload = checkImagesLoaded;
             img.onerror = () => {
                 console.error(`Erreur de chargement de l'image : ${img.src}`);
-                checkImagesLoaded();
+                checkImagesLoaded(); // Continuer même en cas d’erreur
             };
         });
     </script>
