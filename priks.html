@@ -86,6 +86,9 @@
 </head>
 <body>
     <div id="gameContainer">
+        <audio id="placeSound" src="place.wav" preload="auto"></audio>
+<audio id="chainSound" src="chain.mp3" preload="auto"></audio>
+<audio id="bombSound" src="bomb.wav" preload="auto"></audio>
         <canvas id="gameCanvas" width="360" height="400"></canvas>
         <div id="highScores">
             <h3>Meilleurs Scores</h3>
@@ -369,6 +372,7 @@
                 if (toRemove.length > 0) {
                     await blinkBlocks(toRemove);
                     await drawExplosionParticles(col * cellSize + 40, row * cellSize); // Ajout des particules
+                    document.getElementById("bombSound").play();
                 }
                 for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
                     for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
@@ -382,6 +386,7 @@
             } else {
                 await animateBlock(col, gridSize * cellSize, row);
                 grid[row][col] = nextBlock;
+                document.getElementById("placeSound").play();
                 moveCount++;
                 nextBlock = nextNextBlock;
                 nextNextBlock = getNewBlock();
@@ -493,6 +498,7 @@
                         let points = isGravityChain ? 10 : (group.length > 5 ? 10 : 5);
                         score += points; // Ajouter les points ici
                         await blinkBlocks(group, points); // Appeler pour chaque groupe séparément
+                        document.getElementById("chainSound").play();
                     }
                 }
             }
