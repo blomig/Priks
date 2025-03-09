@@ -412,20 +412,32 @@
         }
 
         // Faire clignoter les Blox avant suppression
-        async function blinkBlocks(blocks) {
-            const blinkCount = 3;
-            const blinkDuration = 150;
+        async function blinkBlocks(blocks, points = null) {
+    const blinkCount = 3;
+    const blinkDuration = 150;
 
-            for (let i = 0; i < blinkCount; i++) {
-                blocks.forEach(([row, col]) => {
-                    ctx.clearRect(col * cellSize + 40 + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
-                    ctx.strokeRect(col * cellSize + 40, row * cellSize, cellSize, cellSize);
-                });
-                await new Promise(resolve => setTimeout(resolve, blinkDuration));
-                drawGrid();
-                await new Promise(resolve => setTimeout(resolve, blinkDuration));
-            }
+    // Calculer le centre des blocs supprimés pour placer le texte
+    let avgX = 0, avgY = 0;
+    blocks.forEach(([row, col]) => {
+        avgX += col * cellSize + 40 + cellSize / 2;
+        avgY += row * cellSize + cellSize / 2;
+    });
+    avgX /= blocks.length;
+    avgY /= blocks.length;
+
+    for (let i = 0; i < blinkCount; i++) {
+        blocks.forEach(([row, col]) => {
+            ctx.clearRect(col * cellSize + 40 + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
+            ctx.strokeRect(col * cellSize + 40, row * cellSize, cellSize, cellSize);
+        });
+        if (points && i === 0) { // Lancer l’animation des points au premier clignotement
+            animateScorePopup(avgX, avgY, points);
         }
+        await new Promise(resolve => setTimeout(resolve, blinkDuration));
+        drawGrid();
+        await new Promise(resolve => setTimeout(resolve, blinkDuration));
+    }
+}
 
         // Vérifier et supprimer les chaînes de 5 ou plus en cascade, avec mise à jour des Priks
         async function checkChains() {
@@ -474,7 +486,7 @@
 
                 if (toRemove.length > 0) {
                     chainsRemoved = true;
-                    await blinkBlocks(toRemove);
+                    await blinkBlocks(toRemove, isGravityChain ? 10 : (group.length > 5 ? 10 : 5));
 
                     let priksAffected = new Set();
                     let priksToRemove = [];
@@ -504,7 +516,7 @@
                     });
 
                     if (priksToRemove.length > 0) {
-                        await blinkBlocks(priksToRemove);
+                        await blinkBlocks(priksToRemove); // Pas de points pour les Priks seuls
                         priksToRemove.forEach(([row, col]) => {
                             grid[row][col] = null;
                         });
@@ -520,7 +532,26 @@
                 }
             } while (chainsRemoved);
         }
+        // ajout fonction score popup
+        async function animateScorePopup(x, y, points) {
+    const duration = 200; // 200ms au total
+    const steps = 10; // 10 étapes pour une animation fluide
+    const stepDuration = duration / steps;
+    let size = 10; // Taille initiale
+    const maxSize = 20; // Taille maximale
 
+    for (let i = 0; i <= steps; i++) {
+        ctx.save(); // Sauvegarder l’état du canvas
+        ctx.fillStyle = "rgba(255, 215, 0, " + (1 - i / steps) + ")"; // Or avec fondu
+        ctx.font = `${size}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`+${points}`, x, y);
+        ctx.restore(); // Restaurer pour ne pas interférer avec le reste
+        size = 10 + (maxSize - 10) * (i / steps); // Grandit de 10 à 20
+        await new Promise(resolve => setTimeout(resolve, stepDuration));
+    }
+}
         // Calculer les mouvements de gravité pour l’animation
         function calculateGravityMoves() {
             let moves = [];
