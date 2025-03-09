@@ -296,7 +296,37 @@
             }
         }
 
-        // Ajouter un Blox ou une bombe dans une colonne avec animation
+        // Nouvelle fonction pour l’effet d’explosion de la bombe
+        async function drawExplosionParticles(x, y) {
+            const particles = [];
+            for (let i = 0; i < 20; i++) {
+                particles.push({
+                    x: x + cellSize / 2,
+                    y: y + cellSize / 2,
+                    vx: (Math.random() - 0.5) * 4, // Vitesse horizontale
+                    vy: (Math.random() - 0.5) * 4, // Vitesse verticale
+                    size: Math.random() * 5 + 2,
+                    life: 20 // Durée de vie en frames
+                });
+            }
+
+            for (let frame = 0; frame < 20; frame++) {
+                ctx.fillStyle = "rgba(255, 100, 0, " + (1 - frame / 20) + ")"; // Orange dégradé
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life--;
+                    if (p.life > 0) {
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+                await new Promise(resolve => setTimeout(resolve, 16)); // ~60 FPS
+            }
+        }
+
+        // Ajouter un Blox ou une bombe dans une colonne avec animation et particules pour la bombe
         async function addBlock(col) {
             let row = gridSize - 1;
             while (row >= 0 && !grid[row][col]) row--;
@@ -317,6 +347,7 @@
                 }
                 if (toRemove.length > 0) {
                     await blinkBlocks(toRemove);
+                    await drawExplosionParticles(col * cellSize + 40, row * cellSize); // Ajout des particules
                 }
                 for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
                     for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
@@ -550,7 +581,6 @@
             const rect = canvas.getBoundingClientRect();
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
-            // Vérifier si le clic est dans la grille (y < 320) ou la zone de prévisualisation (ignoré ici)
             if (y < gridSize * cellSize) {
                 const col = Math.floor((x - 40) / cellSize); // Décalage de 40px à gauche
                 if (col >= 0 && col < gridSize) {
