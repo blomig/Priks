@@ -552,11 +552,24 @@
 
         // Mettre à jour l'interface
         function updateUI() {
-            document.getElementById("bombCount").textContent = bombCount;
-            document.getElementById("score").textContent = score;
-            const chainsToNextBomb = 10 - (chainCount % 10);
-            document.getElementById("chainsRemaining").textContent = `Chaînes restantes : ${chainsToNextBomb}`;
-        }
+    document.getElementById("bombCount").textContent = bombCount;
+    document.getElementById("score").textContent = score;
+    const chainsToNextBomb = 10 - (chainCount % 10);
+    document.getElementById("chainsRemaining").textContent = `Chaînes restantes : ${chainsToNextBomb}`;
+
+    // Mise à jour de la barre de progression
+    const progress = (moveCount % 10) * 10; // 0% à 90% (10 étapes)
+    const progressBar = document.getElementById("progressBar");
+    progressBar.style.width = `${progress}%`;
+    // Changement de couleur selon la progression
+    if (moveCount % 10 >= 8) {
+        progressBar.style.backgroundColor = "#f44336"; // Rouge quand proche de 10
+    } else if (moveCount % 10 >= 5) {
+        progressBar.style.backgroundColor = "#ff9800"; // Orange au milieu
+    } else {
+        progressBar.style.backgroundColor = "#4caf50"; // Vert au début
+    }
+}
 
         // Fin du jeu avec gestion des hiscores
         function endGame() {
