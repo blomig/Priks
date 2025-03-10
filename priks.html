@@ -214,6 +214,8 @@
 
         // Dessiner la grille avec images et compteurs pour les Priks
         function drawGrid(movingBlocks = []) {
+            ctx.fillStyle = "#cadc9f";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (let row = 0; row < gridSize; row++) {
                 for (let col = 0; col < gridSize; col++) {
@@ -332,7 +334,7 @@
         // Nouvelle fonction pour l’effet d’explosion de la bombe
          async function drawExplosionParticles(x, y) {
     const pixelSize = 2;
-    const colors = ["#FF0000", "#FF4500", "#FFFF00", "#FFA500"];
+    const colors = ["#0F380F", "#306230", "#8BAC0F", "#9BBC0F"];
     const explosionArea = 3 * cellSize;
     const baseX = x - explosionArea / 2;
     const baseY = y - explosionArea / 2;
