@@ -325,12 +325,12 @@
     const pixelSize = 2; // Taille des petits carrés "confettis"
     const colors = ["#FF0000", "#FF4500", "#FFFF00", "#FFA500"]; // Rouge, orange vif, jaune, orange moyen
     const explosionArea = 3 * cellSize; // Zone 3x3 cases
-    const baseX = x - cellSize; // Coin supérieur gauche
-    const baseY = y - cellSize;
+    const baseX = x - cellSize / 2; // Centrer sur x (ajusté pour avgX)
+    const baseY = y - cellSize; // Centrer sur y
     const particleCount = 30; // Nombre de confettis
-    const duration = 450; // Durée totale alignée sur blinkBlocks (3 × 150ms)
+    const duration = 450; // Durée totale alignée sur blinkBlocks
     const steps = 15; // Nombre d’étapes
-    const stepDuration = duration / steps; // ~30ms par étape
+    const stepDuration = duration / steps;
 
     const particles = [];
     for (let i = 0; i < particleCount; i++) {
@@ -343,7 +343,7 @@
 
     for (let frame = 0; frame < steps; frame++) {
         particles.forEach(p => {
-            if (frame % 2 === 0) { // Clignoter une frame sur deux
+            if (frame % 2 === 0) {
                 ctx.fillStyle = p.color;
                 ctx.fillRect(p.x, p.y, pixelSize, pixelSize);
             }
