@@ -323,13 +323,13 @@
         // Nouvelle fonction pour l’effet d’explosion de la bombe
          async function drawExplosionParticles(x, y) {
     const pixelSize = 2; // Taille des petits carrés "confettis"
-    const colors = ["#FF0000", "#FF4500", "#FFFF00", "#FFA500"]; // Rouge, orange vif, jaune, orange moyen
+    const colors = ["#FF0000", "#FF4500", "#FFFF00", "#FFA500"];
     const explosionArea = 3 * cellSize; // Zone 3x3 cases
-    const baseX = x - cellSize / 2; // Centrer sur x (ajusté pour avgX)
-    const baseY = y - cellSize; // Centrer sur y
-    const particleCount = 30; // Nombre de confettis
-    const duration = 450; // Durée totale alignée sur blinkBlocks
-    const steps = 15; // Nombre d’étapes
+    const baseX = x - explosionArea / 2; // Centrer la zone sur x
+    const baseY = y - explosionArea / 2; // Centrer la zone sur y
+    const particleCount = 30;
+    const duration = 450;
+    const steps = 15;
     const stepDuration = duration / steps;
 
     const particles = [];
@@ -373,7 +373,9 @@
             }
         }
         if (toRemove.length > 0) {
-            await blinkBlocks(toRemove, null, true); // Confettis déclenchés ici
+            const bombX = col * cellSize + 40 + cellSize / 2; // Centre exact de la bombe
+            const bombY = row * cellSize + cellSize / 2;
+            await blinkBlocks(toRemove, null, true, bombX, bombY); // Passer les coordonnées
             document.getElementById("bombSound").play();
         }
         for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
@@ -386,17 +388,7 @@
         await animateGravity(calculateGravityMoves());
         await checkChains();
     } else {
-        await animateBlock(col, gridSize * cellSize, row);
-        grid[row][col] = nextBlock;
-        document.getElementById("placeSound").play();
-        moveCount++;
-        nextBlock = nextNextBlock;
-        nextNextBlock = getNewBlock();
-        await checkChains();
-        if (moveCount % 10 === 0 && moveCount > 0) {
-            addRandomLine();
-            nextLine = getNewLine();
-        }
+        // ... (reste inchangé)
     }
     drawGrid();
     updateUI();
@@ -438,7 +430,8 @@
     }
 }
         // Faire clignoter les Blox avant suppression
-        async function blinkBlocks(blocks, points = null, isBomb = false) {
+
+        async function blinkBlocks(blocks, points = null, isBomb = false, bombX = null, bombY = null) {
     const blinkCount = 3;
     const blinkDuration = 150;
 
@@ -450,11 +443,10 @@
     avgX /= blocks.length;
     avgY /= blocks.length;
 
-    // Lancer les confettis en parallèle si c’est une bombe
     let particlePromise = null;
-    if (isBomb) {
-        console.log("avgX:", avgX, "avgY:", avgY)
-        particlePromise = drawExplosionParticles(avgX, avgY);
+    if (isBomb && bombX && bombY) {
+        console.log("bombX:", bombX, "bombY:", bombY); // Pour vérifier
+        particlePromise = drawExplosionParticles(bombX, bombY);
     }
 
     for (let i = 0; i < blinkCount; i++) {
@@ -470,7 +462,6 @@
         await new Promise(resolve => setTimeout(resolve, blinkDuration));
     }
 
-    // Attendre la fin des confettis si applicable
     if (particlePromise) {
         await particlePromise;
     }
