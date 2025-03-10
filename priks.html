@@ -322,36 +322,40 @@
 
         // Nouvelle fonction pour l’effet d’explosion de la bombe
         async function drawExplosionParticles(x, y) {
-    const particles = [];
-    const pixelSize = 4; // Taille des "pixels" (carrés)
+    const pixelSize = 2; // Taille des petits carrés "confettis"
     const colors = ["#FF0000", "#FF4500", "#FFFF00", "#FFA500"]; // Rouge, orange vif, jaune, orange moyen
+    const explosionArea = 3 * cellSize; // Zone 3x3 cases (largeur/hauteur)
+    const baseX = x - cellSize; // Coin supérieur gauche de la zone 3x3
+    const baseY = y - cellSize;
+    const particleCount = 30; // Nombre total de confettis
+    const duration = 300; // Durée totale en ms
+    const steps = 15; // Nombre d’étapes pour clignoter
+    const stepDuration = duration / steps;
 
-    // Générer les particules
-    for (let i = 0; i < 20; i++) {
+    // Générer les particules statiques
+    const particles = [];
+    for (let i = 0; i < particleCount; i++) {
         particles.push({
-            x: x + cellSize / 2,
-            y: y + cellSize / 2,
-            vx: (Math.random() - 0.5) * 4, // Vitesse horizontale
-            vy: (Math.random() - 0.5) * 4, // Vitesse verticale
-            color: colors[Math.floor(Math.random() * colors.length)], // Couleur aléatoire
-            life: 20 // Durée de vie en frames
+            x: baseX + Math.random() * explosionArea, // Position aléatoire dans la zone
+            y: baseY + Math.random() * explosionArea,
+            color: colors[Math.floor(Math.random() * colors.length)] // Couleur aléatoire
         });
     }
 
-    // Animer les particules
-    for (let frame = 0; frame < 20; frame++) {
+    // Animation de clignotement
+    for (let frame = 0; frame < steps; frame++) {
+        ctx.clearRect(baseX, baseY, explosionArea, explosionArea); // Effacer la zone pour éviter les traînées
         particles.forEach(p => {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.life--;
-            if (p.life > 0) {
-                ctx.fillStyle = p.color; // Couleur sans dégradé pour un look pixel
-                ctx.fillRect(p.x - pixelSize / 2, p.y - pixelSize / 2, pixelSize, pixelSize); // Carré centré
+            // Clignoter en alternant visibilité (pair/impair)
+            if (frame % 2 === 0) {
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, pixelSize, pixelSize);
             }
         });
-        await new Promise(resolve => setTimeout(resolve, 16)); // ~60 FPS, environ 320ms au total
+        await new Promise(resolve => setTimeout(resolve, stepDuration));
     }
 }
+        
 
         // Ajouter un Blox ou une bombe dans une colonne avec animation et particules pour la bombe
         async function addBlock(col) {
