@@ -237,7 +237,7 @@
                         if (images[color] && images[color].complete) {
                             ctx.drawImage(images[color], col * cellSize + 40 + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
                             if (Array.isArray(block) && block[0] === priksColor) {
-                                ctx.fillStyle = "white";
+                                ctx.fillStyle = "#0F380F";
                                 ctx.font = "16px gameboy";
                                 ctx.textAlign = "center";
                                 ctx.textBaseline = "middle";
@@ -253,7 +253,7 @@
             if (images[previewColor] && images[previewColor].complete) {
                 ctx.drawImage(images[previewColor], blockPosition * cellSize + 40 + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
                 if (Array.isArray(previewBlock) && previewBlock[0] === priksColor) {
-                    ctx.fillStyle = "white";
+                    ctx.fillStyle = "#0F380F";
                     ctx.font = "16px gameboy";
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
@@ -267,7 +267,7 @@
                     if (images[lineColor] && images[lineColor].complete) {
                         ctx.drawImage(images[lineColor], col * cellSize + 40 + 2, (gridSize + 1) * cellSize + 2, cellSize - 4, cellSize - 4);
                         if (Array.isArray(lineBlock) && lineBlock[0] === priksColor) {
-                            ctx.fillStyle = "white";
+                            ctx.fillStyle = "#0F380F";
                             ctx.font = "16px gameboy";
                             ctx.textAlign = "center";
                             ctx.textBaseline = "middle";
@@ -281,7 +281,7 @@
                 if (images[moveColor] && images[moveColor].complete) {
                     ctx.drawImage(images[moveColor], x + 2, y + 2, cellSize - 4, cellSize - 4);
                     if (Array.isArray(color) && color[0] === priksColor) {
-                        ctx.fillStyle = "white";
+                        ctx.fillStyle = "#0F380F";
                         ctx.font = "16px gameboy";
                         ctx.textAlign = "center";
                         ctx.textBaseline = "middle";
@@ -293,7 +293,7 @@
             if (images[nextNextColor] && images[nextNextColor].complete) {
                 ctx.drawImage(images[nextNextColor], 2, gridSize * cellSize + 2, 36, 36);
                 if (Array.isArray(nextNextBlock) && nextNextBlock[0] === priksColor) {
-                    ctx.fillStyle = "white";
+                    ctx.fillStyle = "#0F380F";
                     ctx.font = "16px gameboy";
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
