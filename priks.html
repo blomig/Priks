@@ -321,10 +321,10 @@
         }
 
         // Nouvelle fonction pour l’effet d’explosion de la bombe
-        async function drawExplosionParticles(x, y) {
+       async function drawExplosionParticles(x, y) {
     const pixelSize = 2; // Taille des petits carrés "confettis"
     const colors = ["#FF0000", "#FF4500", "#FFFF00", "#FFA500"]; // Rouge, orange vif, jaune, orange moyen
-    const explosionArea = 3 * cellSize; // Zone 3x3 cases (largeur/hauteur)
+    const explosionArea = 3 * cellSize; // Zone 3x3 cases
     const baseX = x - cellSize; // Coin supérieur gauche de la zone 3x3
     const baseY = y - cellSize;
     const particleCount = 30; // Nombre total de confettis
@@ -342,12 +342,10 @@
         });
     }
 
-    // Animation de clignotement
+    // Animation de clignotement en superposition
     for (let frame = 0; frame < steps; frame++) {
-        ctx.clearRect(baseX, baseY, explosionArea, explosionArea); // Effacer la zone pour éviter les traînées
         particles.forEach(p => {
-            // Clignoter en alternant visibilité (pair/impair)
-            if (frame % 2 === 0) {
+            if (frame % 2 === 0) { // Clignoter une frame sur deux
                 ctx.fillStyle = p.color;
                 ctx.fillRect(p.x, p.y, pixelSize, pixelSize);
             }
