@@ -453,6 +453,7 @@
     // Lancer les confettis en parallèle si c’est une bombe
     let particlePromise = null;
     if (isBomb) {
+        console.log("avgX:", avgX, "avgY:", avgY)
         particlePromise = drawExplosionParticles(avgX, avgY);
     }
 
