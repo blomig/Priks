@@ -624,12 +624,12 @@
     const progressBar = document.getElementById("progressBar");
     progressBar.style.width = `${progress}%`;
     // Changement de couleur selon la progression
-    if (moveCount % 10 >= 8) {
-        progressBar.style.backgroundColor = "#f44336"; // Rouge quand proche de 10
+     if (moveCount % 10 >= 8) {
+        progressBar.style.backgroundColor = "#0F380F"; // Vert très foncé (proche de la fin)
     } else if (moveCount % 10 >= 5) {
-        progressBar.style.backgroundColor = "#ff9800"; // Orange au milieu
+        progressBar.style.backgroundColor = "#306230"; // Vert foncé (milieu)
     } else {
-        progressBar.style.backgroundColor = "#4caf50"; // Vert au début
+        progressBar.style.backgroundColor = "#8BAC0F"; // Vert clair (début)
     }
 }
 
