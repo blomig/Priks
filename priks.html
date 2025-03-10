@@ -220,7 +220,7 @@
                             ctx.drawImage(images[color], col * cellSize + 40 + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
                             if (Array.isArray(block) && block[0] === priksColor) {
                                 ctx.fillStyle = "white";
-                                ctx.font = "16px Arial";
+                                ctx.font = "16px gameboy";
                                 ctx.textAlign = "center";
                                 ctx.textBaseline = "middle";
                                 ctx.fillText(block[1], col * cellSize + 40 + cellSize / 2, row * cellSize + cellSize / 2);
@@ -436,7 +436,7 @@
     for (let i = 0; i <= steps; i++) {
         ctx.save(); // Sauvegarder l’état du canvas
         ctx.fillStyle = "rgba(255, 215, 0, " + (1 - i / steps) + ")"; // Or avec fondu
-        ctx.font = `${size}px Arial`;
+        ctx.font = `${size}px gameboy`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(`+${points}`, x, y);
