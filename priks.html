@@ -321,28 +321,26 @@
         }
 
         // Nouvelle fonction pour l’effet d’explosion de la bombe
-       async function drawExplosionParticles(x, y) {
+         async function drawExplosionParticles(x, y) {
     const pixelSize = 2; // Taille des petits carrés "confettis"
     const colors = ["#FF0000", "#FF4500", "#FFFF00", "#FFA500"]; // Rouge, orange vif, jaune, orange moyen
     const explosionArea = 3 * cellSize; // Zone 3x3 cases
-    const baseX = x - cellSize; // Coin supérieur gauche de la zone 3x3
+    const baseX = x - cellSize; // Coin supérieur gauche
     const baseY = y - cellSize;
-    const particleCount = 30; // Nombre total de confettis
-    const duration = 300; // Durée totale en ms
-    const steps = 15; // Nombre d’étapes pour clignoter
-    const stepDuration = duration / steps;
+    const particleCount = 30; // Nombre de confettis
+    const duration = 450; // Durée totale alignée sur blinkBlocks (3 × 150ms)
+    const steps = 15; // Nombre d’étapes
+    const stepDuration = duration / steps; // ~30ms par étape
 
-    // Générer les particules statiques
     const particles = [];
     for (let i = 0; i < particleCount; i++) {
         particles.push({
-            x: baseX + Math.random() * explosionArea, // Position aléatoire dans la zone
+            x: baseX + Math.random() * explosionArea,
             y: baseY + Math.random() * explosionArea,
-            color: colors[Math.floor(Math.random() * colors.length)] // Couleur aléatoire
+            color: colors[Math.floor(Math.random() * colors.length)]
         });
     }
 
-    // Animation de clignotement en superposition
     for (let frame = 0; frame < steps; frame++) {
         particles.forEach(p => {
             if (frame % 2 === 0) { // Clignoter une frame sur deux
@@ -357,53 +355,52 @@
 
         // Ajouter un Blox ou une bombe dans une colonne avec animation et particules pour la bombe
         async function addBlock(col) {
-            let row = gridSize - 1;
-            while (row >= 0 && !grid[row][col]) row--;
-            row++;
-            if (row >= gridSize) {
-                endGame();
-                return;
-            }
-            if (isBombSelected) {
-                await animateBlock(col, gridSize * cellSize, row, true);
-                let toRemove = [];
-                for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
-                    for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
-                        if (grid[r][c]) {
-                            toRemove.push([r, c]);
-                        }
-                    }
-                }
-                if (toRemove.length > 0) {
-                    await blinkBlocks(toRemove);
-                    await drawExplosionParticles(col * cellSize + 40, row * cellSize); // Ajout des particules
-                    document.getElementById("bombSound").play();
-                }
-                for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
-                    for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
-                        grid[r][c] = null;
-                    }
-                }
-                bombCount--;
-                isBombSelected = false;
-                await animateGravity(calculateGravityMoves());
-                await checkChains();
-            } else {
-                await animateBlock(col, gridSize * cellSize, row);
-                grid[row][col] = nextBlock;
-                document.getElementById("placeSound").play();
-                moveCount++;
-                nextBlock = nextNextBlock;
-                nextNextBlock = getNewBlock();
-                await checkChains();
-                if (moveCount % 10 === 0 && moveCount > 0) {
-                    addRandomLine();
-                    nextLine = getNewLine();
+    let row = gridSize - 1;
+    while (row >= 0 && !grid[row][col]) row--;
+    row++;
+    if (row >= gridSize) {
+        endGame();
+        return;
+    }
+    if (isBombSelected) {
+        await animateBlock(col, gridSize * cellSize, row, true);
+        let toRemove = [];
+        for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
+            for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
+                if (grid[r][c]) {
+                    toRemove.push([r, c]);
                 }
             }
-            drawGrid();
-            updateUI();
         }
+        if (toRemove.length > 0) {
+            await blinkBlocks(toRemove, null, true); // Confettis déclenchés ici
+            document.getElementById("bombSound").play();
+        }
+        for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
+            for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
+                grid[r][c] = null;
+            }
+        }
+        bombCount--;
+        isBombSelected = false;
+        await animateGravity(calculateGravityMoves());
+        await checkChains();
+    } else {
+        await animateBlock(col, gridSize * cellSize, row);
+        grid[row][col] = nextBlock;
+        document.getElementById("placeSound").play();
+        moveCount++;
+        nextBlock = nextNextBlock;
+        nextNextBlock = getNewBlock();
+        await checkChains();
+        if (moveCount % 10 === 0 && moveCount > 0) {
+            addRandomLine();
+            nextLine = getNewLine();
+        }
+    }
+    drawGrid();
+    updateUI();
+}
 
         // Ajouter la ligne complète avec 1 Priks
         function addRandomLine() {
@@ -441,11 +438,10 @@
     }
 }
         // Faire clignoter les Blox avant suppression
-       async function blinkBlocks(blocks, points = null) {
+        async function blinkBlocks(blocks, points = null, isBomb = false) {
     const blinkCount = 3;
     const blinkDuration = 150;
 
-    // Calculer le centre des blocs supprimés
     let avgX = 0, avgY = 0;
     blocks.forEach(([row, col]) => {
         avgX += col * cellSize + 40 + cellSize / 2;
@@ -453,6 +449,12 @@
     });
     avgX /= blocks.length;
     avgY /= blocks.length;
+
+    // Lancer les confettis en parallèle si c’est une bombe
+    let particlePromise = null;
+    if (isBomb) {
+        particlePromise = drawExplosionParticles(avgX, avgY);
+    }
 
     for (let i = 0; i < blinkCount; i++) {
         blocks.forEach(([row, col]) => {
@@ -465,6 +467,11 @@
         await new Promise(resolve => setTimeout(resolve, blinkDuration));
         drawGrid();
         await new Promise(resolve => setTimeout(resolve, blinkDuration));
+    }
+
+    // Attendre la fin des confettis si applicable
+    if (particlePromise) {
+        await particlePromise;
     }
 }
         // Vérifier et supprimer les chaînes de 5 ou plus en cascade, avec mise à jour des Priks
