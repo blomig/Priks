@@ -322,21 +322,23 @@
 
         // Nouvelle fonction pour l’effet d’explosion de la bombe
          async function drawExplosionParticles(x, y) {
-    const pixelSize = 2; // Taille des petits carrés "confettis"
+    const pixelSize = 2;
     const colors = ["#FF0000", "#FF4500", "#FFFF00", "#FFA500"];
-    const explosionArea = 3 * cellSize; // Zone 3x3 cases
-    const baseX = x - explosionArea / 2; // Centrer la zone sur x
-    const baseY = y - explosionArea / 2; // Centrer la zone sur y
-    const particleCount = 30;
+    const explosionArea = 3 * cellSize;
+    const baseX = x - explosionArea / 2;
+    const baseY = y - explosionArea / 2;
+    const particleCount = 50; // Par exemple, plus de confettis
     const duration = 450;
     const steps = 15;
     const stepDuration = duration / steps;
+    const fallDistance = 20; // Distance de chute en pixels (ajustable)
 
     const particles = [];
     for (let i = 0; i < particleCount; i++) {
         particles.push({
             x: baseX + Math.random() * explosionArea,
             y: baseY + Math.random() * explosionArea,
+            vy: fallDistance / steps, // Vitesse pour tomber de fallDistance en steps étapes
             color: colors[Math.floor(Math.random() * colors.length)]
         });
     }
@@ -347,6 +349,7 @@
                 ctx.fillStyle = p.color;
                 ctx.fillRect(p.x, p.y, pixelSize, pixelSize);
             }
+            p.y += p.vy; // Faire descendre à chaque frame
         });
         await new Promise(resolve => setTimeout(resolve, stepDuration));
     }
