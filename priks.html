@@ -322,33 +322,36 @@
 
         // Nouvelle fonction pour l’effet d’explosion de la bombe
         async function drawExplosionParticles(x, y) {
-            const particles = [];
-            for (let i = 0; i < 20; i++) {
-                particles.push({
-                    x: x + cellSize / 2,
-                    y: y + cellSize / 2,
-                    vx: (Math.random() - 0.5) * 4, // Vitesse horizontale
-                    vy: (Math.random() - 0.5) * 4, // Vitesse verticale
-                    size: Math.random() * 5 + 2,
-                    life: 20 // Durée de vie en frames
-                });
-            }
+    const particles = [];
+    const pixelSize = 4; // Taille des "pixels" (carrés)
+    const colors = ["#FF0000", "#FF4500", "#FFFF00", "#FFA500"]; // Rouge, orange vif, jaune, orange moyen
 
-            for (let frame = 0; frame < 20; frame++) {
-                ctx.fillStyle = "rgba(255, 100, 0, " + (1 - frame / 20) + ")"; // Orange dégradé
-                particles.forEach(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.life--;
-                    if (p.life > 0) {
-                        ctx.beginPath();
-                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-                });
-                await new Promise(resolve => setTimeout(resolve, 16)); // ~60 FPS
+    // Générer les particules
+    for (let i = 0; i < 20; i++) {
+        particles.push({
+            x: x + cellSize / 2,
+            y: y + cellSize / 2,
+            vx: (Math.random() - 0.5) * 4, // Vitesse horizontale
+            vy: (Math.random() - 0.5) * 4, // Vitesse verticale
+            color: colors[Math.floor(Math.random() * colors.length)], // Couleur aléatoire
+            life: 20 // Durée de vie en frames
+        });
+    }
+
+    // Animer les particules
+    for (let frame = 0; frame < 20; frame++) {
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life--;
+            if (p.life > 0) {
+                ctx.fillStyle = p.color; // Couleur sans dégradé pour un look pixel
+                ctx.fillRect(p.x - pixelSize / 2, p.y - pixelSize / 2, pixelSize, pixelSize); // Carré centré
             }
-        }
+        });
+        await new Promise(resolve => setTimeout(resolve, 16)); // ~60 FPS, environ 320ms au total
+    }
+}
 
         // Ajouter un Blox ou une bombe dans une colonne avec animation et particules pour la bombe
         async function addBlock(col) {
