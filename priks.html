@@ -354,7 +354,7 @@
         
 
         // Ajouter un Blox ou une bombe dans une colonne avec animation et particules pour la bombe
-        async function addBlock(col) {
+      async function addBlock(col) {
     let row = gridSize - 1;
     while (row >= 0 && !grid[row][col]) row--;
     row++;
@@ -375,7 +375,7 @@
         if (toRemove.length > 0) {
             const bombX = col * cellSize + 40 + cellSize / 2; // Centre exact de la bombe
             const bombY = row * cellSize + cellSize / 2;
-            await blinkBlocks(toRemove, null, true, bombX, bombY); // Passer les coordonnées
+            await blinkBlocks(toRemove, null, true, bombX, bombY); // Confettis et clignotement
             document.getElementById("bombSound").play();
         }
         for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
@@ -388,12 +388,21 @@
         await animateGravity(calculateGravityMoves());
         await checkChains();
     } else {
-        // ... (reste inchangé)
+        await animateBlock(col, gridSize * cellSize, row); // Animation du Blox
+        grid[row][col] = nextBlock; // Placer le Blox dans la grille
+        document.getElementById("placeSound").play();
+        moveCount++;
+        nextBlock = nextNextBlock;
+        nextNextBlock = getNewBlock();
+        await checkChains(); // Vérifier les chaînes
+        if (moveCount % 10 === 0 && moveCount > 0) {
+            addRandomLine();
+            nextLine = getNewLine();
+        }
     }
-    drawGrid();
-    updateUI();
+    drawGrid(); // Toujours redessiner à la fin
+    updateUI(); // Mettre à jour l’UI
 }
-
         // Ajouter la ligne complète avec 1 Priks
         function addRandomLine() {
             for (let col = 0; col < gridSize; col++) {
@@ -431,7 +440,7 @@
 }
         // Faire clignoter les Blox avant suppression
 
-        async function blinkBlocks(blocks, points = null, isBomb = false, bombX = null, bombY = null) {
+       async function blinkBlocks(blocks, points = null, isBomb = false, bombX = null, bombY = null) {
     const blinkCount = 3;
     const blinkDuration = 150;
 
@@ -445,7 +454,7 @@
 
     let particlePromise = null;
     if (isBomb && bombX && bombY) {
-        console.log("bombX:", bombX, "bombY:", bombY); // Pour vérifier
+        console.log("bombX:", bombX, "bombY:", bombY);
         particlePromise = drawExplosionParticles(bombX, bombY);
     }
 
@@ -458,12 +467,12 @@
             animateScorePopup(avgX, avgY, points);
         }
         await new Promise(resolve => setTimeout(resolve, blinkDuration));
-        drawGrid();
+        drawGrid(); // Redessiner la grille à chaque étape
         await new Promise(resolve => setTimeout(resolve, blinkDuration));
     }
 
     if (particlePromise) {
-        await particlePromise;
+        await particlePromise; // Attendre les confettis
     }
 }
         // Vérifier et supprimer les chaînes de 5 ou plus en cascade, avec mise à jour des Priks
