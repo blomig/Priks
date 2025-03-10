@@ -102,10 +102,49 @@
     font-family: "gameboy"; /* Nom que tu choisis pour l’utiliser */
     src: url("gameboy.ttf") format("truetype"); /* Chemin vers le fichier */
     }
+    #startScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Fond semi-transparent */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Au-dessus du canvas */
+}
+
+#startImage {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Garde les proportions */
+}
+
+#startButton {
+    position: absolute;
+    bottom: 20px;
+    padding: 10px 20px;
+    font-family: "GameBoy", monospace;
+    font-size: 16px;
+    color: #0F380F; /* Vert foncé GameBoy */
+    background-color: #8BAC0F; /* Vert clair GameBoy */
+    border: 2px solid #0F380F;
+    cursor: pointer;
+    z-index: 1001; /* Au-dessus de l’image */
+}
+
+#startButton:hover {
+    background-color: #306230; /* Vert foncé au survol */
+}
     </style>
 </head>
 <body>
     <div id="gameContainer">
+        <div id="startScreen">
+        <img src="start_screen.png" alt="Écran d'accueil" id="startImage">
+       <button id="startButton">START</button>
+        </div>
         <audio id="placeSound" src="place.wav" preload="auto"></audio>
 <audio id="chainSound" src="chain.mp3" preload="auto"></audio>
 <audio id="bombSound" src="bomb.wav" preload="auto"></audio>
@@ -139,6 +178,13 @@
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
+        document.getElementById("startButton").addEventListener("click", () => {
+        document.getElementById("startScreen").style.display = "none";
+         // Lancer le jeu (déjà géré par le code existant)
+         updateHighScoresDisplay();
+         drawGrid();
+         updateUI();
+         });
         const gridSize = 8;
         const cellSize = 320 / gridSize;
         const previewHeight = cellSize * 2;
