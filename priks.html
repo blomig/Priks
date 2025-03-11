@@ -533,55 +533,59 @@
 
     // Ajouter un bloc ou une bombe
     async function addBlock(col) {
-        let row = gridSize - 1;
-        while (row >= 0 && !grid[row][col]) row--;
-        row++;
-        if (row >= gridSize) {
-            endGame();
-            return;
-        }
-        if (isBombSelected) {
-            await animateBlock(col, gridSize * cellSize, row, true);
-            let toRemove = [];
-            for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
-                for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
-                    if (grid[r][c]) {
-                        toRemove.push([r, c]);
-                    }
-                }
-            }
-            if (toRemove.length > 0) {
-                const bombX = col * cellSize + 40 + cellSize / 2;
-                const bombY = row * cellSize + cellSize / 2;
-                await blinkBlocks(toRemove, null, true, bombX, bombY);
-                document.getElementById("bombSound").play();
-            }
-            for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
-                for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
-                    grid[r][c] = null;
-                }
-            }
-            bombCount--;
-            isBombSelected = false;
-            await animateGravity(calculateGravityMoves());
-            await checkChains();
-        } else {
-            await animateBlock(col, gridSize * cellSize, row);
-            grid[row][col] = nextBlock;
-            console.log("Bloc placé:", row, col, nextBlock);
-            document.getElementById("placeSound").play();
-            moveCount++;
-            nextBlock = nextNextBlock;
-            nextNextBlock = getNewBlock();
-            await checkChains();
-            if (moveCount % 10 === 0 && moveCount > 0) {
-                addRandomLine();
-                nextLine = getNewLine();
-            }
-        }
-        drawGrid();
-        updateUI();
+    let row = gridSize - 1;
+    while (row >= 0 && !grid[row][col]) row--;
+    row++;
+    if (row >= gridSize) {
+        endGame();
+        return;
     }
+    if (isBombSelected) {
+        await animateBlock(col, gridSize * cellSize, row, true);
+        let toRemove = [];
+        for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
+            for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
+                if (grid[r][c]) {
+                    toRemove.push([r, c]);
+                }
+            }
+        }
+        if (toRemove.length > 0) {
+            const bombX = col * cellSize + 40 + cellSize / 2;
+            const bombY = row * cellSize + cellSize / 2;
+            await blinkBlocks(toRemove, null, true, bombX, bombY);
+            const bombSound = document.getElementById("bombSound");
+            if (bombSound) bombSound.play().catch(e => console.error("Erreur son bombe:", e));
+        }
+        for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
+            for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
+                grid[r][c] = null;
+            }
+        }
+        bombCount--;
+        isBombSelected = false;
+        await animateGravity(calculateGravityMoves());
+        await checkChains();
+    } else {
+        await animateBlock(col, gridSize * cellSize, row);
+        grid[row][col] = nextBlock;
+        console.log("Bloc placé:", row, col, nextBlock);
+        console.log("nextBlock avant:", nextBlock, "nextNextBlock avant:", nextNextBlock);
+        const placeSound = document.getElementById("placeSound");
+        if (placeSound) placeSound.play().catch(e => console.error("Erreur son placement:", e));
+        moveCount++;
+        nextBlock = nextNextBlock;
+        nextNextBlock = getNewBlock();
+        console.log("nextBlock après:", nextBlock, "nextNextBlock après:", nextNextBlock);
+        await checkChains();
+        if (moveCount % 10 === 0 && moveCount > 0) {
+            addRandomLine();
+            nextLine = getNewLine();
+        }
+    }
+    drawGrid();
+    updateUI();
+}
 
     // Ajouter une ligne complète
     function addRandomLine() {
