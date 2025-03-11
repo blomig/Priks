@@ -139,13 +139,31 @@
 #startButton:hover {
     background-color: #306230; /* Vert foncé au survol */
 }
+#pressStart {
+    position: absolute;
+    bottom: 60px; /* Juste au-dessus du bouton */
+    font-family: "GameBoy", monospace;
+    font-size: 14px;
+    color: #0F380F; /* Vert foncé GameBoy */
+    animation: blink 1s infinite; /* Animation de clignotement */
+}
+
+@keyframes blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0;
+    }
+}
     </style>
 </head>
 <body>
     <div id="gameContainer">
         <div id="startScreen">
-        <img src="start_screen.png" alt="Écran d'accueil" id="startImage">
-       <button id="startButton">START</button>
+            <img src="start_screen.png" alt="Écran d'accueil" id="startImage">
+            <span id="pressStart">PRESS START</span>
+            <button id="startButton">START</button>
         </div>
         <audio id="placeSound" src="place.wav" preload="auto"></audio>
 <audio id="chainSound" src="chain.mp3" preload="auto"></audio>
