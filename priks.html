@@ -102,18 +102,29 @@
     font-family: "gameboy"; /* Nom que tu choisis pour l’utiliser */
     src: url("gameboy.ttf") format("truetype"); /* Chemin vers le fichier */
     }
-  #pressStart, #startButton {
-    display: none; /* Cachés par défaut */
+#startScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    z-index: 1000;
 }
 
-#startScreen[style*="display: flex"] ~ #pressStart,
-#startScreen[style*="display: flex"] ~ #startButton {
-    display: block; /* Affichés quand #startScreen est visible */
+#startImage {
+    max-width: 360px;
+    max-height: 400px;
+    object-fit: contain;
+    margin-top: 20px;
 }
 
 #pressStart {
-    display: block; /* Afficher en ligne */
-    margin-top: 10px; /* Espacement sous #underGrid */
+    position: absolute;
+    bottom: 60px;
     font-family: "GameBoy", monospace;
     font-size: 14px;
     color: #0F380F;
@@ -121,8 +132,8 @@
 }
 
 #startButton {
-    display: block; /* Afficher en ligne */
-    margin-top: 5px; /* Espacement sous pressStart */
+    position: absolute;
+    bottom: 20px;
     padding: 10px 20px;
     font-family: "GameBoy", monospace;
     font-size: 16px;
@@ -130,28 +141,21 @@
     background-color: #8BAC0F;
     border: 2px solid #0F380F;
     cursor: pointer;
+    z-index: 1001;
 }
 
 #startButton:hover {
     background-color: #306230;
 }
 
-@keyframes blink {
-    0%, 50% {
-        opacity: 1;
-    }
-    51%, 100% {
-        opacity: 0;
-    }
-}
-        #gameOverScreen {
+#gameOverScreen {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    display: none; /* Caché par défaut */
+    display: none;
     justify-content: center;
     align-items: flex-start;
     z-index: 1000;
@@ -161,7 +165,18 @@
     max-width: 360px;
     max-height: 400px;
     object-fit: contain;
-    margin-top: 10px; /* Même décalage que start_screen */
+    margin-top: 20px;
+}
+
+#gameOverScore {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: "GameBoy", monospace;
+    font-size: 16px;
+    color: #0F380F;
+    z-index: 1002;
 }
 
 #gameOverPressStart {
@@ -189,23 +204,14 @@
 #gameOverButton:hover {
     background-color: #306230;
 }
-        #gameOverScore {
-    position: absolute;
-    top: 10px; /* Juste au-dessus de l’image */
-    left: 50%;
-    transform: translateX(-50%); /* Centrer horizontalement */
-    font-family: "GameBoy", monospace;
-    font-size: 16px;
-    color: #0F380F; /* Vert foncé GameBoy */
-    z-index: 1002; /* Au-dessus de tout */
-}
-        #pressStart, #startButton {
-    display: none;
-}
 
-#startScreen[style*="display: flex"] ~ #pressStart,
-#startScreen[style*="display: flex"] ~ #startButton {
-    display: block;
+@keyframes blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0;
+    }
 }
     </style>
 </head>
@@ -229,8 +235,6 @@
             <span id="chainsRemaining">CHAÎNES RESTANTES : 10</span>
         </div>
     </div>
-    <span id="pressStart">PRESS START</span>
-    <button id="startButton">START</button>
     <div id="info">
         <p>Utilisez ← et → (ou cliquez/touchez une colonne) pour déplacer, Espace (ou clic colonne) pour placer, B (ou clic bombe) pour sélectionner une bombe</p>
         <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés sauf par bombes ou chaînes adjacentes (5→4→3→2→1→disparition). Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 10 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
@@ -238,6 +242,8 @@
 </div>
 <div id="startScreen">
     <img src="start_screen.png" alt="Écran d'accueil" id="startImage">
+    <span id="pressStart">PRESS START</span>
+    <button id="startButton">START</button>
 </div>
 <div id="gameOverScreen">
     <span id="gameOverScore"></span>
@@ -250,20 +256,32 @@
         const ctx = canvas.getContext("2d");
 // Au chargement de la page
 document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("pressStart").style.display = "block";
-    document.getElementById("startButton").style.display = "block";
+    // Pas besoin de gérer pressStart/startButton ici, ils sont dans l’overlay
 });
 
 document.getElementById("startButton").addEventListener("click", () => {
     document.getElementById("startScreen").style.display = "none";
-    document.getElementById("pressStart").style.display = "none";
-    document.getElementById("startButton").style.display = "none";
     updateHighScoresDisplay();
     drawGrid();
     updateUI();
 });
-        document.getElementById("gameOverButton").addEventListener("click", () => {
+
+document.getElementById("gameOverButton").addEventListener("click", () => {
     document.getElementById("gameOverScreen").style.display = "none";
+    grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
+    bombCount = 1;
+    chainCount = 0;
+    score = 0;
+    moveCount = 0;
+    nextBlock = getNewBlock();
+    nextNextBlock = getNewBlock();
+    nextLine = getNewLine();
+    isBombSelected = false;
+    blockPosition = 0;
+    drawGrid();
+    updateUI();
+});
+
     // Réinitialiser le jeu
     grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
     bombCount = 1;
@@ -775,14 +793,12 @@ document.getElementById("startButton").addEventListener("click", () => {
 }
 
         // Fin du jeu avec gestion des hiscores
-        function endGame() {
+       function endGame() {
     const highScores = loadHighScores();
     if (score > highScores[9][1]) {
         addHighScore(score);
     }
-    // Supprimer l’alert et afficher le score
     document.getElementById("gameOverScore").textContent = `SCORE FINAL : ${score}`;
-    // Afficher l’écran de fin
     document.getElementById("gameOverScreen").style.display = "flex";
 }
 
