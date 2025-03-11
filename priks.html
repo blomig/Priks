@@ -201,6 +201,16 @@
 #gameOverButton:hover {
     background-color: #306230;
 }
+        #gameOverScore {
+    position: absolute;
+    top: 10px; /* Juste au-dessus de l’image */
+    left: 50%;
+    transform: translateX(-50%); /* Centrer horizontalement */
+    font-family: "GameBoy", monospace;
+    font-size: 16px;
+    color: #0F380F; /* Vert foncé GameBoy */
+    z-index: 1002; /* Au-dessus de tout */
+}
     </style>
 </head>
 <body>
@@ -210,11 +220,12 @@
             <span id="pressStart">PRESS START</span>
             <button id="startButton">START</button>
         </div>
-        <div id="gameOverScreen">
+       <div id="gameOverScreen">
+    <span id="gameOverScore"></span>
     <img src="gameover.png" alt="Game Over" id="gameOverImage">
     <span id="gameOverPressStart">PRESS START</span>
     <button id="gameOverButton">START</button>
-    </div>
+</div>
         <audio id="placeSound" src="place.wav" preload="auto"></audio>
 <audio id="chainSound" src="chain.mp3" preload="auto"></audio>
 <audio id="bombSound" src="bomb.wav" preload="auto"></audio>
@@ -755,28 +766,11 @@
     if (score > highScores[9][1]) {
         addHighScore(score);
     }
-    alert("Jeu terminé ! Score final : " + score);
-    
+    // Supprimer l’alert et afficher le score
+    document.getElementById("gameOverScore").textContent = `SCORE FINAL : ${score}`;
     // Afficher l’écran de fin
     document.getElementById("gameOverScreen").style.display = "flex";
 }
-
-document.getElementById("gameOverButton").addEventListener("click", () => {
-    document.getElementById("gameOverScreen").style.display = "none";
-    // Réinitialiser le jeu
-    grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
-    bombCount = 1;
-    chainCount = 0;
-    score = 0;
-    moveCount = 0;
-    nextBlock = getNewBlock();
-    nextNextBlock = getNewBlock();
-    nextLine = getNewLine();
-    isBombSelected = false;
-    blockPosition = 0;
-    drawGrid();
-    updateUI();
-});
 
         // Gestion des touches du clavier (optionnel sur mobile)
         document.addEventListener("keydown", (event) => {
