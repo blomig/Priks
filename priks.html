@@ -248,8 +248,16 @@
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        document.getElementById("startButton").addEventListener("click", () => {
+// Au chargement de la page
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("pressStart").style.display = "block";
+    document.getElementById("startButton").style.display = "block";
+});
+
+document.getElementById("startButton").addEventListener("click", () => {
     document.getElementById("startScreen").style.display = "none";
+    document.getElementById("pressStart").style.display = "none";
+    document.getElementById("startButton").style.display = "none";
     updateHighScoresDisplay();
     drawGrid();
     updateUI();
