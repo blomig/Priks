@@ -156,6 +156,51 @@
         opacity: 0;
     }
 }
+        #gameOverScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none; /* Caché par défaut */
+    justify-content: center;
+    align-items: flex-start;
+    z-index: 1000;
+}
+
+#gameOverImage {
+    max-width: 360px;
+    max-height: 400px;
+    object-fit: contain;
+    margin-top: 20px; /* Même décalage que start_screen */
+}
+
+#gameOverPressStart {
+    position: absolute;
+    bottom: 60px;
+    font-family: "GameBoy", monospace;
+    font-size: 14px;
+    color: #0F380F;
+    animation: blink 1s infinite;
+}
+
+#gameOverButton {
+    position: absolute;
+    bottom: 20px;
+    padding: 10px 20px;
+    font-family: "GameBoy", monospace;
+    font-size: 16px;
+    color: #0F380F;
+    background-color: #8BAC0F;
+    border: 2px solid #0F380F;
+    cursor: pointer;
+    z-index: 1001;
+}
+
+#gameOverButton:hover {
+    background-color: #306230;
+}
     </style>
 </head>
 <body>
@@ -165,6 +210,11 @@
             <span id="pressStart">PRESS START</span>
             <button id="startButton">START</button>
         </div>
+        <div id="gameOverScreen">
+    <img src="gameover.png" alt="Game Over" id="gameOverImage">
+    <span id="gameOverPressStart">PRESS START</span>
+    <button id="gameOverButton">START</button>
+    </div>
         <audio id="placeSound" src="place.wav" preload="auto"></audio>
 <audio id="chainSound" src="chain.mp3" preload="auto"></audio>
 <audio id="bombSound" src="bomb.wav" preload="auto"></audio>
@@ -701,24 +751,32 @@
 
         // Fin du jeu avec gestion des hiscores
         function endGame() {
-            const highScores = loadHighScores();
-            if (score > highScores[9][1]) {
-                addHighScore(score);
-            }
-            alert("Jeu terminé ! Score final : " + score);
-            grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
-            bombCount = 1;
-            chainCount = 0;
-            score = 0;
-            moveCount = 0;
-            nextBlock = getNewBlock();
-            nextNextBlock = getNewBlock();
-            nextLine = getNewLine();
-            isBombSelected = false;
-            blockPosition = 0;
-            drawGrid();
-            updateUI();
-        }
+    const highScores = loadHighScores();
+    if (score > highScores[9][1]) {
+        addHighScore(score);
+    }
+    alert("Jeu terminé ! Score final : " + score);
+    
+    // Afficher l’écran de fin
+    document.getElementById("gameOverScreen").style.display = "flex";
+}
+
+document.getElementById("gameOverButton").addEventListener("click", () => {
+    document.getElementById("gameOverScreen").style.display = "none";
+    // Réinitialiser le jeu
+    grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
+    bombCount = 1;
+    chainCount = 0;
+    score = 0;
+    moveCount = 0;
+    nextBlock = getNewBlock();
+    nextNextBlock = getNewBlock();
+    nextLine = getNewLine();
+    isBombSelected = false;
+    blockPosition = 0;
+    drawGrid();
+    updateUI();
+});
 
         // Gestion des touches du clavier (optionnel sur mobile)
         document.addEventListener("keydown", (event) => {
