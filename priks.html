@@ -223,49 +223,40 @@
 </head>
 <body>
     <div id="gameContainer">
-        <div id="startScreen">
-            <img src="start_screen.png" alt="Écran d'accueil" id="startImage">
-            <span id="pressStart">PRESS START</span>
-            <button id="startButton">START</button>
+    <canvas id="gameCanvas" width="360" height="400"></canvas>
+    <div id="highScores">
+        <h3>MEILLEURS SCORES</h3>
+        <ul id="highScoreList"></ul>
+    </div>
+    <div id="underGrid">
+        <div id="scoreDisplay">SCORE : <span id="score">0</span></div>
+        <div id="progressContainer">
+            <div id="progressBar"></div>
         </div>
-       <div id="gameOverScreen">
+        <div id="bombDisplay">
+            <div style="display: flex; align-items: center;">
+                <img src="bomb.png" alt="Bombes" id="bombIcon">
+                <span id="bombCount">1</span>
+            </div>
+            <span id="chainsRemaining">CHAÎNES RESTANTES : 10</span>
+        </div>
+    </div>
+    <span id="pressStart">PRESS START</span>
+    <button id="startButton">START</button>
+    <div id="info">
+        <p>Utilisez ← et → (ou cliquez/touchez une colonne) pour déplacer, Espace (ou clic colonne) pour placer, B (ou clic bombe) pour sélectionner une bombe</p>
+        <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés sauf par bombes ou chaînes adjacentes (5→4→3→2→1→disparition). Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 10 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
+    </div>
+</div>
+<div id="startScreen">
+    <img src="start_screen.png" alt="Écran d'accueil" id="startImage">
+</div>
+<div id="gameOverScreen">
     <span id="gameOverScore"></span>
     <img src="gameover.png" alt="Game Over" id="gameOverImage">
     <span id="gameOverPressStart">PRESS START</span>
     <button id="gameOverButton">START</button>
 </div>
-        <audio id="placeSound" src="place.wav" preload="auto"></audio>
-<audio id="chainSound" src="chain.mp3" preload="auto"></audio>
-<audio id="bombSound" src="bomb.wav" preload="auto"></audio>
-        <canvas id="gameCanvas" width="360" height="400"></canvas>
-        <div id="highScores">
-            <h3>Meilleurs Scores</h3>
-            <ul id="highScoreList"></ul>
-        </div>
-         <div id="underGrid">
-            
-          <div id="scoreDisplay">Score : <span id="score">0</span></div>
-         <!-- Nouvelle barre de progression -->
-           <div id="progressContainer">
-             <div id="progressBar"></div>
-           </div>
-        <div id="bombDisplay">
-        <div style="display: flex; align-items: center;">
-            <img src="bomb.png" alt="Bombes" id="bombIcon">
-            <span id="bombCount">1</span>
-        </div>
-        <span id="chainsRemaining">Chaines restantes : 10</span>
-    </div>
-</div>
-            
-        </div>
-        <span id="pressStart">PRESS START</span>
-    <button id="startButton">START</button>
-        <div id="info">
-            <p id="rules">Utilisez ← et → (ou cliquez/touchez une colonne) pour déplacer, Espace (ou clic colonne) pour placer, B (ou clic bombe) pour sélectionner une bombe</p>
-            <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés sauf par bombes ou chaînes adjacentes (5→4→3→2→1→disparition). Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 10 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
-        </div>
-    </div>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
