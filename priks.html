@@ -211,6 +211,14 @@
     color: #0F380F; /* Vert foncé GameBoy */
     z-index: 1002; /* Au-dessus de tout */
 }
+        #pressStart, #startButton {
+    display: none;
+}
+
+#startScreen[style*="display: flex"] ~ #pressStart,
+#startScreen[style*="display: flex"] ~ #startButton {
+    display: block;
+}
     </style>
 </head>
 <body>
@@ -260,12 +268,11 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         document.getElementById("startButton").addEventListener("click", () => {
-        document.getElementById("startScreen").style.display = "none";
-         // Lancer le jeu (déjà géré par le code existant)
-         updateHighScoresDisplay();
-         drawGrid();
-         updateUI();
-         });
+    document.getElementById("startScreen").style.display = "none";
+    updateHighScoresDisplay();
+    drawGrid();
+    updateUI();
+});
         document.getElementById("gameOverButton").addEventListener("click", () => {
     document.getElementById("gameOverScreen").style.display = "none";
     // Réinitialiser le jeu
