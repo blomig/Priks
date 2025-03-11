@@ -266,6 +266,22 @@
          drawGrid();
          updateUI();
          });
+        document.getElementById("gameOverButton").addEventListener("click", () => {
+    document.getElementById("gameOverScreen").style.display = "none";
+    // Réinitialiser le jeu
+    grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
+    bombCount = 1;
+    chainCount = 0;
+    score = 0;
+    moveCount = 0;
+    nextBlock = getNewBlock();
+    nextNextBlock = getNewBlock();
+    nextLine = getNewLine();
+    isBombSelected = false;
+    blockPosition = 0;
+    drawGrid();
+    updateUI();
+});
         const gridSize = 8;
         const cellSize = 320 / gridSize;
         const previewHeight = cellSize * 2;
