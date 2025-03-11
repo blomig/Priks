@@ -310,6 +310,7 @@ document.getElementById("startButton").addEventListener("click", () => {
         // Générer un nouveau Blox
         function getNewBlock() {
             if (Math.random() < 0.1) return [priksColor, 5];
+            console.log("Nouveau bloc généré:", block);
             return colors[Math.floor(Math.random() * colors.length)];
         }
 
@@ -554,6 +555,7 @@ document.getElementById("startButton").addEventListener("click", () => {
     } else {
         await animateBlock(col, gridSize * cellSize, row); // Animation du Blox
         grid[row][col] = nextBlock; // Placer le Blox dans la grille
+        console.log("Bloc placé:", row, col, nextBlock);
         document.getElementById("placeSound").play();
         moveCount++;
         nextBlock = nextNextBlock;
