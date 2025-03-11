@@ -102,50 +102,38 @@
     font-family: "gameboy"; /* Nom que tu choisis pour l’utiliser */
     src: url("gameboy.ttf") format("truetype"); /* Chemin vers le fichier */
     }
-   #startScreen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: flex-start; /* Changer de center à flex-start pour aligner en haut */
-    z-index: 1000;
+  #pressStart, #startButton {
+    display: none; /* Cachés par défaut */
 }
 
-#startImage {
-    max-width: 360px; /* Largeur fixe correspondant au canvas */
-    max-height: 400px; /* Hauteur fixe correspondant au canvas */
-    object-fit: contain;
-    margin-top: 10px; /* Réinitialiser la marge */
-    transform: translateY(0); /* Ajuster verticalement si besoin */
+#startScreen[style*="display: flex"] ~ #pressStart,
+#startScreen[style*="display: flex"] ~ #startButton {
+    display: block; /* Affichés quand #startScreen est visible */
+}
+
+#pressStart {
+    display: block; /* Afficher en ligne */
+    margin-top: 10px; /* Espacement sous #underGrid */
+    font-family: "GameBoy", monospace;
+    font-size: 14px;
+    color: #0F380F;
+    animation: blink 1s infinite;
 }
 
 #startButton {
-    position: absolute;
-    bottom: 20px;
+    display: block; /* Afficher en ligne */
+    margin-top: 5px; /* Espacement sous pressStart */
     padding: 10px 20px;
     font-family: "GameBoy", monospace;
     font-size: 16px;
-    color: #0F380F; /* Vert foncé GameBoy */
-    background-color: #8BAC0F; /* Vert clair GameBoy */
+    color: #0F380F;
+    background-color: #8BAC0F;
     border: 2px solid #0F380F;
     cursor: pointer;
-    z-index: 1001; /* Au-dessus de l’image */
 }
 
 #startButton:hover {
-    background-color: #306230; /* Vert foncé au survol */
-}
-#pressStart {
-    position: absolute;
-    bottom: 60px; /* Juste au-dessus du bouton */
-    font-family: "GameBoy", monospace;
-    font-size: 14px;
-    color: #0F380F; /* Vert foncé GameBoy */
-    animation: blink 1s infinite; /* Animation de clignotement */
+    background-color: #306230;
 }
 
 @keyframes blink {
