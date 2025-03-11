@@ -256,14 +256,19 @@
         const ctx = canvas.getContext("2d");
 // Au chargement de la page
 document.addEventListener("DOMContentLoaded", () => {
-    // Pas besoin de gérer pressStart/startButton ici, ils sont dans l’overlay
-});
-
-document.getElementById("startButton").addEventListener("click", () => {
-    document.getElementById("startScreen").style.display = "none";
-    updateHighScoresDisplay();
-    drawGrid();
-    updateUI();
+    const startButton = document.getElementById("startButton");
+    console.log("Bouton Start trouvé:", startButton);
+    if (startButton) {
+        startButton.addEventListener("click", () => {
+            console.log("Bouton Start cliqué");
+            document.getElementById("startScreen").style.display = "none";
+            updateHighScoresDisplay();
+            drawGrid();
+            updateUI();
+        });
+    } else {
+        console.error("Erreur : #startButton non trouvé");
+    }
 });
 
 document.getElementById("gameOverButton").addEventListener("click", () => {
