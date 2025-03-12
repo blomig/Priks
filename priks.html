@@ -326,21 +326,22 @@
             console.log("Bouton Game Over trouvé:", gameOverButton);
             if (gameOverButton) {
                 gameOverButton.addEventListener("click", () => {
-                    console.log("Bouton Game Over cliqué");
-                    document.getElementById("gameOverScreen").style.display = "none";
-                    grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
-                    bombCount = 1;
-                    chainCount = 0;
-                    score = 0;
-                    moveCount = 0;
-                    nextBlock = getNewBlock();
-                    nextNextBlock = getNewBlock();
-                    nextLine = getNewLine();
-                    isBombSelected = false;
-                    blockPosition = 0;
-                    drawGrid();
-                    updateUI();
-                });
+    console.log("Bouton Game Over cliqué");
+    document.getElementById("gameOverScreen").style.display = "none";
+    grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
+    bombCount = 1;
+    chainCount = 0;
+    score = 0;
+    moveCount = 0;
+    nextBlock = getNewBlock();
+    nextNextBlock = getNewBlock();
+    nextLine = getNewLine();
+    isBombSelected = false;
+    blockPosition = 0;
+    isGameOver = false; // Réinitialiser pour une nouvelle partie
+    drawGrid();
+    updateUI();
+});
             }
 
             // Gestion des touches avec verrouillage
