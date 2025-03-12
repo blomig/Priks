@@ -397,12 +397,12 @@
 
         // Charger et afficher les hiscores
         // Charger les hiscores depuis l’API
-function loadHighScores() {
+        function loadHighScores() {
     console.log("Chargement des scores depuis l’API...");
-    return fetch('https://www.blomig.com/api/scores.php', {
+    return fetch('https://www.blomig.com/api/scores.php?v=' + Date.now(), {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        cache: 'no-cache' // Empêcher la mise en cache
+        cache: 'no-cache' // Empêcher la mise en cache côté client
     })
     .then(response => {
         if (!response.ok) {
