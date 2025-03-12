@@ -417,13 +417,24 @@ function loadHighScores() {
 
 // Sauvegarder les hiscores via l’API
 function saveHighScores(highScores) {
+    const newScore = highScores[highScores.length - 1]; // [name, score]
     return fetch('https://www.blomig.com/api/scores.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(highScores[highScores.length - 1]) // Envoyer seulement le dernier score ajouté
+        body: JSON.stringify({ name: newScore[0], score: newScore[1] }) // Objet { name, score }
     })
-    .then(response => response.json())
-    .catch(error => console.error("Erreur sauvegarde scores:", error));
+    .then(response => {
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        console.log("Score sauvegardé:", data);
+        return data;
+    })
+    .catch(error => {
+        console.error("Erreur sauvegarde scores:", error);
+        throw error; // Propager l’erreur pour gérer la boucle
+    });
 }
 
 // Mettre à jour l’affichage des hiscores
@@ -448,7 +459,12 @@ function addHighScore(score) {
             highScores.push([name, score]);
             highScores.sort((a, b) => b[1] - a[1]);
             highScores = highScores.slice(0, 10);
-            saveHighScores(highScores).then(() => updateHighScoresDisplay());
+            saveHighScores(highScores).then(() => {
+                updateHighScoresDisplay();
+            }).catch(error => {
+                console.error("Échec de la sauvegarde, score non ajouté:", error);
+                alert("Erreur lors de la sauvegarde du score. Essaye encore ou contacte l'admin.");
+            });
         });
     }
 }
