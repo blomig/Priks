@@ -257,6 +257,7 @@
         const cellSize = 320 / gridSize;
         const previewHeight = cellSize * 2;
         let grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
+        let isGameOver = false; // Empêcher plusieurs appels à endGame
         let bombCount = 1;
         let chainCount = 0;
         let score = 0;
@@ -890,6 +891,8 @@ function addHighScore(score) {
 
         // Fin du jeu
         function endGame() {
+    if (isGameOver) return; // Empêcher plusieurs appels
+    isGameOver = true; // Verrouiller
     loadHighScores().then((highScores) => {
         if (score > highScores[9][1]) {
             addHighScore(score);
