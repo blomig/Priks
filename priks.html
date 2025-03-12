@@ -396,7 +396,7 @@
         // Charger et afficher les hiscores
         // Charger les hiscores depuis l’API
 function loadHighScores() {
-    return fetch('https://tondomaine.com/api/scores.php', {
+    return fetch('https://www.blomig.com/api/scores.php', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
     })
@@ -417,7 +417,7 @@ function loadHighScores() {
 
 // Sauvegarder les hiscores via l’API
 function saveHighScores(highScores) {
-    return fetch('https://tondomaine.com/api/scores.php', {
+    return fetch('https://www.blomig.com/api/scores.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(highScores[highScores.length - 1]) // Envoyer seulement le dernier score ajouté
