@@ -398,12 +398,20 @@
         // Charger et afficher les hiscores
         // Charger les hiscores depuis l’API
 function loadHighScores() {
+    console.log("Chargement des scores depuis l’API...");
     return fetch('https://www.blomig.com/api/scores.php', {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-cache' // Empêcher la mise en cache
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(highScores => {
+        console.log("Scores chargés:", highScores);
         if (highScores.length < 10) {
             while (highScores.length < 10) {
                 highScores.push(["AAAAA", 0]);
@@ -446,6 +454,7 @@ function loadHighScores() {
 // Mettre à jour l’affichage des hiscores
 function updateHighScoresDisplay() {
     loadHighScores().then(highScores => {
+        console.log("Mise à jour de l’affichage des highscores:", highScores);
         const list = document.getElementById("highScoreList");
         list.innerHTML = "";
         highScores.forEach(([name, score]) => {
