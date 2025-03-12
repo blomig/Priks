@@ -394,38 +394,64 @@
         });
 
         // Charger et afficher les hiscores
-        function loadHighScores() {
-            const highScores = JSON.parse(localStorage.getItem("priksHighScores")) || [];
-            return highScores.length ? highScores : [["AAAAA", 0], ["BBBBB", 0], ["CCCCC", 0], ["DDDDD", 0], ["EEEEE", 0], ["FFFFF", 0], ["GGGGG", 0], ["HHHHH", 0], ["IIIII", 0], ["JJJJJ", 0]];
-        }
-
-        function saveHighScores(highScores) {
-            localStorage.setItem("priksHighScores", JSON.stringify(highScores));
-        }
-
-        function updateHighScoresDisplay() {
-            const highScores = loadHighScores();
-            const list = document.getElementById("highScoreList");
-            list.innerHTML = "";
-            highScores.forEach(([name, score]) => {
-                const li = document.createElement("li");
-                li.textContent = `${name} : ${score}`;
-                list.appendChild(li);
-            });
-        }
-
-        function addHighScore(score) {
-            let highScores = loadHighScores();
-            let name = prompt("Nouveau highscore ! Entrez vos initiales (5 lettres max) :", "AAAAA");
-            if (name) {
-                name = name.slice(0, 5).padEnd(5, " ").toUpperCase();
-                highScores.push([name, score]);
-                highScores.sort((a, b) => b[1] - a[1]);
-                highScores = highScores.slice(0, 10);
-                saveHighScores(highScores);
-                updateHighScoresDisplay();
+        // Charger les hiscores depuis l’API
+function loadHighScores() {
+    return fetch('https://tondomaine.com/api/scores.php', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(highScores => {
+        if (highScores.length < 10) {
+            while (highScores.length < 10) {
+                highScores.push(["AAAAA", 0]);
             }
         }
+        return highScores;
+    })
+    .catch(error => {
+        console.error("Erreur chargement scores:", error);
+        return [["AAAAA", 0], ["BBBBB", 0], ["CCCCC", 0], ["DDDDD", 0], ["EEEEE", 0], ["FFFFF", 0], ["GGGGG", 0], ["HHHHH", 0], ["IIIII", 0], ["JJJJJ", 0]];
+    });
+}
+
+// Sauvegarder les hiscores via l’API
+function saveHighScores(highScores) {
+    return fetch('https://tondomaine.com/api/scores.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(highScores[highScores.length - 1]) // Envoyer seulement le dernier score ajouté
+    })
+    .then(response => response.json())
+    .catch(error => console.error("Erreur sauvegarde scores:", error));
+}
+
+// Mettre à jour l’affichage des hiscores
+function updateHighScoresDisplay() {
+    loadHighScores().then(highScores => {
+        const list = document.getElementById("highScoreList");
+        list.innerHTML = "";
+        highScores.forEach(([name, score]) => {
+            const li = document.createElement("li");
+            li.textContent = `${name} : ${score}`;
+            list.appendChild(li);
+        });
+    });
+}
+
+// Ajouter un nouveau highscore
+function addHighScore(score) {
+    let name = prompt("Nouveau highscore ! Entrez vos initiales (5 lettres max) :", "AAAAA");
+    if (name) {
+        name = name.slice(0, 5).padEnd(5, " ").toUpperCase();
+        loadHighScores().then(highScores => {
+            highScores.push([name, score]);
+            highScores.sort((a, b) => b[1] - a[1]);
+            highScores = highScores.slice(0, 10);
+            saveHighScores(highScores).then(() => updateHighScoresDisplay());
+        });
+    }
+}
 
         // Dessiner la grille
         function drawGrid(movingBlocks = []) {
