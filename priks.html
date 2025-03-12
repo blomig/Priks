@@ -313,12 +313,12 @@
             console.log("Bouton Start trouvé:", startButton);
             if (startButton) {
                 startButton.addEventListener("click", () => {
-                    console.log("Bouton Start cliqué");
-                    document.getElementById("startScreen").style.display = "none";
-                    updateHighScoresDisplay();
-                    drawGrid();
-                    updateUI();
-                });
+    console.log("Bouton Start cliqué");
+    document.getElementById("startScreen").style.display = "none";
+    updateHighScoresDisplay();
+    drawGrid();
+    updateUI();
+});
             }
 
             const gameOverButton = document.getElementById("gameOverButton");
@@ -874,13 +874,14 @@ function addHighScore(score) {
 
         // Fin du jeu
         function endGame() {
-            const highScores = loadHighScores();
-            if (score > highScores[9][1]) {
-                addHighScore(score);
-            }
-            document.getElementById("gameOverScore").textContent = `SCORE FINAL : ${score}`;
-            document.getElementById("gameOverScreen").style.display = "flex";
+    loadHighScores().then((highScores) => {
+        if (score > highScores[9][1]) {
+            addHighScore(score);
         }
+        document.getElementById("gameOverScore").textContent = `SCORE FINAL : ${score}`;
+        document.getElementById("gameOverScreen").style.display = "flex";
+    });
+}
 
         // Gestion des touches
         document.addEventListener("keydown", (event) => {
