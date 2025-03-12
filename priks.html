@@ -419,14 +419,19 @@ function loadHighScores() {
 
 // Sauvegarder les hiscores via l’API
 function saveHighScores(highScores) {
-    const newScore = highScores[highScores.length - 1]; // [name, score]
+    const newScore = highScores[highScores.length - 1];
+    console.log("Données à envoyer:", { name: newScore[0], score: newScore[1] }); // Log avant envoi
     return fetch('https://www.blomig.com/api/scores.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newScore[0], score: newScore[1] }) // Objet { name, score }
+        body: JSON.stringify({ name: newScore[0], score: newScore[1] })
     })
     .then(response => {
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(`HTTP error! status: ${response.status}, message: ${err.error}`);
+            });
+        }
         return response.json();
     })
     .then(data => {
@@ -435,7 +440,7 @@ function saveHighScores(highScores) {
     })
     .catch(error => {
         console.error("Erreur sauvegarde scores:", error);
-        throw error; // Propager l’erreur pour gérer la boucle
+        throw error;
     });
 }
 
@@ -455,12 +460,17 @@ function updateHighScoresDisplay() {
 // Ajouter un nouveau highscore
 function addHighScore(score) {
     let name = prompt("Nouveau highscore ! Entrez vos initiales (5 lettres max) :", "AAAAA");
+    console.log("Nom saisi:", name, "Score:", score); // Log initial
     if (name) {
         name = name.slice(0, 5).padEnd(5, " ").toUpperCase();
+        console.log("Nom formaté:", name, "Score:", score); // Log après formatage
         loadHighScores().then(highScores => {
+            console.log("Highscores actuels:", highScores);
             highScores.push([name, score]);
+            console.log("Highscores après ajout:", highScores);
             highScores.sort((a, b) => b[1] - a[1]);
             highScores = highScores.slice(0, 10);
+            console.log("Highscores après tri:", highScores);
             saveHighScores(highScores).then(() => {
                 updateHighScoresDisplay();
             }).catch(error => {
