@@ -418,13 +418,12 @@ function loadHighScores() {
 }
 
 // Sauvegarder les hiscores via l’API
-function saveHighScores(highScores) {
-    const newScore = highScores[highScores.length - 1];
-    console.log("Données à envoyer:", { name: newScore[0], score: newScore[1] }); // Log avant envoi
+   function saveHighScores(newScore) {
+    console.log("Données à envoyer:", newScore);
     return fetch('https://www.blomig.com/api/scores.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newScore[0], score: newScore[1] })
+        body: JSON.stringify(newScore)
     })
     .then(response => {
         if (!response.ok) {
@@ -458,12 +457,12 @@ function updateHighScoresDisplay() {
 }
 
 // Ajouter un nouveau highscore
-function addHighScore(score) {
+        function addHighScore(score) {
     let name = prompt("Nouveau highscore ! Entrez vos initiales (5 lettres max) :", "AAAAA");
-    console.log("Nom saisi:", name, "Score:", score); // Log initial
+    console.log("Nom saisi:", name, "Score:", score);
     if (name) {
         name = name.slice(0, 5).padEnd(5, " ").toUpperCase();
-        console.log("Nom formaté:", name, "Score:", score); // Log après formatage
+        console.log("Nom formaté:", name, "Score:", score);
         loadHighScores().then(highScores => {
             console.log("Highscores actuels:", highScores);
             highScores.push([name, score]);
@@ -471,7 +470,8 @@ function addHighScore(score) {
             highScores.sort((a, b) => b[1] - a[1]);
             highScores = highScores.slice(0, 10);
             console.log("Highscores après tri:", highScores);
-            saveHighScores(highScores).then(() => {
+            // Passer explicitement name et score à saveHighScores
+            saveHighScores({ name: name, score: score }).then(() => {
                 updateHighScoresDisplay();
             }).catch(error => {
                 console.error("Échec de la sauvegarde, score non ajouté:", error);
