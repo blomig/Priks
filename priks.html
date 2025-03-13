@@ -203,7 +203,16 @@
                 opacity: 0;
             }
         }
-        #rulesButton {
+ #rulesButtonContainer {
+    width: 320px;
+    margin: 5px auto 0;
+    text-align: center;
+    display: flex; /* Aligner les boutons côte à côte */
+    justify-content: center; /* Centrer les boutons */
+    gap: 10px; /* Espacement entre les boutons */
+}
+
+#rulesButton, #hiscoresButton {
     padding: 5px 10px;
     font-family: "gameboy", monospace;
     font-size: 14px;
@@ -211,50 +220,40 @@
     background-color: #8BAC0F;
     border: 2px solid #0F380F;
     cursor: pointer;
-    margin-top: 5px;
 }
 
-#rulesButton:hover {
+#rulesButton:hover, #hiscoresButton:hover {
     background-color: #306230;
 }
 
-#rulesScreen {
+#rulesScreen, #hiscoresScreen {
     position: fixed;
-    top: 0; /* Aligné en haut pour ajustement */
+    top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     display: none;
     justify-content: center;
-    align-items: flex-start; /* Alignement en haut */
+    align-items: flex-start;
     z-index: 1000;
 }
 
-#rulesContent {
-    width: 360px; /* Même taille que gameover.png */
-    height: 400px; /* Même taille que gameover.png */
+#rulesContent, #hiscoresContent {
+    width: 360px;
+    height: 400px;
     background-color: #cadc9f;
     padding: 20px;
     border: 2px solid #0F380F;
     font-family: "gameboy", monospace;
-    font-size: 10px;
+    font-size: 14px;
     color: #0F380F;
     text-align: left;
-    overflow-y: auto; /* Pour faire défiler si le texte déborde */
-    position: absolute; /* Position absolue pour placer au-dessus de la grille */
-    top: 0; /* Ajuster selon la position de #gameCanvas */
-    left: 50%; /* Centrer horizontalement */
-    transform: translateX(-50%); /* Décalage pour centrer */
-}
-        #rulesButtonContainer {
-    width: 320px; /* Même largeur que #underGrid */
-    margin: 5px auto 0; /* Centrer et espacer du #underGrid */
-    text-align: center; /* Centrer le bouton */
-}
-
-#rulesButton:hover {
-    background-color: #306230;
+    overflow-y: auto;
+    position: absolute;
+    top: 60px; /* Ajusté pour être au-dessus de la grille */
+    left: 50%;
+    transform: translateX(-50%);
 }
     </style>
 </head>
@@ -282,7 +281,8 @@
              <!-- Les règles seront affichées dans la superposition -->
         </div>
         <div id="rulesButtonContainer">
-    <button id="rulesButton">RULES</button>
+            <button id="rulesButton">RULES</button>
+            <button id="hiscoresButton">HISCORES</button>
 </div>
     </div>
     <div id="startScreen">
@@ -301,6 +301,9 @@
         <p>Utilisez ← et → (ou cliquez/touchez une colonne) pour déplacer, Espace (ou clic colonne) pour placer, B (ou clic bombe) pour sélectionner une bombe</p>
         <p>Le but de Blox est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés sauf par bombes ou chaînes adjacentes (5→4→3→2→1→disparition). Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 10 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
     </div>
+</div>
+    <div id="hiscoresScreen">
+    <div id="hiscoresContent"></div>
 </div>
     <audio id="placeSound" src="place.wav"></audio>
     <audio id="bombSound" src="bomb.wav"></audio>
@@ -369,60 +372,82 @@
         if (!nextLine) nextLine = getNewLine();
 
         // Attacher les événements une fois le DOM chargé
-        document.addEventListener("DOMContentLoaded", () => {
-            console.log("DOM chargé, début des événements");
-            const rulesButton = document.getElementById("rulesButton");
+      document.addEventListener("DOMContentLoaded", () => {
+    const startButton = document.getElementById("startButton");
+    const gameOverButton = document.getElementById("gameOverButton");
+    const rulesButton = document.getElementById("rulesButton");
     const rulesScreen = document.getElementById("rulesScreen");
+    const hiscoresButton = document.getElementById("hiscoresButton");
+    const hiscoresScreen = document.getElementById("hiscoresScreen");
+    const hiscoresContent = document.getElementById("hiscoresContent");
+
+    if (startButton) {
+        startButton.addEventListener("click", () => {
+            console.log("Bouton Start cliqué");
+            document.getElementById("startScreen").style.display = "none";
+            updateHighScoresDisplay();
+            drawGrid();
+            updateUI();
+        });
+    }
+
+    if (gameOverButton) {
+        gameOverButton.addEventListener("click", () => {
+            console.log("Bouton Game Over cliqué");
+            document.getElementById("gameOverScreen").style.display = "none";
+            grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
+            bombCount = 1;
+            chainCount = 0;
+            score = 0;
+            moveCount = 0;
+            nextBlock = getNewBlock();
+            nextNextBlock = getNewBlock();
+            nextLine = getNewLine();
+            isBombSelected = false;
+            blockPosition = 0;
+            isGameOver = false;
+            drawGrid();
+            updateUI();
+        });
+    }
 
     if (rulesButton && rulesScreen) {
-        // Afficher la superposition des règles
         rulesButton.addEventListener("click", () => {
             console.log("Bouton Rules cliqué");
             rulesScreen.style.display = "flex";
         });
 
-        // Fermer la superposition en cliquant dessus
         rulesScreen.addEventListener("click", () => {
             console.log("RulesScreen cliqué, fermeture...");
             rulesScreen.style.display = "none";
         });
-    } else {
-        console.error("Erreur : #rulesButton ou #rulesScreen non trouvé");
     }
-            
-            const startButton = document.getElementById("startButton");
-            console.log("Bouton Start trouvé:", startButton);
-            if (startButton) {
-                startButton.addEventListener("click", () => {
-    console.log("Bouton Start cliqué");
-    document.getElementById("startScreen").style.display = "none";
-    updateHighScoresDisplay();
-    drawGrid();
-    updateUI();
-});
-            }
 
-            const gameOverButton = document.getElementById("gameOverButton");
-            console.log("Bouton Game Over trouvé:", gameOverButton);
-            if (gameOverButton) {
-                gameOverButton.addEventListener("click", () => {
-    console.log("Bouton Game Over cliqué");
-    document.getElementById("gameOverScreen").style.display = "none";
-    grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
-    bombCount = 1;
-    chainCount = 0;
-    score = 0;
-    moveCount = 0;
-    nextBlock = getNewBlock();
-    nextNextBlock = getNewBlock();
-    nextLine = getNewLine();
-    isBombSelected = false;
-    blockPosition = 0;
-    isGameOver = false; // Réinitialiser pour une nouvelle partie
-    drawGrid();
-    updateUI();
+    if (hiscoresButton && hiscoresScreen && hiscoresContent) {
+        hiscoresButton.addEventListener("click", () => {
+            console.log("Bouton Hiscores cliqué");
+            // Charger les highscores et les afficher
+            loadHighScores().then(highScores => {
+                hiscoresContent.innerHTML = ""; // Vider le contenu
+                highScores.forEach(([name, score], index) => {
+                    const p = document.createElement("p");
+                    p.textContent = `${index + 1}. ${name} : ${score}`;
+                    hiscoresContent.appendChild(p);
+                });
+                hiscoresScreen.style.display = "flex";
+            }).catch(error => {
+                console.error("Erreur chargement highscores:", error);
+            });
+        });
+
+        hiscoresScreen.addEventListener("click", () => {
+            console.log("HiscoresScreen cliqué, fermeture...");
+            hiscoresScreen.style.display = "none";
+        });
+    } else {
+        console.error("Erreur : #hiscoresButton, #hiscoresScreen ou #hiscoresContent non trouvé");
+    }
 });
-            }
 
             // Gestion des touches avec verrouillage
             document.addEventListener("keydown", (event) => {
