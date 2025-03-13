@@ -424,18 +424,7 @@ function saveHighScores(newScore) {
 }
 
 // Mettre à jour l’affichage des hiscores
-function updateHighScoresDisplay() {
-    loadHighScores().then(highScores => {
-        console.log("Mise à jour de l’affichage des highscores:", highScores);
-        const list = document.getElementById("highScoreList");
-        list.innerHTML = "";
-        highScores.forEach(([name, score]) => {
-            const li = document.createElement("li");
-            li.textContent = `${name} : ${score}`;
-            list.appendChild(li);
-        });
-    });
-}
+// Supprimé : updateHighScoresDisplay
 
 // Ajouter un nouveau highscore
 function addHighScore(score) {
@@ -452,7 +441,7 @@ function addHighScore(score) {
             highScores = highScores.slice(0, 10);
             console.log("Highscores après tri:", highScores);
             saveHighScores({ name: name, score: score }).then(() => {
-                updateHighScoresDisplay();
+                //update supprimé
             }).catch(error => {
                 console.error("Échec de la sauvegarde, score non ajouté:", error);
                 alert("Erreur lors de la sauvegarde du score. Essaye encore ou contacte l'admin.");
@@ -952,7 +941,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 console.error("Erreur : #startScreen non trouvé");
             }
-            updateHighScoresDisplay();
+            
             drawGrid();
             updateUI();
         });
@@ -1080,7 +1069,7 @@ function checkImagesLoaded() {
     imagesLoaded++;
     console.log("Image chargée, total:", imagesLoaded, "/", totalImages);
     if (imagesLoaded === totalImages) {
-        updateHighScoresDisplay();
+        // updateHighScoresDisplay(); // Supprimé
         drawGrid();
         updateUI();
     }
