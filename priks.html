@@ -935,7 +935,97 @@ function endGame() {
         document.getElementById("gameOverScreen").style.display = "flex";
     });
 }
+document.addEventListener("DOMContentLoaded", () => {
+    const startButton = document.getElementById("startButton");
+    const gameOverButton = document.getElementById("gameOverButton");
+    const rulesButton = document.getElementById("rulesButton");
+    const rulesScreen = document.getElementById("rulesScreen");
+    const hiscoresButton = document.getElementById("hiscoresButton");
+    const hiscoresScreen = document.getElementById("hiscoresScreen");
+    const hiscoresContent = document.getElementById("hiscoresContent");
 
+    // Vérification et écouteur pour startButton
+    if (startButton) {
+        startButton.addEventListener("click", () => {
+            console.log("Bouton Start cliqué");
+            const startScreen = document.getElementById("startScreen");
+            if (startScreen) {
+                console.log("startScreen trouvé, changement de display à 'none'");
+                startScreen.style.display = "none";
+            } else {
+                console.error("Erreur : #startScreen non trouvé");
+            }
+            updateHighScoresDisplay();
+            drawGrid();
+            updateUI();
+        });
+    } else {
+        console.error("Erreur : #startButton non trouvé");
+    }
+
+    // Vérification et écouteur pour gameOverButton
+    if (gameOverButton) {
+        gameOverButton.addEventListener("click", () => {
+            console.log("Bouton Game Over cliqué");
+            document.getElementById("gameOverScreen").style.display = "none";
+            grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
+            bombCount = 1;
+            chainCount = 0;
+            score = 0;
+            moveCount = 0;
+            nextBlock = getNewBlock();
+            nextNextBlock = getNewBlock();
+            nextLine = getNewLine();
+            isBombSelected = false;
+            blockPosition = 0;
+            isGameOver = false;
+            drawGrid();
+            updateUI();
+        });
+    } else {
+        console.error("Erreur : #gameOverButton non trouvé");
+    }
+
+    // Vérification et écouteurs pour rulesButton et rulesScreen
+    if (rulesButton && rulesScreen) {
+        rulesButton.addEventListener("click", () => {
+            console.log("Bouton Rules cliqué");
+            rulesScreen.style.display = "flex";
+        });
+
+        rulesScreen.addEventListener("click", () => {
+            console.log("RulesScreen cliqué, fermeture...");
+            rulesScreen.style.display = "none";
+        });
+    } else {
+        console.error("Erreur : #rulesButton ou #rulesScreen non trouvé");
+    }
+
+    // Vérification et écouteurs pour hiscoresButton, hiscoresScreen, et hiscoresContent
+    if (hiscoresButton && hiscoresScreen && hiscoresContent) {
+        hiscoresButton.addEventListener("click", () => {
+            console.log("Bouton Hiscores cliqué");
+            loadHighScores().then(highScores => {
+                hiscoresContent.innerHTML = "";
+                highScores.forEach(([name, score], index) => {
+                    const p = document.createElement("p");
+                    p.textContent = `${index + 1}. ${name} : ${score}`;
+                    hiscoresContent.appendChild(p);
+                });
+                hiscoresScreen.style.display = "flex";
+            }).catch(error => {
+                console.error("Erreur chargement highscores:", error);
+            });
+        });
+
+        hiscoresScreen.addEventListener("click", () => {
+            console.log("HiscoresScreen cliqué, fermeture...");
+            hiscoresScreen.style.display = "none";
+        });
+    } else {
+        console.error("Erreur : #hiscoresButton, #hiscoresScreen ou #hiscoresContent non trouvé");
+    }
+});
 // Gestion des touches
 document.addEventListener("keydown", (event) => {
     if (isProcessing) return;
