@@ -389,6 +389,8 @@
             drawGrid();
             updateUI();
         });
+    } else {
+        console.error("Erreur : #startButton non trouvé");
     }
 
     if (gameOverButton) {
@@ -409,6 +411,8 @@
             drawGrid();
             updateUI();
         });
+    } else {
+        console.error("Erreur : #gameOverButton non trouvé");
     }
 
     if (rulesButton && rulesScreen) {
@@ -421,12 +425,13 @@
             console.log("RulesScreen cliqué, fermeture...");
             rulesScreen.style.display = "none";
         });
+    } else {
+        console.error("Erreur : #rulesButton ou #rulesScreen non trouvé");
     }
 
     if (hiscoresButton && hiscoresScreen && hiscoresContent) {
         hiscoresButton.addEventListener("click", () => {
             console.log("Bouton Hiscores cliqué");
-            // Charger les highscores et les afficher
             loadHighScores().then(highScores => {
                 hiscoresContent.innerHTML = ""; // Vider le contenu
                 highScores.forEach(([name, score], index) => {
@@ -448,7 +453,6 @@
         console.error("Erreur : #hiscoresButton, #hiscoresScreen ou #hiscoresContent non trouvé");
     }
 });
-
             // Gestion des touches avec verrouillage
             document.addEventListener("keydown", (event) => {
                 if (isProcessing) return; // Bloquer si en cours de traitement
