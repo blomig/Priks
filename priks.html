@@ -243,6 +243,15 @@
     color: #0F380F;
     text-align: left;
 }
+        #rulesButtonContainer {
+    width: 320px; /* Même largeur que #underGrid */
+    margin: 5px auto 0; /* Centrer et espacer du #underGrid */
+    text-align: center; /* Centrer le bouton */
+}
+
+#rulesButton:hover {
+    background-color: #306230;
+}
     </style>
 </head>
 <body>
@@ -264,11 +273,13 @@
                 </div>
                 <span id="chainsRemaining">CHAÎNES RESTANTES : 10</span>
             </div>
-            <button id="rulesButton">RULES</button> <!-- Nouveau bouton -->
         </div>
         <div id="info">
              <!-- Les règles seront affichées dans la superposition -->
         </div>
+        <div id="rulesButtonContainer">
+    <button id="rulesButton">RULES</button>
+</div>
     </div>
     <div id="startScreen">
         <img src="start_screen.png" alt="Écran d'accueil" id="startImage">
