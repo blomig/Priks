@@ -586,7 +586,38 @@ function updateHighScoresDisplay() {
                 await new Promise(resolve => setTimeout(resolve, stepDuration));
             }
         }
+        // Animation pour une ligne complète
+async function animateLine(lineData) {
+    const startY = (gridSize + 1) * cellSize; // Départ juste au-dessus de la grille
+    const duration = 100; // Même durée que animateBlock
+    const steps = 10; // Même nombre d'étapes que animateBlock
+    const stepDuration = duration / steps;
 
+    // Calculer les distances pour chaque bloc
+    const animations = lineData.map(({ col, row, color }) => {
+        const endY = row * cellSize;
+        const stepDistance = (startY - endY) / steps;
+        return { col, currentY: startY, endY, stepDistance, color };
+    });
+
+    for (let i = 0; i <= steps; i++) {
+        const movingBlocks = animations.map(anim => ({
+            x: anim.col * cellSize + 40,
+            y: anim.currentY,
+            color: anim.color
+        }));
+        drawGrid(movingBlocks);
+        animations.forEach(anim => {
+            anim.currentY -= anim.stepDistance;
+        });
+        await new Promise(resolve => setTimeout(resolve, stepDuration));
+    }
+
+    // Placer les blocs dans la grille à la fin
+    lineData.forEach(({ col, row, color }) => {
+        grid[row][col] = color;
+    });
+}
         // Animation pour la gravité
         async function animateGravity(movingBlocks) {
             const duration = 100;
@@ -705,20 +736,24 @@ function updateHighScoresDisplay() {
         }
 
         // Ajouter une ligne complète
-        function addRandomLine() {
-            for (let col = 0; col < gridSize; col++) {
-                let row = gridSize - 1;
-                while (row >= 0 && !grid[row][col]) row--;
-                row++;
-                if (row >= gridSize) {
-                    endGame();
-                    return;
-                }
-                grid[row][col] = nextLine[col];
-            }
-            drawGrid();
-            checkChains();
+        // Ajouter une ligne complète avec animation
+function addRandomLine() {
+    const lineData = [];
+    for (let col = 0; col < gridSize; col++) {
+        let row = gridSize - 1;
+        while (row >= 0 && !grid[row][col]) row--;
+        row++;
+        if (row >= gridSize) {
+            endGame();
+            return;
         }
+        lineData.push({ col, row, color: nextLine[col] });
+    }
+    animateLine(lineData).then(() => {
+        checkChains();
+    });
+    nextLine = getNewLine();
+}
 
         // Animation des points
         async function animateScorePopup(x, y, points) {
