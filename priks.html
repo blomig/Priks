@@ -310,6 +310,8 @@
     <audio id="bombSound" src="bomb.wav"></audio>
     <audio id="chainSound" src="chain.mp3"></audio>
     <audio id="lineSound" src="line.mp3"></audio>
+    <audio id="beginSound" src="begin.wav"></audio> <!-- Nouveau son pour Start -->
+     <audio id="endSound" src="end.wav"></audio> <!-- Nouveau son pour Game Over -->
     <script>
        // Charger le canvas en premier
 const canvas = document.getElementById("gameCanvas");
@@ -934,6 +936,10 @@ function endGame() {
         if (score > highScores[9][1]) {
             addHighScore(score);
         }
+        const endSound = document.getElementById("endSound");
+        if (endSound) {
+            endSound.play().catch(e => console.error("Erreur son fin:", e));
+        }
         document.getElementById("gameOverScore").textContent = `SCORE FINAL : ${score}`;
         document.getElementById("gameOverScreen").style.display = "flex";
     });
@@ -955,6 +961,10 @@ document.addEventListener("DOMContentLoaded", () => {
             if (startScreen) {
                 console.log("startScreen trouvé, changement de display à 'none'");
                 startScreen.style.display = "none";
+                const beginSound = document.getElementById("beginSound");
+                if (beginSound) {
+                    beginSound.play().catch(e => console.error("Erreur son début:", e));
+                }
             } else {
                 console.error("Erreur : #startScreen non trouvé");
             }
