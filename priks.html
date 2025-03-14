@@ -658,6 +658,11 @@ async function addBlock(col) {
     }
     if (isBombSelected) {
         await animateBlock(col, gridSize * cellSize, row, true);
+        // Jouer le son après l'animation du bloc, avant l'explosion
+        const bombSound = document.getElementById("bombSound");
+        if (bombSound) {
+            bombSound.play().catch(e => console.error("Erreur son bombe:", e));
+        }
         let toRemove = [];
         for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
             for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
@@ -670,8 +675,7 @@ async function addBlock(col) {
             const bombX = col * cellSize + 40 + cellSize / 2;
             const bombY = row * cellSize + cellSize / 2;
             await blinkBlocks(toRemove, null, true, bombX, bombY);
-            const bombSound = document.getElementById("bombSound");
-            if (bombSound) bombSound.play().catch(e => console.error("Erreur son bombe:", e));
+            
         }
         for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
             for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
@@ -821,9 +825,13 @@ async function checkChains() {
                         toRemove = toRemove.concat(group);
                         let points = isGravityChain ? 10 : (group.length > 5 ? 10 : 5);
                         score += points;
-                        await blinkBlocks(group, points);
+                        // Jouer le son au début de l'animation
                         const chainSound = document.getElementById("chainSound");
-                        if (chainSound) chainSound.play().catch(e => console.error("Erreur son chaîne:", e));
+                        if (chainSound) {
+                            chainSound.play().catch(e => console.error("Erreur son chaîne:", e));
+                        }
+                        await blinkBlocks(group, points);
+                        
                     }
                 }
             }
