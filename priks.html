@@ -309,6 +309,7 @@
     <audio id="placeSound" src="place.wav"></audio>
     <audio id="bombSound" src="bomb.wav"></audio>
     <audio id="chainSound" src="chain.mp3"></audio>
+    <audio id="lineSound" src="line.wav"></audio>
     <script>
        // Charger le canvas en premier
 const canvas = document.getElementById("gameCanvas");
@@ -557,7 +558,11 @@ async function animateLine(lineData) {
     const duration = 100;
     const steps = 10;
     const stepDuration = duration / steps;
-
+     // Jouer le son au début de l’animation
+    const lineSound = document.getElementById("lineSound");
+    if (lineSound) {
+        lineSound.play().catch(e => console.error("Erreur son ligne:", e));
+    }
     const animations = lineData.map(({ col, row, color }) => {
         const endY = row * cellSize;
         const stepDistance = (startY - endY) / steps;
