@@ -723,6 +723,11 @@ function addRandomLine() {
         while (row >= 0 && !grid[row][col]) row--;
         row++;
         if (row >= gridSize) {
+            // Jouer le son avant endGame
+            const endSound = document.getElementById("endSound");
+            if (endSound) {
+                endSound.play().catch(e => console.error("Erreur son fin:", e));
+            }
             endGame();
             return;
         }
