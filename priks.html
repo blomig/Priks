@@ -654,6 +654,11 @@ async function addBlock(col) {
     while (row >= 0 && !grid[row][col]) row--;
     row++;
     if (row >= gridSize) {
+        // Jouer le son juste avant endGame
+        const endSound = document.getElementById("endSound");
+        if (endSound) {
+            endSound.play().catch(e => console.error("Erreur son fin:", e));
+        }
         endGame();
         isProcessing = false;
         return;
@@ -936,10 +941,7 @@ function endGame() {
         if (score > highScores[9][1]) {
             addHighScore(score);
         }
-        const endSound = document.getElementById("endSound");
-        if (endSound) {
-            endSound.play().catch(e => console.error("Erreur son fin:", e));
-        }
+        
         document.getElementById("gameOverScore").textContent = `SCORE FINAL : ${score}`;
         document.getElementById("gameOverScreen").style.display = "flex";
     });
@@ -963,6 +965,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 startScreen.style.display = "none";
                 const beginSound = document.getElementById("beginSound");
                 if (beginSound) {
+                    beginSound.currentTime = 0; // Réinitialiser la position du son
                     beginSound.play().catch(e => console.error("Erreur son début:", e));
                 }
             } else {
