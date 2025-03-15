@@ -997,6 +997,12 @@ document.addEventListener("DOMContentLoaded", () => {
             isGameOver = false;
             drawGrid();
             updateUI();
+            // Jouer le son begin.mp3 lors du démarrage d'une nouvelle partie
+            const beginSound = document.getElementById("beginSound");
+            if (beginSound) {
+                beginSound.currentTime = 0; // Réinitialiser la position du son
+                beginSound.play().catch(e => console.error("Erreur son début:", e));
+            }
         });
     } else {
         console.error("Erreur : #gameOverButton non trouvé");
