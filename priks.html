@@ -659,6 +659,10 @@ async function addBlock(col) {
         if (endSound) {
             endSound.play().catch(e => console.error("Erreur son fin:", e));
         }
+        // Lancer l’animation au centre de la case bloquée
+        const x = col * cellSize + 40 + cellSize / 2; // Centre horizontal
+        const y = gridSize * cellSize + cellSize / 2; // Bas de la grille
+        animateGameOver(x, y);
         endGame();
         isProcessing = false;
         return;
@@ -728,6 +732,10 @@ function addRandomLine() {
             if (endSound) {
                 endSound.play().catch(e => console.error("Erreur son fin:", e));
             }
+            // Lancer l’animation pour la colonne qui a provoqué la fin
+            const x = col * cellSize + 40 + cellSize / 2; // Centre horizontal
+            const y = gridSize * cellSize + cellSize / 2; // Bas de la grille
+            animateGameOver(x, y);
             endGame();
             return;
         }
@@ -896,6 +904,36 @@ async function checkChains() {
             chainSeriesLevel = 0; // Réinitialiser après une série terminée
         }
     } while (chainsRemoved);
+}
+
+// Animation des cercles concentriques pour la fin de partie
+function animateGameOver(x, y) {
+    const duration = 500; // Durée totale en ms
+    const steps = 30; // Nombre d'étapes pour l'animation
+    const stepDuration = duration / steps;
+    const maxRadius = cellSize * 1.5; // Grand cercle initial
+    const minRadius = 2; // Point minimal
+    const colors = ["#0F380F", "#306230", "#8BAC0F", "#9BBC0F"]; // Couleurs GameBoy
+
+    let step = 0;
+    const animate = () => {
+        if (step > steps * 2) return; // 2 cycles : réduction puis agrandissement
+        ctx.save();
+        ctx.beginPath();
+        const radius = step <= steps 
+            ? maxRadius - (maxRadius - minRadius) * (step / steps) // Réduction
+            : minRadius + (maxRadius - minRadius) * ((step - steps) / steps); // Agrandissement
+        const color = colors[Math.floor(step / (steps / colors.length)) % colors.length];
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.restore();
+        step++;
+        if (step <= steps * 2) {
+            requestAnimationFrame(animate);
+        }
+    };
+    requestAnimationFrame(animate);
 }
 // Calculer les mouvements de gravité
 function calculateGravityMoves() {
