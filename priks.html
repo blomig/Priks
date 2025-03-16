@@ -716,6 +716,7 @@ async function addBlock(col) {
 }
 
 // Ajouter une ligne complète avec animation
+// Ajouter une ligne complète avec animation
 function addRandomLine() {
     const lineData = [];
     for (let col = 0; col < gridSize; col++) {
@@ -723,7 +724,6 @@ function addRandomLine() {
         while (row >= 0 && !grid[row][col]) row--;
         row++;
         if (row >= gridSize) {
-            // Jouer le son avant endGame
             const endSound = document.getElementById("endSound");
             if (endSound) {
                 endSound.play().catch(e => console.error("Erreur son fin:", e));
@@ -734,11 +734,10 @@ function addRandomLine() {
         lineData.push({ col, row, color: nextLine[col] });
     }
     animateLine(lineData).then(() => {
-        checkChains();
+        checkChains(); // checkChains gérera les points uniformément
     });
     nextLine = getNewLine();
 }
-
 // Animation des points
 async function animateScorePopup(x, y, points) {
     const duration = 400;
@@ -804,7 +803,7 @@ async function blinkBlocks(blocks, points = null, isBomb = false, bombX = null, 
 // Vérifier les chaînes avec une copie de la grille
 async function checkChains() {
     let chainsRemoved;
-    let isGravityChain = false;
+    let chainSeriesLevel = 0; // Compteur pour le niveau de la série
     do {
         chainsRemoved = false;
         let visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
@@ -835,15 +834,21 @@ async function checkChains() {
                     dfs(row, col, color, group);
                     if (group.length >= 5) {
                         toRemove = toRemove.concat(group);
-                        let points = isGravityChain ? 10 : (group.length > 5 ? 10 : 5);
+                        // Calculer les points selon le niveau de la série
+                        let points;
+                        if (chainSeriesLevel >= 2) {
+                            points = 25; // Troisième chaîne ou plus dans la série
+                        } else if (chainSeriesLevel === 1 || group.length > 5) {
+                            points = 10; // Deuxième chaîne ou plus de 5 blocs
+                        } else {
+                            points = 5; // Première chaîne de 5 blocs
+                        }
                         score += points;
-                        // Jouer le son au début de l'animation
                         const chainSound = document.getElementById("chainSound");
                         if (chainSound) {
                             chainSound.play().catch(e => console.error("Erreur son chaîne:", e));
                         }
                         await blinkBlocks(group, points);
-                        
                     }
                 }
             }
@@ -880,22 +885,18 @@ async function checkChains() {
 
             if (priksToRemove.length > 0) {
                 await blinkBlocks(priksToRemove);
-                priksToRemove.forEach(([row, col]) => {
-                    grid[row][col] = null;
-                });
             }
 
             chainCount++;
             if (chainCount % 10 === 0) bombCount++;
-            isGravityChain = true;
+            chainSeriesLevel++; // Incrémenter le niveau de la série
             await animateGravity(calculateGravityMoves());
             drawGrid();
         } else {
-            isGravityChain = false;
+            chainSeriesLevel = 0; // Réinitialiser après une série terminée
         }
     } while (chainsRemoved);
 }
-
 // Calculer les mouvements de gravité
 function calculateGravityMoves() {
     let moves = [];
