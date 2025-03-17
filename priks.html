@@ -259,6 +259,80 @@
     left: 50%;
     transform: translateX(-50%);
 }
+    #rulesButtonContainer {
+    width: 320px;
+    margin: 5px auto 0;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+#rulesButton, #hiscoresButton, #switchButton {
+    padding: 5px 10px;
+    font-family: "gameboy", monospace;
+    font-size: 14px;
+    color: #0F380F;
+    background-color: #8BAC0F;
+    border: 2px solid #0F380F;
+    cursor: pointer;
+}
+
+#rulesButton:hover, #hiscoresButton:hover, #switchButton:hover {
+    background-color: #306230;
+}
+
+/* Styles spécifiques aux thèmes */
+.gameboy-theme #gameCanvas {
+    background-color: #cadc9f; /* Fond GameBoy */
+}
+
+.colorful-theme #gameCanvas {
+    background-color: #e0e0e0; /* Fond plus clair et moderne */
+}
+
+.gameboy-theme #scoreDisplay,
+.gameboy-theme #bombCount,
+.gameboy-theme #chainsRemaining,
+.gameboy-theme #info {
+    color: #0F380F; /* Couleur texte GameBoy */
+}
+
+.colorful-theme #scoreDisplay,
+.colorful-theme #bombCount,
+.colorful-theme #chainsRemaining,
+.colorful-theme #info {
+    color: #333333; /* Couleur texte plus moderne */
+}
+
+.gameboy-theme #progressContainer {
+    background-color: #cadc9f;
+}
+
+.colorful-theme #progressContainer {
+    background-color: #d0d0d0;
+}
+
+.gameboy-theme #progressBar {
+    background-color: #8BAC0F;
+}
+
+.colorful-theme #progressBar {
+    background-color: #FF5555; /* Rouge vif pour la barre de progression */
+}
+
+.gameboy-theme #rulesContent,
+.gameboy-theme #hiscoresContent {
+    background-color: #cadc9f;
+    color: #0F380F;
+}
+
+.colorful-theme #rulesContent,
+.colorful-theme #hiscoresContent {
+    background-color: #F5F5F5;
+    color: #333333;
+}
+
     </style>
 </head>
 <body>
@@ -284,6 +358,7 @@
         <div id="rulesButtonContainer">
             <button id="rulesButton">RULES</button>
             <button id="hiscoresButton">HISCORES</button>
+             <button id="switchButton">SWITCH</button>
 </div>
     </div>
     <div id="startScreen">
