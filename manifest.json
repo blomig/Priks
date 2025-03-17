@@ -2,7 +2,7 @@
  "name": "Blox",
  "short_name": "Blox",
  "description": "A retro puzzle game with global highscores",
- "start_url": "/index.html",
+ "start_url": "/priks.html",
  "display": "standalone",
  "theme_color": "#0F380F",
  "background_color": "#cadc9f",
