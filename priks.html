@@ -395,7 +395,11 @@ const ctx = canvas.getContext("2d");
 if (!ctx) console.error("Contexte 2D non trouvé");
 
 // Variables globales
-console.log("Début des variables globales");
+const canvas = document.getElementById("gameCanvas");
+if (!canvas) console.error("Canvas non trouvé");
+const ctx = canvas.getContext("2d");
+if (!ctx) console.error("Contexte 2D non trouvé");
+
 const gridSize = 8;
 const cellSize = 320 / gridSize;
 const previewHeight = cellSize * 2;
@@ -412,20 +416,36 @@ let isBombSelected = false;
 let isProcessing = false;
 let isGameOver = false;
 
+// Ajout de la gestion des thèmes
+let currentTheme = 'gameboy'; // Thème par défaut
 const colors = ["red", "blue", "green", "yellow", "purple", "orange"];
 const priksColor = "gray";
 const bombColor = "bomb";
 
-// Charger les images
-const images = {};
+// Gestion des ensembles d’images pour les deux thèmes
+const imageSets = {
+    gameboy: {},
+    colorful: {}
+};
+
+// Charger les images pour les deux thèmes
 colors.forEach(color => {
-    images[color] = new Image();
-    images[color].src = `${color}.png`;
+    imageSets.gameboy[color] = new Image();
+    imageSets.gameboy[color].src = `${color}.png`; // Images GameBoy
+    imageSets.colorful[color] = new Image();
+    imageSets.colorful[color].src = `${color}_new.png`; // Images Colorées
 });
-images[priksColor] = new Image();
-images[priksColor].src = "priks.png";
-images[bombColor] = new Image();
-images[bombColor].src = "bomb.png";
+imageSets.gameboy[priksColor] = new Image();
+imageSets.gameboy[priksColor].src = "priks.png";
+imageSets.colorful[priksColor] = new Image();
+imageSets.colorful[priksColor].src = "priks_new.png";
+imageSets.gameboy[bombColor] = new Image();
+imageSets.gameboy[bombColor].src = "bomb.png";
+imageSets.colorful[bombColor] = new Image();
+imageSets.colorful[bombColor].src = "bomb_new.png";
+
+// Utiliser l’ensemble d’images actif
+let images = imageSets[currentTheme];
 
 // Générer un nouveau bloc
 function getNewBlock() {
@@ -534,7 +554,7 @@ function addHighScore(score) {
 
 // Dessiner la grille
 function drawGrid(movingBlocks = []) {
-    ctx.fillStyle = "#cadc9f";
+    ctx.fillStyle = currentTheme === 'gameboy' ? "#cadc9f" : "#e0e0e0";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (let row = 0; row < gridSize; row++) {
@@ -545,8 +565,8 @@ function drawGrid(movingBlocks = []) {
                 const color = Array.isArray(block) ? block[0] : block;
                 if (images[color] && images[color].complete) {
                     ctx.drawImage(images[color], col * cellSize + 40 + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
-                    if (Array.isArray(block) && block[0] === priksColor) {
-                        ctx.fillStyle = "#0F380F";
+                    if (Array.isArray(block) && color === priksColor) {
+                        ctx.fillStyle = currentTheme === 'gameboy' ? "#0F380F" : "#333333";
                         ctx.font = "16px gameboy";
                         ctx.textAlign = "center";
                         ctx.textBaseline = "middle";
@@ -562,7 +582,7 @@ function drawGrid(movingBlocks = []) {
     if (images[previewColor] && images[previewColor].complete) {
         ctx.drawImage(images[previewColor], blockPosition * cellSize + 40 + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
         if (Array.isArray(previewBlock) && previewBlock[0] === priksColor) {
-            ctx.fillStyle = "#0F380F";
+            ctx.fillStyle = currentTheme === 'gameboy' ? "#0F380F" : "#333333";
             ctx.font = "16px gameboy";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
@@ -576,7 +596,7 @@ function drawGrid(movingBlocks = []) {
             if (images[lineColor] && images[lineColor].complete) {
                 ctx.drawImage(images[lineColor], col * cellSize + 40 + 2, (gridSize + 1) * cellSize + 2, cellSize - 4, cellSize - 4);
                 if (Array.isArray(lineBlock) && lineBlock[0] === priksColor) {
-                    ctx.fillStyle = "#0F380F";
+                    ctx.fillStyle = currentTheme === 'gameboy' ? "#0F380F" : "#333333";
                     ctx.font = "16px gameboy";
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
@@ -590,7 +610,7 @@ function drawGrid(movingBlocks = []) {
         if (images[moveColor] && images[moveColor].complete) {
             ctx.drawImage(images[moveColor], x + 2, y + 2, cellSize - 4, cellSize - 4);
             if (Array.isArray(color) && color[0] === priksColor) {
-                ctx.fillStyle = "#0F380F";
+                ctx.fillStyle = currentTheme === 'gameboy' ? "#0F380F" : "#333333";
                 ctx.font = "16px gameboy";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
@@ -602,7 +622,7 @@ function drawGrid(movingBlocks = []) {
     if (images[nextNextColor] && images[nextNextColor].complete) {
         ctx.drawImage(images[nextNextColor], 2, gridSize * cellSize + 2, 36, 36);
         if (Array.isArray(nextNextBlock) && nextNextBlock[0] === priksColor) {
-            ctx.fillStyle = "#0F380F";
+            ctx.fillStyle = currentTheme === 'gameboy' ? "#0F380F" : "#333333";
             ctx.font = "16px gameboy";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
@@ -983,21 +1003,23 @@ async function checkChains() {
 
 // Animation des cercles concentriques pour la fin de partie
 function animateGameOver(x, y) {
-    const duration = 500; // Durée totale en ms
-    const steps = 30; // Nombre d'étapes pour l'animation
+    const duration = 500;
+    const steps = 30;
     const stepDuration = duration / steps;
-    const maxRadius = cellSize * 1.5; // Grand cercle initial
-    const minRadius = 2; // Point minimal
-    const colors = ["#0F380F", "#306230", "#8BAC0F", "#9BBC0F"]; // Couleurs GameBoy
+    const maxRadius = cellSize * 1.5;
+    const minRadius = 2;
+    const colors = currentTheme === 'gameboy' 
+        ? ["#0F380F", "#306230", "#8BAC0F", "#9BBC0F"] 
+        : ["#FF5555", "#55FF55", "#5555FF", "#FFFF55"]; // Couleurs vives pour le style Coloré
 
     let step = 0;
     const animate = () => {
-        if (step > steps * 2) return; // 2 cycles : réduction puis agrandissement
+        if (step > steps * 2) return;
         ctx.save();
         ctx.beginPath();
         const radius = step <= steps 
-            ? maxRadius - (maxRadius - minRadius) * (step / steps) // Réduction
-            : minRadius + (maxRadius - minRadius) * ((step - steps) / steps); // Agrandissement
+            ? maxRadius - (maxRadius - minRadius) * (step / steps)
+            : minRadius + (maxRadius - minRadius) * ((step - steps) / steps);
         const color = colors[Math.floor(step / (steps / colors.length)) % colors.length];
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fillStyle = color;
@@ -1065,7 +1087,8 @@ function endGame() {
         document.getElementById("gameOverScreen").style.display = "flex";
     });
 }
-document.addEventListener("DOMContentLoaded", () => {
+
+        document.addEventListener("DOMContentLoaded", () => {
     const startButton = document.getElementById("startButton");
     const gameOverButton = document.getElementById("gameOverButton");
     const rulesButton = document.getElementById("rulesButton");
@@ -1073,8 +1096,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const hiscoresButton = document.getElementById("hiscoresButton");
     const hiscoresScreen = document.getElementById("hiscoresScreen");
     const hiscoresContent = document.getElementById("hiscoresContent");
+    const switchButton = document.getElementById("switchButton");
 
-    // Vérification et écouteur pour startButton
+    // Initialiser le thème par défaut
+    document.body.classList.add('gameboy-theme');
+
     if (startButton) {
         startButton.addEventListener("click", () => {
             console.log("Bouton Start cliqué");
@@ -1084,13 +1110,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 startScreen.style.display = "none";
                 const beginSound = document.getElementById("beginSound");
                 if (beginSound) {
-                    beginSound.currentTime = 0; // Réinitialiser la position du son
+                    beginSound.currentTime = 0;
                     beginSound.play().catch(e => console.error("Erreur son début:", e));
                 }
             } else {
                 console.error("Erreur : #startScreen non trouvé");
             }
-            
             drawGrid();
             updateUI();
         });
@@ -1098,7 +1123,6 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Erreur : #startButton non trouvé");
     }
 
-    // Vérification et écouteur pour gameOverButton
     if (gameOverButton) {
         gameOverButton.addEventListener("click", () => {
             console.log("Bouton Game Over cliqué");
@@ -1116,10 +1140,9 @@ document.addEventListener("DOMContentLoaded", () => {
             isGameOver = false;
             drawGrid();
             updateUI();
-            // Jouer le son begin.mp3 lors du démarrage d'une nouvelle partie
             const beginSound = document.getElementById("beginSound");
             if (beginSound) {
-                beginSound.currentTime = 0; // Réinitialiser la position du son
+                beginSound.currentTime = 0;
                 beginSound.play().catch(e => console.error("Erreur son début:", e));
             }
         });
@@ -1127,7 +1150,6 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Erreur : #gameOverButton non trouvé");
     }
 
-    // Vérification et écouteurs pour rulesButton et rulesScreen
     if (rulesButton && rulesScreen) {
         rulesButton.addEventListener("click", () => {
             console.log("Bouton Rules cliqué");
@@ -1142,7 +1164,6 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Erreur : #rulesButton ou #rulesScreen non trouvé");
     }
 
-    // Vérification et écouteurs pour hiscoresButton, hiscoresScreen, et hiscoresContent
     if (hiscoresButton && hiscoresScreen && hiscoresContent) {
         hiscoresButton.addEventListener("click", () => {
             console.log("Bouton Hiscores cliqué");
@@ -1165,6 +1186,19 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     } else {
         console.error("Erreur : #hiscoresButton, #hiscoresScreen ou #hiscoresContent non trouvé");
+    }
+
+    if (switchButton) {
+        switchButton.addEventListener("click", () => {
+            console.log("Bouton Switch cliqué");
+            currentTheme = currentTheme === 'gameboy' ? 'colorful' : 'gameboy';
+            document.body.classList.remove('gameboy-theme', 'colorful-theme');
+            document.body.classList.add(currentTheme + '-theme');
+            images = imageSets[currentTheme];
+            drawGrid(); // Redessiner avec le nouveau thème
+        });
+    } else {
+        console.error("Erreur : #switchButton non trouvé");
     }
 });
 // Gestion des touches
