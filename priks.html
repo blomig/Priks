@@ -355,24 +355,40 @@ let isBombSelected = false;
 let isProcessing = false;
 let isGameOver = false;
 
-// Ajout de la gestion des thèmes
-let currentTheme = 'gameboy'; // Thème par défaut
+let currentTheme = 'gameboy';
 const colors = ["red", "blue", "green", "yellow", "purple", "orange"];
 const priksColor = "gray";
 const bombColor = "bomb";
 
-// Gestion des ensembles d’images pour les deux thèmes
 const imageSets = {
     gameboy: {},
     colorful: {}
 };
 
-// Charger les images pour les deux thèmes
+const soundSets = {
+    gameboy: {
+        place: "place.mp3",
+        bomb: "bomb.mp3",
+        chain: "chain.mp3",
+        line: "line.wav",
+        begin: "begin.mp3",
+        end: "end.mp3"
+    },
+    colorful: {
+        place: "place_new.mp3",
+        bomb: "bomb_new.mp3",
+        chain: "chain_new.mp3",
+        line: "line_new.wav",
+        begin: "begin_new.mp3",
+        end: "end_new.mp3"
+    }
+};
+
 colors.forEach(color => {
     imageSets.gameboy[color] = new Image();
-    imageSets.gameboy[color].src = `${color}.png`; // Images GameBoy
+    imageSets.gameboy[color].src = `${color}.png`;
     imageSets.colorful[color] = new Image();
-    imageSets.colorful[color].src = `${color}_new.png`; // Images Colorées
+    imageSets.colorful[color].src = `${color}_new.png`;
 });
 imageSets.gameboy[priksColor] = new Image();
 imageSets.gameboy[priksColor].src = "priks.png";
@@ -383,8 +399,14 @@ imageSets.gameboy[bombColor].src = "bomb.png";
 imageSets.colorful[bombColor] = new Image();
 imageSets.colorful[bombColor].src = "bomb_new.png";
 
-// Utiliser l’ensemble d’images actif
 let images = imageSets[currentTheme];
+
+// Charger les sons dynamiquement
+const audioElements = {};
+Object.keys(soundSets.gameboy).forEach(key => {
+    audioElements[key + 'Sound'] = document.getElementById(key + 'Sound');
+    audioElements[key + 'SoundNew'] = document.getElementById(key + 'SoundNew');
+});
 
 // Générer un nouveau bloc
 function getNewBlock() {
