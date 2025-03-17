@@ -710,14 +710,12 @@ async function addBlock(col) {
     while (row >= 0 && !grid[row][col]) row--;
     row++;
     if (row >= gridSize) {
-        // Jouer le son juste avant endGame
-        const endSound = document.getElementById("endSound");
+        const endSound = audioElements[currentTheme === 'gameboy' ? 'endSound' : 'endSoundNew'];
         if (endSound) {
             endSound.play().catch(e => console.error("Erreur son fin:", e));
         }
-        // Lancer l’animation au centre de la case bloquée
-        const x = col * cellSize + 40 + cellSize / 2; // Centre horizontal
-        const y = gridSize * cellSize + cellSize / 2; // Bas de la grille
+        const x = col * cellSize + 40 + cellSize / 2;
+        const y = gridSize * cellSize + cellSize / 2;
         animateGameOver(x, y);
         endGame();
         isProcessing = false;
@@ -725,8 +723,7 @@ async function addBlock(col) {
     }
     if (isBombSelected) {
         await animateBlock(col, gridSize * cellSize, row, true);
-        // Jouer le son après l'animation du bloc, avant l'explosion
-        const bombSound = document.getElementById("bombSound");
+        const bombSound = audioElements[currentTheme === 'gameboy' ? 'bombSound' : 'bombSoundNew'];
         if (bombSound) {
             bombSound.play().catch(e => console.error("Erreur son bombe:", e));
         }
@@ -742,7 +739,6 @@ async function addBlock(col) {
             const bombX = col * cellSize + 40 + cellSize / 2;
             const bombY = row * cellSize + cellSize / 2;
             await blinkBlocks(toRemove, null, true, bombX, bombY);
-            
         }
         for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
             for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
@@ -758,7 +754,7 @@ async function addBlock(col) {
         grid[row][col] = nextBlock;
         console.log("Bloc placé:", row, col, nextBlock);
         console.log("nextBlock avant:", nextBlock, "nextNextBlock avant:", nextNextBlock);
-        const placeSound = document.getElementById("placeSound");
+        const placeSound = audioElements[currentTheme === 'gameboy' ? 'placeSound' : 'placeSoundNew'];
         if (placeSound) placeSound.play().catch(e => console.error("Erreur son placement:", e));
         moveCount++;
         nextBlock = nextNextBlock;
@@ -767,15 +763,12 @@ async function addBlock(col) {
         await checkChains();
         if (moveCount % 10 === 0 && moveCount > 0) {
             addRandomLine();
-            // nextLine = getNewLine(); // Déplacé dans addRandomLine
         }
     }
     drawGrid();
     updateUI();
     isProcessing = false;
 }
-
-// Ajouter une ligne complète avec animation
 // Ajouter une ligne complète avec animation
 function addRandomLine() {
     const lineData = [];
@@ -784,13 +777,12 @@ function addRandomLine() {
         while (row >= 0 && !grid[row][col]) row--;
         row++;
         if (row >= gridSize) {
-            const endSound = document.getElementById("endSound");
+            const endSound = audioElements[currentTheme === 'gameboy' ? 'endSound' : 'endSoundNew'];
             if (endSound) {
                 endSound.play().catch(e => console.error("Erreur son fin:", e));
             }
-            // Lancer l’animation pour la colonne qui a provoqué la fin
-            const x = col * cellSize + 40 + cellSize / 2; // Centre horizontal
-            const y = gridSize * cellSize + cellSize / 2; // Bas de la grille
+            const x = col * cellSize + 40 + cellSize / 2;
+            const y = gridSize * cellSize + cellSize / 2;
             animateGameOver(x, y);
             endGame();
             return;
@@ -798,7 +790,7 @@ function addRandomLine() {
         lineData.push({ col, row, color: nextLine[col] });
     }
     animateLine(lineData).then(() => {
-        checkChains(); // checkChains gérera les points uniformément
+        checkChains();
     });
     nextLine = getNewLine();
 }
@@ -867,7 +859,7 @@ async function blinkBlocks(blocks, points = null, isBomb = false, bombX = null, 
 // Vérifier les chaînes avec une copie de la grille
 async function checkChains() {
     let chainsRemoved;
-    let chainSeriesLevel = 0; // Compteur pour le niveau de la série
+    let chainSeriesLevel = 0;
     do {
         chainsRemoved = false;
         let visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
@@ -898,17 +890,16 @@ async function checkChains() {
                     dfs(row, col, color, group);
                     if (group.length >= 5) {
                         toRemove = toRemove.concat(group);
-                        // Calculer les points selon le niveau de la série
                         let points;
                         if (chainSeriesLevel >= 2) {
-                            points = 50; // Troisième chaîne ou plus dans la série
+                            points = 50;
                         } else if (chainSeriesLevel === 1 || group.length > 5) {
-                            points = 10; // Deuxième chaîne ou plus de 5 blocs
+                            points = 10;
                         } else {
-                            points = 5; // Première chaîne de 5 blocs
+                            points = 5;
                         }
                         score += points;
-                        const chainSound = document.getElementById("chainSound");
+                        const chainSound = audioElements[currentTheme === 'gameboy' ? 'chainSound' : 'chainSoundNew'];
                         if (chainSound) {
                             chainSound.play().catch(e => console.error("Erreur son chaîne:", e));
                         }
@@ -953,15 +944,14 @@ async function checkChains() {
 
             chainCount++;
             if (chainCount % 10 === 0) bombCount++;
-            chainSeriesLevel++; // Incrémenter le niveau de la série
+            chainSeriesLevel++;
             await animateGravity(calculateGravityMoves());
             drawGrid();
         } else {
-            chainSeriesLevel = 0; // Réinitialiser après une série terminée
+            chainSeriesLevel = 0;
         }
     } while (chainsRemoved);
 }
-
 // Animation des cercles concentriques pour la fin de partie
 function animateGameOver(x, y) {
     const duration = 500;
