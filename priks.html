@@ -22,19 +22,14 @@
 
 #rulesButton, #hiscoresButton, #switchButton {
     padding: 5px 10px;
-    font-family: "gameboy", monospace;
+    font-family: var(--font-family);
     font-size: 14px;
-    color: #0F380F;
-    background-color: #8BAC0F;
+    color: var(--text-color);
+    background-color: var(--button-bg, #8BAC0F); /* Utiliser une variable par défaut */
     border: 2px solid #0F380F;
     cursor: pointer;
 }
 
-#rulesButton:hover, #hiscoresButton:hover, #switchButton:hover {
-    background-color: #306230;
-}
-
-/* Styles spécifiques aux thèmes */
 .gameboy-theme {
     --font-family: "gameboy", monospace;
     --canvas-bg: #cadc9f;
@@ -42,6 +37,7 @@
     --progress-bg: #cadc9f;
     --progress-bar: #8BAC0F;
     --content-bg: #cadc9f;
+    --button-bg: #8BAC0F; /* Fond GameBoy */
 }
 
 .colorful-theme {
@@ -51,8 +47,22 @@
     --progress-bg: #d0d0d0;
     --progress-bar: #FF5555;
     --content-bg: #F5F5F5;
+    --button-bg: #FF5555; /* Fond rouge vif pour le thème Coloré */
 }
 
+#rulesButton:hover, #hiscoresButton:hover, #switchButton:hover {
+    background-color: var(--button-hover, #306230); /* Variable pour le hover */
+}
+
+.gameboy-theme {
+    --button-hover: #306230; /* Hover GameBoy */
+}
+
+.colorful-theme {
+    --button-hover: #CC0000; /* Hover rouge foncé pour Coloré */
+}
+
+/* Styles spécifiques aux thèmes (restants inchangés) */
 #gameCanvas {
     background-color: var(--canvas-bg);
 }
@@ -175,7 +185,7 @@
     max-width: 360px;
     max-height: 400px;
     object-fit: contain;
-    margin-top: 20px;
+    margin-top: 10px;
 }
 
 #pressStart {
@@ -194,7 +204,7 @@
     font-family: var(--font-family);
     font-size: 16px;
     color: var(--text-color);
-    background-color: #8BAC0F;
+    background-color: var(--button-bg);
     border: 2px solid #0F380F;
     cursor: pointer;
     z-index: 1001;
@@ -202,7 +212,7 @@
 }
 
 #startButton:hover {
-    background-color: #306230;
+    background-color: var(--button-hover);
 }
 
 #gameOverScreen {
@@ -222,12 +232,12 @@
     max-width: 360px;
     max-height: 400px;
     object-fit: contain;
-    margin-top: 20px;
+    margin-top: 10px;
 }
 
 #gameOverScore {
     position: absolute;
-    top: 10px;
+    top: 100px;
     left: 50%;
     transform: translateX(-50%);
     font-family: var(--font-family);
@@ -252,14 +262,14 @@
     font-family: var(--font-family);
     font-size: 16px;
     color: var(--text-color);
-    background-color: #8BAC0F;
+    background-color: var(--button-bg);
     border: 2px solid #0F380F;
     cursor: pointer;
     z-index: 1001;
 }
 
 #gameOverButton:hover {
-    background-color: #306230;
+    background-color: var(--button-hover);
 }
 
 @keyframes blink {
