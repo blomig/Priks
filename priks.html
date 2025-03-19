@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -347,8 +348,13 @@
 <audio id="beginSoundNew" src="begin_new.wav"></audio>
 <audio id="endSoundNew" src="end_new.wav"></audio>
     <script>
-       // Charger le canvas en premier
-
+// multijoueur       
+const socket = io('https://www.blomig.com:3000');
+let isMultiplayer = false;
+let room = null;
+let opponentName = null;
+let sharedSeed = null;
+// Charger le canvas en premier        
 // Variables globales
 const canvas = document.getElementById("gameCanvas");
 if (!canvas) console.error("Canvas non trouvé");
