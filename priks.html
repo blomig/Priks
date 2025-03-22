@@ -857,8 +857,7 @@
             startTurnTimer();
         }
 
-
-    document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener("DOMContentLoaded", () => {
         const startButton = document.getElementById("startButton");
         const gameOverButton = document.getElementById("gameOverButton");
         const rulesButton = document.getElementById("rulesButton");
@@ -959,12 +958,12 @@
             }
         });
 
-        socket.on('startGame', ({ seed }) => {
+        socket.on('startGame', ({ seed, room }) => {
             sharedSeed = seed;
+            currentRoom = room; // Utilise la room envoyée par le serveur
             isMultiplayer = true;
             multiplayerScreen.style.display = "none";
             document.getElementById("startScreen").style.display = "none";
-            currentRoom = `${socket.id}-${seed}`; // Simplifie, ajusté par le serveur
             startMultiplayerGame();
         });
 
@@ -982,7 +981,7 @@
         });
 
         socket.on('gameOver', (data) => {
-            if (turnTimer) clearInterval(turnTimer); // Arrête le timer
+            if (turnTimer) clearInterval(turnTimer);
             if (playerName === data.winner) {
                 alert('Vous avez gagné contre ' + data.loser + ' !');
             } else {
@@ -993,6 +992,25 @@
             isMultiplayer = false;
             currentRoom = null;
         });
+
+        // Ajoute ces fonctions pour envoyer les événements avec currentRoom
+        function sendMove(col, isBomb) {
+            if (isMultiplayer && currentRoom) {
+                socket.emit('move', { room: currentRoom, col, isBomb });
+            }
+        }
+
+        function updateScore(score) {
+            if (isMultiplayer && currentRoom) {
+                socket.emit('scoreUpdate', { room: currentRoom, score });
+            }
+        }
+
+        function onGameOver() {
+            if (isMultiplayer && currentRoom) {
+                socket.emit('gameOver', currentRoom);
+            }
+        }
     });
 
     document.addEventListener("keydown", (event) => {
@@ -1052,4 +1070,22 @@
         img.onload = checkImagesLoaded;
         img.onerror = () => checkImagesLoaded();
     });
+
+    // Intègre ces appels dans ton jeu
+    function addBlock(col) {
+        // Ton code existant pour ajouter un bloc
+        if (isMultiplayer) sendMove(col, isBombSelected);
+        // Suite de ton code
+    }
+
+    function updateScoreDisplay(score) {
+        // Ton code existant pour afficher le score
+        if (isMultiplayer) updateScore(score);
+    }
+
+    function gameOver() {
+        isGameOver = true;
+        if (isMultiplayer) onGameOver();
+        document.getElementById("gameOverScreen").style.display = "flex";
+    }
 </script>
