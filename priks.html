@@ -982,7 +982,17 @@
                 document.getElementById("gameOverScreen").style.display = "flex";
             });
         });
-
+        socket.on('gameOver', (data) => {
+    clearInterval(timer); // Arrête le timer
+    if (playerName === data.winner) {
+        alert('Vous avez gagné contre ' + data.loser + ' !');
+    } else {
+        alert(data.winner + ' gagne contre ' + data.loser + ' !');
+    }
+    // Réinitialiser ou retourner au menu
+    document.getElementById('game').style.display = 'none'; // Cache le jeu
+    document.getElementById('menu').style.display = 'block'; // Montre le menu
+});
         document.addEventListener("keydown", (event) => {
             if (isProcessing) return;
             switch (event.key) {
