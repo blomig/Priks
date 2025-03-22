@@ -983,15 +983,14 @@
             });
         });
         socket.on('gameOver', (data) => {
-    clearInterval(timer); // Arrête le timer
+    clearInterval(timer); // Arrête le timer (ajuste selon ton code)
     if (playerName === data.winner) {
         alert('Vous avez gagné contre ' + data.loser + ' !');
     } else {
         alert(data.winner + ' gagne contre ' + data.loser + ' !');
     }
-    // Réinitialiser ou retourner au menu
-    document.getElementById('game').style.display = 'none'; // Cache le jeu
-    document.getElementById('menu').style.display = 'block'; // Montre le menu
+    document.getElementById('game').style.display = 'none'; // Ajuste selon ton HTML
+    document.getElementById('menu').style.display = 'block';
 });
         document.addEventListener("keydown", (event) => {
             if (isProcessing) return;
