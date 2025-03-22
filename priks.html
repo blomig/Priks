@@ -248,6 +248,9 @@
     <audio id="endSoundNew" src="end_new.wav"></audio>
     <script>
         const socket = io('https://blox.blomig.com:3000');
+    let playerName; // Nom du joueur
+    let currentRoom; // Room actuelle
+    
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const gridSize = 8;
@@ -854,201 +857,199 @@
             startTurnTimer();
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const startButton = document.getElementById("startButton");
-            const gameOverButton = document.getElementById("gameOverButton");
-            const rulesButton = document.getElementById("rulesButton");
-            const rulesScreen = document.getElementById("rulesScreen");
-            const hiscoresButton = document.getElementById("hiscoresButton");
-            const hiscoresScreen = document.getElementById("hiscoresScreen");
-            const hiscoresContent = document.getElementById("hiscoresContent");
-            const switchButton = document.getElementById("switchButton");
-            const multiplayerButton = document.getElementById("multiplayerButton");
-            const multiplayerScreen = document.getElementById("multiplayerScreen");
-            const joinButton = document.getElementById("joinButton");
-            const playerNameInput = document.getElementById("playerName");
-            const playerList = document.getElementById("playerList");
 
-            document.body.classList.add('gameboy-theme');
+    document.addEventListener("DOMContentLoaded", () => {
+        const startButton = document.getElementById("startButton");
+        const gameOverButton = document.getElementById("gameOverButton");
+        const rulesButton = document.getElementById("rulesButton");
+        const rulesScreen = document.getElementById("rulesScreen");
+        const hiscoresButton = document.getElementById("hiscoresButton");
+        const hiscoresScreen = document.getElementById("hiscoresScreen");
+        const hiscoresContent = document.getElementById("hiscoresContent");
+        const switchButton = document.getElementById("switchButton");
+        const multiplayerButton = document.getElementById("multiplayerButton");
+        const multiplayerScreen = document.getElementById("multiplayerScreen");
+        const joinButton = document.getElementById("joinButton");
+        const playerNameInput = document.getElementById("playerName");
+        const playerList = document.getElementById("playerList");
 
-            startButton.addEventListener("click", () => {
-                document.getElementById("startScreen").style.display = "none";
-                const beginSound = audioElements[currentTheme === 'gameboy' ? 'beginSound' : 'beginSoundNew'];
-                if (beginSound) beginSound.play().catch(e => console.error("Erreur son début:", e));
-                drawGrid();
-                updateUI();
-            });
+        document.body.classList.add('gameboy-theme');
 
-            gameOverButton.addEventListener("click", () => {
-                document.getElementById("gameOverScreen").style.display = "none";
-                grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
-                bombCount = 1;
-                chainCount = 0;
-                score = 0;
-                moveCount = 0;
-                blockSequenceIndex = 0;
-                nextBlock = getNewBlock(0);
-                nextNextBlock = getNewBlock(1);
-                nextLine = getNewLine(2);
-                isBombSelected = false;
-                blockPosition = 0;
-                isGameOver = false;
-                isMultiplayer = false;
-                pendingLines = 0;
-                if (turnTimer) clearInterval(turnTimer);
-                drawGrid();
-                updateUI();
-                const beginSound = audioElements[currentTheme === 'gameboy' ? 'beginSound' : 'beginSoundNew'];
-                if (beginSound) beginSound.play().catch(e => console.error("Erreur son début:", e));
-            });
+        startButton.addEventListener("click", () => {
+            document.getElementById("startScreen").style.display = "none";
+            const beginSound = audioElements[currentTheme === 'gameboy' ? 'beginSound' : 'beginSoundNew'];
+            if (beginSound) beginSound.play().catch(e => console.error("Erreur son début:", e));
+            drawGrid();
+            updateUI();
+        });
 
-            rulesButton.addEventListener("click", () => rulesScreen.style.display = "flex");
-            rulesScreen.addEventListener("click", () => rulesScreen.style.display = "none");
+        gameOverButton.addEventListener("click", () => {
+            document.getElementById("gameOverScreen").style.display = "none";
+            grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
+            bombCount = 1;
+            chainCount = 0;
+            score = 0;
+            moveCount = 0;
+            blockSequenceIndex = 0;
+            nextBlock = getNewBlock(0);
+            nextNextBlock = getNewBlock(1);
+            nextLine = getNewLine(2);
+            isBombSelected = false;
+            blockPosition = 0;
+            isGameOver = false;
+            isMultiplayer = false;
+            pendingLines = 0;
+            if (turnTimer) clearInterval(turnTimer);
+            drawGrid();
+            updateUI();
+            const beginSound = audioElements[currentTheme === 'gameboy' ? 'beginSound' : 'beginSoundNew'];
+            if (beginSound) beginSound.play().catch(e => console.error("Erreur son début:", e));
+        });
 
-            hiscoresButton.addEventListener("click", () => {
-                loadHighScores().then(highScores => {
-                    hiscoresContent.innerHTML = "";
-                    highScores.forEach(([name, score], index) => {
-                        const p = document.createElement("p");
-                        p.textContent = `${index + 1}. ${name} : ${score}`;
-                        hiscoresContent.appendChild(p);
-                    });
-                    hiscoresScreen.style.display = "flex";
+        rulesButton.addEventListener("click", () => rulesScreen.style.display = "flex");
+        rulesScreen.addEventListener("click", () => rulesScreen.style.display = "none");
+
+        hiscoresButton.addEventListener("click", () => {
+            loadHighScores().then(highScores => {
+                hiscoresContent.innerHTML = "";
+                highScores.forEach(([name, score], index) => {
+                    const p = document.createElement("p");
+                    p.textContent = `${index + 1}. ${name} : ${score}`;
+                    hiscoresContent.appendChild(p);
                 });
-            });
-            hiscoresScreen.addEventListener("click", () => hiscoresScreen.style.display = "none");
-
-            switchButton.addEventListener("click", () => {
-                currentTheme = currentTheme === 'gameboy' ? 'colorful' : 'gameboy';
-                document.body.classList.remove('gameboy-theme', 'colorful-theme');
-                document.body.classList.add(currentTheme + '-theme');
-                images = imageSets[currentTheme];
-                drawGrid();
-            });
-
-            multiplayerButton.addEventListener("click", () => multiplayerScreen.style.display = "flex");
-
-            joinButton.addEventListener("click", () => {
-                const name = playerNameInput.value.slice(0, 5).padEnd(5, " ").toUpperCase();
-                if (name.length === 5) {
-                    socket.emit('join', name);
-                    playerNameInput.disabled = true;
-                    joinButton.disabled = true;
-                }
-            });
-
-            socket.on('playerList', (players) => {
-                playerList.innerHTML = "";
-                players.forEach(p => {
-                    if (p !== playerNameInput.value) {
-                        const btn = document.createElement("button");
-                        btn.textContent = p;
-                        btn.addEventListener("click", () => socket.emit('propose', { toName: p, fromName: playerNameInput.value }));
-                        playerList.appendChild(btn);
-                    }
-                });
-            });
-
-            socket.on('proposal', (fromName) => {
-    if (confirm(fromName + " vous propose une partie. Accepter ?")) {
-        socket.emit('accept', { opponentName: fromName });
-    }
-});
-
-            socket.on('startGame', ({ seed }) => {
-                sharedSeed = seed;
-                isMultiplayer = true;
-                multiplayerScreen.style.display = "none";
-                document.getElementById("startScreen").style.display = "none";
-                room = `${socket.id}-${opponentName}`;
-                startMultiplayerGame();
-            });
-
-            socket.on('opponentMove', ({ col, isBomb }) => {
-                if (pendingLines > 0 && !isProcessing) {
-                    addRandomLine();
-                    pendingLines--;
-                }
-            });
-
-            socket.on('opponentScore', (opponentScore) => {
-                const opponentPaliers = Math.floor(opponentScore / 25);
-                const myPaliers = Math.floor(score / 25);
-                if (opponentPaliers > myPaliers) pendingLines += opponentPaliers - myPaliers;
-            });
-
-            socket.on('opponentLost', () => {
-                alert("Vous avez gagné ! L’adversaire a perdu.");
-                document.getElementById("gameOverScreen").style.display = "flex";
+                hiscoresScreen.style.display = "flex";
             });
         });
+        hiscoresScreen.addEventListener("click", () => hiscoresScreen.style.display = "none");
+
+        switchButton.addEventListener("click", () => {
+            currentTheme = currentTheme === 'gameboy' ? 'colorful' : 'gameboy';
+            document.body.classList.remove('gameboy-theme', 'colorful-theme');
+            document.body.classList.add(currentTheme + '-theme');
+            images = imageSets[currentTheme];
+            drawGrid();
+        });
+
+        multiplayerButton.addEventListener("click", () => multiplayerScreen.style.display = "flex");
+
+        joinButton.addEventListener("click", () => {
+            playerName = playerNameInput.value.slice(0, 5).padEnd(5, " ").toUpperCase();
+            if (playerName.length === 5) {
+                socket.emit('join', playerName);
+                playerNameInput.disabled = true;
+                joinButton.disabled = true;
+            }
+        });
+
+        socket.on('playerList', (players) => {
+            playerList.innerHTML = "";
+            players.forEach(p => {
+                if (p !== playerName) {
+                    const btn = document.createElement("button");
+                    btn.textContent = p;
+                    btn.addEventListener("click", () => socket.emit('propose', { toName: p, fromName: playerName }));
+                    playerList.appendChild(btn);
+                }
+            });
+        });
+
+        socket.on('proposal', (fromName) => {
+            if (confirm(fromName + " vous propose une partie. Accepter ?")) {
+                socket.emit('accept', { opponentName: fromName });
+            }
+        });
+
+        socket.on('startGame', ({ seed }) => {
+            sharedSeed = seed;
+            isMultiplayer = true;
+            multiplayerScreen.style.display = "none";
+            document.getElementById("startScreen").style.display = "none";
+            currentRoom = `${socket.id}-${seed}`; // Simplifie, ajusté par le serveur
+            startMultiplayerGame();
+        });
+
+        socket.on('opponentMove', ({ col, isBomb }) => {
+            if (pendingLines > 0 && !isProcessing) {
+                addRandomLine();
+                pendingLines--;
+            }
+        });
+
+        socket.on('opponentScore', (opponentScore) => {
+            const opponentPaliers = Math.floor(opponentScore / 25);
+            const myPaliers = Math.floor(score / 25);
+            if (opponentPaliers > myPaliers) pendingLines += opponentPaliers - myPaliers;
+        });
+
         socket.on('gameOver', (data) => {
-    clearInterval(timer); // Arrête le timer (ajuste selon ton code)
-    if (playerName === data.winner) {
-        alert('Vous avez gagné contre ' + data.loser + ' !');
-    } else {
-        alert(data.winner + ' gagne contre ' + data.loser + ' !');
-    }
-    document.getElementById('game').style.display = 'none'; // Ajuste selon ton HTML
-    document.getElementById('menu').style.display = 'block';
-});
-        document.addEventListener("keydown", (event) => {
-            if (isProcessing) return;
-            switch (event.key) {
-                case "ArrowLeft":
-                    if (blockPosition > 0) blockPosition--;
-                    drawGrid();
-                    break;
-                case "ArrowRight":
-                    if (blockPosition < gridSize - 1) blockPosition++;
-                    drawGrid();
-                    break;
-                case " ":
-                    event.preventDefault();
-                    addBlock(blockPosition);
-                    break;
-                case "b":
-                case "B":
-                    if (bombCount > 0 && !isBombSelected) {
-                        isBombSelected = true;
-                        drawGrid();
-                    }
-                    break;
+            if (turnTimer) clearInterval(turnTimer); // Arrête le timer
+            if (playerName === data.winner) {
+                alert('Vous avez gagné contre ' + data.loser + ' !');
+            } else {
+                alert(data.winner + ' gagne contre ' + data.loser + ' !');
             }
+            document.getElementById('game').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+            isMultiplayer = false;
+            currentRoom = null;
         });
+    });
 
-        canvas.addEventListener("click", (event) => {
-            if (isProcessing) return;
-            const rect = canvas.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
-            if (y < gridSize * cellSize) {
-                const col = Math.floor((x - 40) / cellSize);
-                if (col >= 0 && col < gridSize) {
-                    blockPosition = col;
-                    addBlock(col);
-                }
-            }
-        });
-
-        document.getElementById("bombIcon").addEventListener("click", () => {
-            if (isProcessing) return;
-            if (bombCount > 0 && !isBombSelected) {
-                isBombSelected = true;
+    document.addEventListener("keydown", (event) => {
+        if (isProcessing) return;
+        switch (event.key) {
+            case "ArrowLeft":
+                if (blockPosition > 0) blockPosition--;
                 drawGrid();
-            }
-        });
-
-        let imagesLoaded = 0;
-        const totalImages = colors.length + 2;
-        function checkImagesLoaded() {
-            imagesLoaded++;
-            if (imagesLoaded === totalImages) drawGrid();
+                break;
+            case "ArrowRight":
+                if (blockPosition < gridSize - 1) blockPosition++;
+                drawGrid();
+                break;
+            case " ":
+                event.preventDefault();
+                addBlock(blockPosition);
+                break;
+            case "b":
+            case "B":
+                if (bombCount > 0 && !isBombSelected) {
+                    isBombSelected = true;
+                    drawGrid();
+                }
+                break;
         }
-        Object.values(images).forEach(img => {
-            img.onload = checkImagesLoaded;
-            img.onerror = () => checkImagesLoaded();
-        });
-    </script>
-</body>
-</html>
+    });
+
+    canvas.addEventListener("click", (event) => {
+        if (isProcessing) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        if (y < gridSize * cellSize) {
+            const col = Math.floor((x - 40) / cellSize);
+            if (col >= 0 && col < gridSize) {
+                blockPosition = col;
+                addBlock(col);
+            }
+        }
+    });
+
+    document.getElementById("bombIcon").addEventListener("click", () => {
+        if (isProcessing) return;
+        if (bombCount > 0 && !isBombSelected) {
+            isBombSelected = true;
+            drawGrid();
+        }
+    });
+
+    let imagesLoaded = 0;
+    const totalImages = colors.length + 2;
+    function checkImagesLoaded() {
+        imagesLoaded++;
+        if (imagesLoaded === totalImages) drawGrid();
+    }
+    Object.values(images).forEach(img => {
+        img.onload = checkImagesLoaded;
+        img.onerror = () => checkImagesLoaded();
+    });
+</script>
