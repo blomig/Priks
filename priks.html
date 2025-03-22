@@ -950,11 +950,10 @@
             });
 
             socket.on('proposal', (fromName) => {
-                if (confirm(`${fromName} vous propose de jouer, OK ?`)) {
-                    socket.emit('accept', { opponentName: fromName });
-                    opponentName = fromName;
-                }
-            });
+    if (confirm(fromName + " vous propose une partie. Accepter ?")) {
+        socket.emit('accept', { opponentName: fromName });
+    }
+});
 
             socket.on('startGame', ({ seed }) => {
                 sharedSeed = seed;
