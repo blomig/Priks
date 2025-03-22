@@ -699,15 +699,7 @@
             }
             for (let row = 0; row < gridSize; row++) {
                 for (let col = 0; col < gridSize; col++) {
-                    if (gridSnapshot[row][col] && !
-
-
-
-
-
-
-
-visited[row][col] && !Array.isArray(gridSnapshot[row][col])) {
+                    if (gridSnapshot[row][col] && !visited[row][col] && !Array.isArray(gridSnapshot[row][col])) {
                         let group = [];
                         const color = gridSnapshot[row][col];
                         dfs(row, col, color, group);
@@ -721,110 +713,178 @@ visited[row][col] && !Array.isArray(gridSnapshot[row][col])) {
                         }
                     }
                 }
-                if (toRemove.length > 0) {
-                    chainsRemoved = true;
-                    let priksAffected = new Set();
-                    let priksToRemove = [];
-                    toRemove.forEach(([row, col]) => {
-                        const directions = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
-                        directions.forEach(([dr, dc]) => {
-                            const r = row + dr;
-                            const c = col + dc;
-                            if (r >= 0 && r < gridSize && c >= 0 && c < gridSize && grid[r][c] && Array.isArray(grid[r][c]) && grid[r][c][0] === priksColor) {
-                                const key = `${r},${c}`;
-                                if (!priksAffected.has(key)) {
-                                    priksAffected.add(key);
-                                    grid[r][c][1]--;
-                                    if (grid[r][c][1] <= 0) priksToRemove.push([r, c]);
-                                }
-                            }
-                        });
-                    });
-                    toRemove.forEach(([row, col]) => grid[row][col] = null);
-                    if (priksToRemove.length > 0) await blinkBlocks(priksToRemove);
-                    chainCount++;
-                    if (chainCount % 10 === 0) bombCount++;
-                    chainSeriesLevel++;
-                    await animateGravity(calculateGravityMoves());
-                    drawGrid();
-                    if (isMultiplayer && currentRoom) socket.emit('scoreUpdate', { room: currentRoom, score });
-                } else {
-                    chainSeriesLevel = 0;
-                }
-            } while (chainsRemoved);
-        }
-
-        function animateGameOver(x, y) {
-            const duration = 500;
-            const steps = 30;
-            const stepDuration = duration / steps;
-            const maxRadius = cellSize * 1.5;
-            const minRadius = 2;
-            const colors = currentTheme === 'gameboy' ? ["#0F380F", "#306230", "#8BAC0F", "#9BBC0F"] : ["#FF5555", "#55FF55", "#5555FF", "#FFFF55"];
-            let step = 0;
-            const animate = () => {
-                if (step > steps * 2) return;
-                ctx.save();
-                ctx.beginPath();
-                const radius = step <= steps ? maxRadius - (maxRadius - minRadius) * (step / steps) : minRadius + (maxRadius - minRadius) * ((step - steps) / steps);
-                const color = colors[Math.floor(step / (steps / colors.length)) % colors.length];
-                ctx.arc(x, y, radius, 0, Math.PI * 2);
-                ctx.fillStyle = color;
-                ctx.fill();
-                ctx.restore();
-                step++;
-                if (step <= steps * 2) requestAnimationFrame(animate);
-            };
-            requestAnimationFrame(animate);
-        }
-
-        function calculateGravityMoves() {
-            let moves = [];
-            for (let col = 0; col < gridSize; col++) {
-                let newCol = [];
-                for (let row = 0; row < gridSize; row++) {
-                    if (grid[row][col]) newCol.push({ row, color: grid[row][col] });
-                }
-                for (let i = 0; i < newCol.length; i++) {
-                    let startRow = newCol[i].row;
-                    let endRow = i;
-                    if (startRow !== endRow) moves.push({ startRow, endRow, col, color: newCol[i].color });
-                }
-                for (let row = 0; row < gridSize; row++) {
-                    grid[row][col] = (row < newCol.length) ? newCol[row].color : null;
-                }
             }
-            return moves;
-        }
+            if (toRemove.length > 0) {
+                chainsRemoved = true;
+                let priksAffected = new Set();
+                let priksToRemove = [];
+                toRemove.forEach(([row, col]) => {
+                    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
+                    directions.forEach(([dr, dc]) => {
+                        const r = row + dr;
+                        const c = col + dc;
+                        if (r >= 0 && r < gridSize && c >= 0 && c < gridSize && grid[r][c] && Array.isArray(grid[r][c]) && grid[r][c][0] === priksColor) {
+                            const key = `${r},${c}`;
+                            if (!priksAffected.has(key)) {
+                                priksAffected.add(key);
+                                grid[r][c][1]--;
+                                if (grid[r][c][1] <= 0) priksToRemove.push([r, c]);
+                            }
+                        }
+                    });
+                });
+                toRemove.forEach(([row, col]) => grid[row][col] = null);
+                if (priksToRemove.length > 0) await blinkBlocks(priksToRemove);
+                chainCount++;
+                if (chainCount % 10 === 0) bombCount++;
+                chainSeriesLevel++;
+                await animateGravity(calculateGravityMoves());
+                drawGrid();
+                if (isMultiplayer && currentRoom) socket.emit('scoreUpdate', { room: currentRoom, score });
+            } else {
+                chainSeriesLevel = 0;
+            }
+        } while (chainsRemoved);
+    }
 
-        function updateUI() {
-            document.getElementById("bombCount").textContent = bombCount;
-            document.getElementById("score").textContent = score;
-            const chainsToNextBomb = 10 - (chainCount % 10);
-            document.getElementById("chainsRemaining").textContent = `CHAÎNES RESTANTES : ${chainsToNextBomb}`;
-            const progress = (moveCount % 10) * 10;
-            const progressBar = document.getElementById("progressBar");
-            progressBar.style.width = `${progress}%`;
-            if (moveCount % 10 >= 8) progressBar.style.backgroundColor = "#0F380F";
-            else if (moveCount % 10 >= 5) progressBar.style.backgroundColor = "#306230";
-            else progressBar.style.backgroundColor = "#8BAC0F";
-            if (!isMultiplayer) document.getElementById("timerDisplay").style.display = "none";
-            else document.getElementById("timerDisplay").style.display = "block";
-        }
+    function animateGameOver(x, y) {
+        const duration = 500;
+        const steps = 30;
+        const stepDuration = duration / steps;
+        const maxRadius = cellSize * 1.5;
+        const minRadius = 2;
+        const colors = currentTheme === 'gameboy' ? ["#0F380F", "#306230", "#8BAC0F", "#9BBC0F"] : ["#FF5555", "#55FF55", "#5555FF", "#FFFF55"];
+        let step = 0;
+        const animate = () => {
+            if (step > steps * 2) return;
+            ctx.save();
+            ctx.beginPath();
+            const radius = step <= steps ? maxRadius - (maxRadius - minRadius) * (step / steps) : minRadius + (maxRadius - minRadius) * ((step - steps) / steps);
+            const color = colors[Math.floor(step / (steps / colors.length)) % colors.length];
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.restore();
+            step++;
+            if (step <= steps * 2) requestAnimationFrame(animate);
+        };
+        requestAnimationFrame(animate);
+    }
 
-        function endGame() {
-            if (isGameOver) return;
-            isGameOver = true;
-            if (isMultiplayer && currentRoom) socket.emit('gameOver', currentRoom);
-            loadHighScores().then((highScores) => {
-                if (score > highScores[9][1]) addHighScore(score);
-                document.getElementById("gameOverScore").textContent = `SCORE FINAL : ${score}`;
-                document.getElementById("gameContainer").style.display = "none";
-                document.getElementById("gameOverScreen").style.display = "flex";
-            });
+    function calculateGravityMoves() {
+        let moves = [];
+        for (let col = 0; col < gridSize; col++) {
+            let newCol = [];
+            for (let row = 0; row < gridSize; row++) {
+                if (grid[row][col]) newCol.push({ row, color: grid[row][col] });
+            }
+            for (let i = 0; i < newCol.length; i++) {
+                let startRow = newCol[i].row;
+                let endRow = i;
+                if (startRow !== endRow) moves.push({ startRow, endRow, col, color: newCol[i].color });
+            }
+            for (let row = 0; row < gridSize; row++) {
+                grid[row][col] = (row < newCol.length) ? newCol[row].color : null;
+            }
         }
+        return moves;
+    }
 
-        function startMultiplayerGame() {
+    function updateUI() {
+        document.getElementById("bombCount").textContent = bombCount;
+        document.getElementById("score").textContent = score;
+        const chainsToNextBomb = 10 - (chainCount % 10);
+        document.getElementById("chainsRemaining").textContent = `CHAÎNES RESTANTES : ${chainsToNextBomb}`;
+        const progress = (moveCount % 10) * 10;
+        const progressBar = document.getElementById("progressBar");
+        progressBar.style.width = `${progress}%`;
+        if (moveCount % 10 >= 8) progressBar.style.backgroundColor = "#0F380F";
+        else if (moveCount % 10 >= 5) progressBar.style.backgroundColor = "#306230";
+        else progressBar.style.backgroundColor = "#8BAC0F";
+        if (!isMultiplayer) document.getElementById("timerDisplay").style.display = "none";
+        else document.getElementById("timerDisplay").style.display = "block";
+    }
+
+    function endGame() {
+        if (isGameOver) return;
+        isGameOver = true;
+        if (isMultiplayer && currentRoom) socket.emit('gameOver', currentRoom);
+        loadHighScores().then((highScores) => {
+            if (score > highScores[9][1]) addHighScore(score);
+            document.getElementById("gameOverScore").textContent = `SCORE FINAL : ${score}`;
+            document.getElementById("gameContainer").style.display = "none";
+            document.getElementById("gameOverScreen").style.display = "flex";
+        });
+    }
+
+    function startMultiplayerGame() {
+        grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
+        bombCount = 1;
+        chainCount = 0;
+        score = 0;
+        moveCount = 0;
+        blockSequenceIndex = 0;
+        nextBlock = getNewBlock(0);
+        nextNextBlock = getNewBlock(1);
+        nextLine = getNewLine(2);
+        isBombSelected = false;
+        blockPosition = 0;
+        isGameOver = false;
+        pendingLines = 0;
+        document.getElementById("gameContainer").style.display = "block";
+        drawGrid();
+        updateUI();
+        startTurnTimer();
+    }
+
+    function startTurnTimer() {
+        if (!isMultiplayer) return;
+        if (turnTimer) clearInterval(turnTimer);
+        let timeLeft = 5;
+        document.getElementById("timerDisplay").textContent = `TEMPS : ${timeLeft}`;
+        turnTimer = setInterval(() => {
+            timeLeft--;
+            document.getElementById("timerDisplay").textContent = `TEMPS : ${timeLeft}`;
+            if (timeLeft <= 0) {
+                clearInterval(turnTimer);
+                addBlock(blockPosition);
+            }
+        }, 1000);
+    }
+
+    function resetTurnTimer() {
+        if (turnTimer) clearInterval(turnTimer);
+        startTurnTimer();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const startButton = document.getElementById("startButton");
+        const gameOverButton = document.getElementById("gameOverButton");
+        const rulesButton = document.getElementById("rulesButton");
+        const rulesScreen = document.getElementById("rulesScreen");
+        const hiscoresButton = document.getElementById("hiscoresButton");
+        const hiscoresScreen = document.getElementById("hiscoresScreen");
+        const hiscoresContent = document.getElementById("hiscoresContent");
+        const switchButton = document.getElementById("switchButton");
+        const multiplayerButton = document.getElementById("multiplayerButton");
+        const multiplayerScreen = document.getElementById("multiplayerScreen");
+        const joinButton = document.getElementById("joinButton");
+        const playerNameInput = document.getElementById("playerName");
+        const playerList = document.getElementById("playerList");
+
+        document.body.classList.add('gameboy-theme');
+
+        startButton.addEventListener("click", () => {
+            document.getElementById("startScreen").style.display = "none";
+            document.getElementById("gameContainer").style.display = "block";
+            const beginSound = audioElements[currentTheme === 'gameboy' ? 'beginSound' : 'beginSoundNew'];
+            if (beginSound) beginSound.play().catch(e => console.error("Erreur son début:", e));
+            drawGrid();
+            updateUI();
+        });
+
+        gameOverButton.addEventListener("click", () => {
+            document.getElementById("gameOverScreen").style.display = "none";
             grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
             bombCount = 1;
             chainCount = 0;
@@ -837,230 +897,160 @@ visited[row][col] && !Array.isArray(gridSnapshot[row][col])) {
             isBombSelected = false;
             blockPosition = 0;
             isGameOver = false;
+            isMultiplayer = false;
             pendingLines = 0;
-            document.getElementById("gameContainer").style.display = "block";
+            if (turnTimer) clearInterval(turnTimer);
+            document.getElementById("gameContainer").style.display = "none";
+            document.getElementById("startScreen").style.display = "flex";
             drawGrid();
             updateUI();
-            startTurnTimer();
-        }
+            const beginSound = audioElements[currentTheme === 'gameboy' ? 'beginSound' : 'beginSoundNew'];
+            if (beginSound) beginSound.play().catch(e => console.error("Erreur son début:", e));
+        });
 
-        function startTurnTimer() {
-            if (!isMultiplayer) return;
-            if (turnTimer) clearInterval(turnTimer);
-            let timeLeft = 5;
-            document.getElementById("timerDisplay").textContent = `TEMPS : ${timeLeft}`;
-            turnTimer = setInterval(() => {
-                timeLeft--;
-                document.getElementById("timerDisplay").textContent = `TEMPS : ${timeLeft}`;
-                if (timeLeft <= 0) {
-                    clearInterval(turnTimer);
-                    addBlock(blockPosition);
-                }
-            }, 1000);
-        }
+        rulesButton.addEventListener("click", () => rulesScreen.style.display = "flex");
+        rulesScreen.addEventListener("click", () => rulesScreen.style.display = "none");
 
-        function resetTurnTimer() {
-            if (turnTimer) clearInterval(turnTimer);
-            startTurnTimer();
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const startButton = document.getElementById("startButton");
-            const gameOverButton = document.getElementById("gameOverButton");
-            const rulesButton = document.getElementById("rulesButton");
-            const rulesScreen = document.getElementById("rulesScreen");
-            const hiscoresButton = document.getElementById("hiscoresButton");
-            const hiscoresScreen = document.getElementById("hiscoresScreen");
-            const hiscoresContent = document.getElementById("hiscoresContent");
-            const switchButton = document.getElementById("switchButton");
-            const multiplayerButton = document.getElementById("multiplayerButton");
-            const multiplayerScreen = document.getElementById("multiplayerScreen");
-            const joinButton = document.getElementById("joinButton");
-            const playerNameInput = document.getElementById("playerName");
-            const playerList = document.getElementById("playerList");
-
-            document.body.classList.add('gameboy-theme');
-
-            startButton.addEventListener("click", () => {
-                document.getElementById("startScreen").style.display = "none";
-                document.getElementById("gameContainer").style.display = "block";
-                const beginSound = audioElements[currentTheme === 'gameboy' ? 'beginSound' : 'beginSoundNew'];
-                if (beginSound) beginSound.play().catch(e => console.error("Erreur son début:", e));
-                drawGrid();
-                updateUI();
-            });
-
-            gameOverButton.addEventListener("click", () => {
-                document.getElementById("gameOverScreen").style.display = "none";
-                grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
-                bombCount = 1;
-                chainCount = 0;
-                score = 0;
-                moveCount = 0;
-                blockSequenceIndex = 0;
-                nextBlock = getNewBlock(0);
-                nextNextBlock = getNewBlock(1);
-                nextLine = getNewLine(2);
-                isBombSelected = false;
-                blockPosition = 0;
-                isGameOver = false;
-                isMultiplayer = false;
-                pendingLines = 0;
-                if (turnTimer) clearInterval(turnTimer);
-                document.getElementById("gameContainer").style.display = "none";
-                document.getElementById("startScreen").style.display = "flex";
-                document.getElementById("playerName").disabled = false;
-                document.getElementById("joinButton").disabled = false;
-                document.getElementById("playerName").value = "";
-                drawGrid();
-                updateUI();
-                const beginSound = audioElements[currentTheme === 'gameboy' ? 'beginSound' : 'beginSoundNew'];
-                if (beginSound) beginSound.play().catch(e => console.error("Erreur son début:", e));
-            });
-
-            rulesButton.addEventListener("click", () => rulesScreen.style.display = "flex");
-            rulesScreen.addEventListener("click", () => rulesScreen.style.display = "none");
-
-            hiscoresButton.addEventListener("click", () => {
-                loadHighScores().then(highScores => {
-                    hiscoresContent.innerHTML = "";
-                    highScores.forEach(([name, score], index) => {
-                        const p = document.createElement("p");
-                        p.textContent = `${index + 1}. ${name} : ${score}`;
-                        hiscoresContent.appendChild(p);
-                    });
-                    hiscoresScreen.style.display = "flex";
+        hiscoresButton.addEventListener("click", () => {
+            loadHighScores().then(highScores => {
+                hiscoresContent.innerHTML = "";
+                highScores.forEach(([name, score], index) => {
+                    const p = document.createElement("p");
+                    p.textContent = `${index + 1}. ${name} : ${score}`;
+                    hiscoresContent.appendChild(p);
                 });
+                hiscoresScreen.style.display = "flex";
             });
-            hiscoresScreen.addEventListener("click", () => hiscoresScreen.style.display = "none");
+        });
+        hiscoresScreen.addEventListener("click", () => hiscoresScreen.style.display = "none");
 
-            switchButton.addEventListener("click", () => {
-                currentTheme = currentTheme === 'gameboy' ? 'colorful' : 'gameboy';
-                document.body.classList.remove('gameboy-theme', 'colorful-theme');
-                document.body.classList.add(currentTheme + '-theme');
-                images = imageSets[currentTheme];
+        switchButton.addEventListener("click", () => {
+            currentTheme = currentTheme === 'gameboy' ? 'colorful' : 'gameboy';
+            document.body.classList.remove('gameboy-theme', 'colorful-theme');
+            document.body.classList.add(currentTheme + '-theme');
+            images = imageSets[currentTheme];
+            drawGrid();
+        });
+
+        multiplayerButton.addEventListener("click", () => multiplayerScreen.style.display = "flex");
+
+        joinButton.addEventListener("click", () => {
+            playerName = playerNameInput.value.slice(0, 5).padEnd(5, " ").toUpperCase();
+            if (playerName.length === 5) {
+                socket.emit('join', playerName);
+                playerNameInput.disabled = true;
+                joinButton.disabled = true;
+            }
+        });
+
+        socket.on('playerList', (players) => {
+            playerList.innerHTML = "";
+            players.forEach(p => {
+                if (p !== playerName) {
+                    const btn = document.createElement("button");
+                    btn.textContent = p;
+                    btn.addEventListener("click", () => socket.emit('propose', { toName: p, fromName: playerName }));
+                    playerList.appendChild(btn);
+                }
+            });
+        });
+
+        socket.on('proposal', (fromName) => {
+            if (confirm(fromName + " vous propose une partie. Accepter ?")) {
+                socket.emit('accept', { opponentName: fromName });
+            }
+        });
+
+        socket.on('startGame', ({ seed, room }) => {
+            sharedSeed = seed;
+            currentRoom = room;
+            isMultiplayer = true;
+            multiplayerScreen.style.display = "none";
+            document.getElementById("startScreen").style.display = "none";
+            startMultiplayerGame();
+        });
+
+        socket.on('opponentMove', ({ col, isBomb }) => {
+            if (pendingLines > 0 && !isProcessing) {
+                addRandomLine();
+                pendingLines--;
+            }
+        });
+
+        socket.on('opponentScore', (opponentScore) => {
+            const opponentPaliers = Math.floor(opponentScore / 25);
+            const myPaliers = Math.floor(score / 25);
+            if (opponentPaliers > myPaliers) pendingLines += opponentPaliers - myPaliers;
+        });
+
+        socket.on('gameOver', (data) => {
+            if (turnTimer) clearInterval(turnTimer);
+            if (playerName === data.winner) {
+                alert('Vous avez gagné contre ' + data.loser + ' !');
+            } else {
+                alert(data.winner + ' gagne contre ' + data.loser + ' !');
+            }
+            endGame(); // Appelle endGame pour uniformiser
+        });
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (isProcessing) return;
+        switch (event.key) {
+            case "ArrowLeft":
+                if (blockPosition > 0) blockPosition--;
                 drawGrid();
-            });
-
-            multiplayerButton.addEventListener("click", () => multiplayerScreen.style.display = "flex");
-
-            joinButton.addEventListener("click", () => {
-                playerName = playerNameInput.value.slice(0, 5).padEnd(5, " ").toUpperCase();
-                if (playerName.length === 5) {
-                    socket.emit('join', playerName);
-                    playerNameInput.disabled = true;
-                    joinButton.disabled = true;
-                }
-            });
-
-            socket.on('playerList', (players) => {
-                playerList.innerHTML = "";
-                players.forEach(p => {
-                    if (p !== playerName) {
-                        const btn = document.createElement("button");
-                        btn.textContent = p;
-                        btn.addEventListener("click", () => socket.emit('propose', { toName: p, fromName: playerName }));
-                        playerList.appendChild(btn);
-                    }
-                });
-            });
-
-            socket.on('proposal', (fromName) => {
-                if (confirm(fromName + " vous propose une partie. Accepter ?")) {
-                    socket.emit('accept', { opponentName: fromName });
-                }
-            });
-
-            socket.on('startGame', ({ seed, room }) => {
-                sharedSeed = seed;
-                currentRoom = room;
-                isMultiplayer = true;
-                multiplayerScreen.style.display = "none";
-                document.getElementById("startScreen").style.display = "none";
-                startMultiplayerGame();
-            });
-
-            socket.on('opponentMove', ({ col, isBomb }) => {
-                if (pendingLines > 0 && !isProcessing) {
-                    addRandomLine();
-                    pendingLines--;
-                }
-            });
-
-            socket.on('opponentScore', (opponentScore) => {
-                const opponentPaliers = Math.floor(opponentScore / 25);
-                const myPaliers = Math.floor(score / 25);
-                if (opponentPaliers > myPaliers) pendingLines += opponentPaliers - myPaliers;
-            });
-
-            socket.on('gameOver', (data) => {
-                if (turnTimer) clearInterval(turnTimer);
-                if (playerName === data.winner) {
-                    alert('Vous avez gagné contre ' + data.loser + ' !');
-                } else {
-                    alert(data.winner + ' gagne contre ' + data.loser + ' !');
-                }
-                endGame();
-            });
-        });
-
-        document.addEventListener("keydown", (event) => {
-            if (isProcessing) return;
-            switch (event.key) {
-                case "ArrowLeft":
-                    if (blockPosition > 0) blockPosition--;
-                    drawGrid();
-                    break;
-                case "ArrowRight":
-                    if (blockPosition < gridSize - 1) blockPosition++;
-                    drawGrid();
-                    break;
-                case " ":
-                    event.preventDefault();
-                    addBlock(blockPosition);
-                    break;
-                case "b":
-                case "B":
-                    if (bombCount > 0 && !isBombSelected) {
-                        isBombSelected = true;
-                        drawGrid();
-                    }
-                    break;
-            }
-        });
-
-        canvas.addEventListener("click", (event) => {
-            if (isProcessing) return;
-            const rect = canvas.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
-            if (y < gridSize * cellSize) {
-                const col = Math.floor((x - 40) / cellSize);
-                if (col >= 0 && col < gridSize) {
-                    blockPosition = col;
-                    addBlock(col);
-                }
-            }
-        });
-
-        document.getElementById("bombIcon").addEventListener("click", () => {
-            if (isProcessing) return;
-            if (bombCount > 0 && !isBombSelected) {
-                isBombSelected = true;
+                break;
+            case "ArrowRight":
+                if (blockPosition < gridSize - 1) blockPosition++;
                 drawGrid();
-            }
-        });
-
-        let imagesLoaded = 0;
-        const totalImages = colors.length + 2;
-        function checkImagesLoaded() {
-            imagesLoaded++;
-            if (imagesLoaded === totalImages) drawGrid();
+                break;
+            case " ":
+                event.preventDefault();
+                addBlock(blockPosition);
+                break;
+            case "b":
+            case "B":
+                if (bombCount > 0 && !isBombSelected) {
+                    isBombSelected = true;
+                    drawGrid();
+                }
+                break;
         }
-        Object.values(images).forEach(img => {
-            img.onload = checkImagesLoaded;
-            img.onerror = () => checkImagesLoaded();
-        });
-    </script>
+    });
+
+    canvas.addEventListener("click", (event) => {
+        if (isProcessing) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        if (y < gridSize * cellSize) {
+            const col = Math.floor((x - 40) / cellSize);
+            if (col >= 0 && col < gridSize) {
+                blockPosition = col;
+                addBlock(col);
+            }
+        }
+    });
+
+    document.getElementById("bombIcon").addEventListener("click", () => {
+        if (isProcessing) return;
+        if (bombCount > 0 && !isBombSelected) {
+            isBombSelected = true;
+            drawGrid();
+        }
+    });
+
+    let imagesLoaded = 0;
+    const totalImages = colors.length + 2;
+    function checkImagesLoaded() {
+        imagesLoaded++;
+        if (imagesLoaded === totalImages) drawGrid();
+    }
+    Object.values(images).forEach(img => {
+        img.onload = checkImagesLoaded;
+        img.onerror = () => checkImagesLoaded();
+    });
+</script>
 </body>
 </html>
