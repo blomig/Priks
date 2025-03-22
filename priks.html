@@ -273,9 +273,6 @@
         let turnTimer = null;
         let blockSequenceIndex = 0;
 
-        let playerName; // Variable globale pour le nom du joueur
-        let currentRoom; // Variable globale pour la room
-
         let currentTheme = 'gameboy';
         const colors = ["red", "blue", "green", "yellow", "purple", "orange"];
         const priksColor = "gray";
@@ -940,49 +937,52 @@
                 }
             });
 
-socket.on('connect', () => {
-    console.log('Connecté au serveur');
-});
+            socket.on('playerList', (players) => {
+                playerList.innerHTML = "";
+                players.forEach(p => {
+                    if (p !== playerNameInput.value) {
+                        const btn = document.createElement("button");
+                        btn.textContent = p;
+                        btn.addEventListener("click", () => socket.emit('propose', { toName: p, fromName: playerNameInput.value }));
+                        playerList.appendChild(btn);
+                    }
+                });
+            });
 
-socket.on('playerList', (players) => {
-    // Ton code actuel pour afficher la liste
-    // Ex. : updatePlayerList(players);
-});
-
-socket.on('proposal', (fromName) => {
+            socket.on('proposal', (fromName) => {
     if (confirm(fromName + " vous propose une partie. Accepter ?")) {
         socket.emit('accept', { opponentName: fromName });
     }
 });
 
-socket.on('startGame', (data) => {
-    currentRoom = data.room; // Reçois la room depuis le serveur (optionnel si envoyé)
-    // Ton code actuel pour démarrer le jeu
-    console.log('Partie démarrée dans la room:', currentRoom);
-    // Ex. : startGameLoop();
-});
+            socket.on('startGame', ({ seed }) => {
+                sharedSeed = seed;
+                isMultiplayer = true;
+                multiplayerScreen.style.display = "none";
+                document.getElementById("startScreen").style.display = "none";
+                room = `${socket.id}-${opponentName}`;
+                startMultiplayerGame();
+            });
 
-// Exemple d’envoi de mouvement
-function sendMove(moveData) {
-    socket.emit('move', { room: currentRoom, ...moveData });
-}
+            socket.on('opponentMove', ({ col, isBomb }) => {
+                if (pendingLines > 0 && !isProcessing) {
+                    addRandomLine();
+                    pendingLines--;
+                }
+            });
 
-// Exemple de mise à jour du score
-function updateScore(score) {
-    socket.emit('scoreUpdate', { room: currentRoom, score });
-}
+            socket.on('opponentScore', (opponentScore) => {
+                const opponentPaliers = Math.floor(opponentScore / 25);
+                const myPaliers = Math.floor(score / 25);
+                if (opponentPaliers > myPaliers) pendingLines += opponentPaliers - myPaliers;
+            });
 
-socket.on('opponentMove', (data) => {
-    // Ton code actuel pour gérer le mouvement de l’adversaire
-    console.log('Mouvement reçu:', data);
-});
-
-socket.on('opponentScore', (score) => {
-    // Ton code actuel pour mettre à jour le score adverse
-    console.log('Score adverse reçu:', score);
-});
-
-socket.on('gameOver', (data) => {
+            socket.on('opponentLost', () => {
+                alert("Vous avez gagné ! L’adversaire a perdu.");
+                document.getElementById("gameOverScreen").style.display = "flex";
+            });
+        });
+        socket.on('gameOver', (data) => {
     clearInterval(timer); // Arrête le timer (ajuste selon ton code)
     if (playerName === data.winner) {
         alert('Vous avez gagné contre ' + data.loser + ' !');
@@ -991,14 +991,7 @@ socket.on('gameOver', (data) => {
     }
     document.getElementById('game').style.display = 'none'; // Ajuste selon ton HTML
     document.getElementById('menu').style.display = 'block';
-    currentRoom = null; // Réinitialise la room
 });
-
-// Quand un joueur perd
-function onGameOver() {
-    socket.emit('gameOver', currentRoom);
-}
-            
         document.addEventListener("keydown", (event) => {
             if (isProcessing) return;
             switch (event.key) {
