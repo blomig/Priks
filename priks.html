@@ -805,17 +805,25 @@
         else document.getElementById("timerDisplay").style.display = "block";
     }
 
-    function endGame() {
-        if (isGameOver) return;
-        isGameOver = true;
-        if (isMultiplayer && currentRoom) socket.emit('gameOver', currentRoom);
-        loadHighScores().then((highScores) => {
-            if (score > highScores[9][1]) addHighScore(score);
-            document.getElementById("gameOverScore").textContent = `SCORE FINAL : ${score}`;
-            document.getElementById("gameContainer").style.display = "none";
-            document.getElementById("gameOverScreen").style.display = "flex";
-        });
-    }
+   function endGame() {
+    if (isGameOver) return;
+    isGameOver = true;
+    if (isMultiplayer && currentRoom) socket.emit('gameOver', currentRoom);
+    loadHighScores().then((highScores) => {
+        if (score > highScores[9][1]) addHighScore(score);
+        document.getElementById("gameOverScore").textContent = `SCORE FINAL : ${score}`;
+        document.getElementById("gameContainer").style.display = "none";
+        document.getElementById("gameOverScreen").style.display = "flex";
+        isMultiplayer = false;
+        currentRoom = null;
+        sharedSeed = null;
+        pendingLines = 0;
+        if (turnTimer) clearInterval(turnTimer);
+        playerNameInput.disabled = false;
+        joinButton.disabled = false;
+        playerNameInput.value = "";
+    });
+}
 
     function startMultiplayerGame() {
         grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
@@ -932,7 +940,23 @@
             drawGrid();
         });
 
-        multiplayerButton.addEventListener("click", () => multiplayerScreen.style.display = "flex");
+        multiplayerButton.addEventListener("click", () => {
+    if (!isGameOver && !isMultiplayer) {
+        document.getElementById("gameContainer").style.display = "none";
+        document.getElementById("startScreen").style.display = "flex";
+        isGameOver = true;
+    }
+    multiplayerScreen.style.display = "flex";
+    playerNameInput.disabled = false;
+    joinButton.disabled = false;
+    playerNameInput.value = "";
+    playerList.innerHTML = "";
+    isMultiplayer = false;
+    currentRoom = null;
+    sharedSeed = null;
+    pendingLines = 0;
+    if (turnTimer) clearInterval(turnTimer);
+});
 
         joinButton.addEventListener("click", () => {
             playerName = playerNameInput.value.slice(0, 5).padEnd(5, " ").toUpperCase();
