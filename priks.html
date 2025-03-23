@@ -180,6 +180,43 @@
             0%, 50% { opacity: 1; }
             51%, 100% { opacity: 0; }
         }
+
+        #multiplayerContent {
+    width: 320px; /* Réduit de 360px à 320px pour correspondre à la grille */
+    height: 400px;
+    background-color: var(--content-bg);
+    padding: 20px;
+    border: 2px solid #0F380F;
+    font-family: var(--font-family);
+    font-size: 14px;
+    color: var(--text-color);
+    text-align: left;
+    overflow-y: auto;
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex; /* Ajout pour contrôler la disposition */
+    flex-direction: column; /* Empile les éléments verticalement */
+    gap: 10px; /* Espace entre les éléments */
+}
+
+#playerName {
+    width: 100%; /* Prend toute la largeur disponible */
+    padding: 5px;
+    box-sizing: border-box; /* Inclut padding dans la largeur */
+}
+
+#joinButton {
+    width: 100%; /* Bouton prend toute la largeur */
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+#playerList {
+    flex-grow: 1; /* Permet à la liste de prendre l’espace restant */
+    overflow-y: auto; /* Garde le défilement si nécessaire */
+}
     </style>
 </head>
 <body>
