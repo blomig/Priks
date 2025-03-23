@@ -826,24 +826,25 @@
 }
 
     function startMultiplayerGame() {
-        grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
-        bombCount = 1;
-        chainCount = 0;
-        score = 0;
-        moveCount = 0;
-        blockSequenceIndex = 0;
-        nextBlock = getNewBlock(0);
-        nextNextBlock = getNewBlock(1);
-        nextLine = getNewLine(2);
-        isBombSelected = false;
-        blockPosition = 0;
-        isGameOver = false;
-        pendingLines = 0;
-        document.getElementById("gameContainer").style.display = "block";
-        drawGrid();
-        updateUI();
-        startTurnTimer();
-    }
+    console.log("Lancement d'une nouvelle partie multijoueur"); // Log
+    grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
+    bombCount = 1;
+    chainCount = 0;
+    score = 0;
+    moveCount = 0;
+    blockSequenceIndex = 0;
+    nextBlock = getNewBlock(0);
+    nextNextBlock = getNewBlock(1);
+    nextLine = getNewLine(2);
+    isBombSelected = false;
+    blockPosition = 0;
+    isGameOver = false;
+    pendingLines = 0;
+    document.getElementById("gameContainer").style.display = "block";
+    drawGrid();
+    updateUI();
+    startTurnTimer();
+}
 
     function startTurnTimer() {
         if (!isMultiplayer) return;
@@ -864,6 +865,68 @@
         if (turnTimer) clearInterval(turnTimer);
         startTurnTimer();
     }
+
+        function setupSocketListeners() {
+    socket.on('playerList', (players) => {
+        console.log("Liste des joueurs reçue :", players); // Log pour déboguer
+        playerList.innerHTML = "";
+        players.forEach(p => {
+            if (p !== playerName) {
+                const btn = document.createElement("button");
+                btn.textContent = p;
+                btn.addEventListener("click", () => {
+                    console.log("Proposition envoyée à :", p); // Log
+                    socket.emit('propose', { toName: p, fromName: playerName });
+                });
+                playerList.appendChild(btn);
+            }
+        });
+    });
+
+    socket.on('proposal', (fromName) => {
+        console.log("Proposition reçue de :", fromName); // Log
+        if (confirm(fromName + " vous propose une partie. Accepter ?")) {
+            console.log("Proposition acceptée pour :", fromName); // Log
+            socket.emit('accept', { opponentName: fromName });
+        }
+    });
+
+    socket.on('startGame', ({ seed, room }) => {
+        console.log("Démarrage partie - Seed:", seed, "Room:", room); // Log
+        sharedSeed = seed;
+        currentRoom = room;
+        isMultiplayer = true;
+        multiplayerScreen.style.display = "none";
+        document.getElementById("startScreen").style.display = "none";
+        startMultiplayerGame();
+    });
+
+    socket.on('opponentMove', ({ col, isBomb }) => {
+        console.log("Mouvement adversaire :", { col, isBomb }); // Log
+        if (pendingLines > 0 && !isProcessing) {
+            addRandomLine();
+            pendingLines--;
+        }
+    });
+
+    socket.on('opponentScore', (opponentScore) => {
+        console.log("Score adversaire :", opponentScore); // Log
+        const opponentPaliers = Math.floor(opponentScore / 25);
+        const myPaliers = Math.floor(score / 25);
+        if (opponentPaliers > myPaliers) pendingLines += opponentPaliers - myPaliers;
+    });
+
+    socket.on('gameOver', (data) => {
+        console.log("Fin de partie multijoueur :", data); // Log
+        if (turnTimer) clearInterval(turnTimer);
+        if (playerName === data.winner) {
+            alert('Vous avez gagné contre ' + data.loser + ' !');
+        } else {
+            alert(data.winner + ' gagne contre ' + data.loser + ' !');
+        }
+        endGame();
+    });
+}
 
     document.addEventListener("DOMContentLoaded", () => {
         const startButton = document.getElementById("startButton");
@@ -946,6 +1009,9 @@
         document.getElementById("startScreen").style.display = "flex";
         isGameOver = true;
     }
+    socket.disconnect();
+    socket.connect();
+    setupSocketListeners(); // Réinitialiser les écouteurs après reconnexion
     multiplayerScreen.style.display = "flex";
     playerNameInput.disabled = false;
     joinButton.disabled = false;
@@ -958,6 +1024,8 @@
     if (turnTimer) clearInterval(turnTimer);
 });
 
+        setupSocketListeners();
+
         joinButton.addEventListener("click", () => {
             playerName = playerNameInput.value.slice(0, 5).padEnd(5, " ").toUpperCase();
             if (playerName.length === 5) {
@@ -967,56 +1035,6 @@
             }
         });
 
-        socket.on('playerList', (players) => {
-            playerList.innerHTML = "";
-            players.forEach(p => {
-                if (p !== playerName) {
-                    const btn = document.createElement("button");
-                    btn.textContent = p;
-                    btn.addEventListener("click", () => socket.emit('propose', { toName: p, fromName: playerName }));
-                    playerList.appendChild(btn);
-                }
-            });
-        });
-
-        socket.on('proposal', (fromName) => {
-            if (confirm(fromName + " vous propose une partie. Accepter ?")) {
-                socket.emit('accept', { opponentName: fromName });
-            }
-        });
-
-        socket.on('startGame', ({ seed, room }) => {
-            sharedSeed = seed;
-            currentRoom = room;
-            isMultiplayer = true;
-            multiplayerScreen.style.display = "none";
-            document.getElementById("startScreen").style.display = "none";
-            startMultiplayerGame();
-        });
-
-        socket.on('opponentMove', ({ col, isBomb }) => {
-            if (pendingLines > 0 && !isProcessing) {
-                addRandomLine();
-                pendingLines--;
-            }
-        });
-
-        socket.on('opponentScore', (opponentScore) => {
-            const opponentPaliers = Math.floor(opponentScore / 25);
-            const myPaliers = Math.floor(score / 25);
-            if (opponentPaliers > myPaliers) pendingLines += opponentPaliers - myPaliers;
-        });
-
-        socket.on('gameOver', (data) => {
-            if (turnTimer) clearInterval(turnTimer);
-            if (playerName === data.winner) {
-                alert('Vous avez gagné contre ' + data.loser + ' !');
-            } else {
-                alert(data.winner + ' gagne contre ' + data.loser + ' !');
-            }
-            endGame(); // Appelle endGame pour uniformiser
-        });
-    });
 
     document.addEventListener("keydown", (event) => {
         if (isProcessing) return;
