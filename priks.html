@@ -870,24 +870,33 @@
     }
 
     function endGame() {
-        if (isGameOver) return;
-        isGameOver = true;
-        if (isMultiplayer && currentRoom) socket.emit('gameOver', currentRoom);
-        loadHighScores().then((highScores) => {
-            if (score > highScores[9][1]) addHighScore(score);
-            document.getElementById("gameOverScore").textContent = `SCORE FINAL : ${score}`;
-            document.getElementById("gameContainer").style.display = "none";
-            document.getElementById("gameOverScreen").style.display = "flex";
-            isMultiplayer = false;
-            currentRoom = null;
-            sharedSeed = null;
-            pendingLines = 0;
-            if (turnTimer) clearInterval(turnTimer);
-            document.getElementById("playerName").disabled = false;
-            document.getElementById("joinButton").disabled = false;
-            document.getElementById("playerName").value = "";
-        });
+    if (isGameOver) return;
+    isGameOver = true;
+    if (isMultiplayer && currentRoom) socket.emit('gameOver', currentRoom);
+    // Arrêter toutes les interactions en cours
+    isProcessing = true; // Bloque addBlock et autres actions
+    if (turnTimer) {
+        clearInterval(turnTimer);
+        turnTimer = null;
     }
+    loadHighScores().then((highScores) => {
+        if (score > highScores[9][1]) addHighScore(score);
+        document.getElementById("gameOverScore").textContent = `SCORE FINAL : ${score}`;
+        document.getElementById("gameContainer").style.display = "none";
+        document.getElementById("gameOverScreen").style.display = "flex";
+        // Réinitialisation complète
+        isMultiplayer = false;
+        currentRoom = null;
+        sharedSeed = null;
+        pendingLines = 0;
+        blockPosition = 0;
+        isBombSelected = false;
+        document.getElementById("playerName").disabled = false;
+        document.getElementById("joinButton").disabled = false;
+        document.getElementById("playerName").value = "";
+        drawGrid(); // Redessine pour éviter les animations résiduelles
+    }).catch(err => console.error("Erreur chargement scores:", err));
+}
 
     function startMultiplayerGame() {
         grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
@@ -1046,29 +1055,30 @@
         });
 
         // Nouveau gestionnaire pour leaveButton
-    leaveButton.addEventListener("click", () => {
-        multiplayerScreen.style.display = "none"; // Ferme la fenêtre
-        if (playerName && currentRoom) {
-            socket.emit('leave', { room: currentRoom, name: playerName }); // Optionnel : informer le serveur
-        }
-        // Réinitialise l’état multijoueur
-        isMultiplayer = false;
-        currentRoom = null;
-        sharedSeed = null;
-        pendingLines = 0;
-        playerName = null;
-        if (turnTimer) clearInterval(turnTimer);
-        playerNameInput.disabled = false;
-        joinButton.disabled = false;
-        playerNameInput.value = "";
-        playerList.innerHTML = "";
-        // Retourne à l’écran d’accueil ou à la grille selon l’état
-        if (isGameOver) {
-            document.getElementById("startScreen").style.display = "flex";
-        } else {
-            document.getElementById("gameContainer").style.display = "block";
-        }
-    });
+       leaveButton.addEventListener("click", () => {
+    multiplayerScreen.style.display = "none";
+    if (playerName && currentRoom) {
+        socket.emit('leave', { room: currentRoom, name: playerName });
+    }
+    isMultiplayer = false;
+    currentRoom = null;
+    sharedSeed = null;
+    pendingLines = 0;
+    playerName = null;
+    if (turnTimer) {
+        clearInterval(turnTimer);
+        turnTimer = null; // Ajout
+    }
+    playerNameInput.disabled = false;
+    joinButton.disabled = false;
+    playerNameInput.value = "";
+    playerList.innerHTML = "";
+    if (isGameOver) {
+        document.getElementById("startScreen").style.display = "flex";
+    } else {
+        document.getElementById("gameContainer").style.display = "block";
+    }
+});
 
         socket.on('playerList', (players) => {
             playerList.innerHTML = "";
