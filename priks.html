@@ -899,24 +899,26 @@
 }
 
     function startMultiplayerGame() {
-        grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
-        bombCount = 1;
-        chainCount = 0;
-        score = 0;
-        moveCount = 0;
-        blockSequenceIndex = 0;
-        nextBlock = getNewBlock(0);
-        nextNextBlock = getNewBlock(1);
-        nextLine = getNewLine(2);
-        isBombSelected = false;
-        blockPosition = 0;
-        isGameOver = false;
-        pendingLines = 0;
-        document.getElementById("gameContainer").style.display = "block";
-        drawGrid();
-        updateUI();
-        startTurnTimer();
-    }
+    console.log('Démarrage nouvelle partie multijoueur avec room:', currentRoom); // Log
+    grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
+    bombCount = 1;
+    chainCount = 0;
+    score = 0;
+    moveCount = 0;
+    blockSequenceIndex = 0;
+    nextBlock = getNewBlock(0);
+    nextNextBlock = getNewBlock(1);
+    nextLine = getNewLine(2);
+    isBombSelected = false;
+    blockPosition = 0;
+    isGameOver = false;
+    pendingLines = 0;
+    isProcessing = false; // Ajout pour débloquer
+    document.getElementById("gameContainer").style.display = "block";
+    drawGrid();
+    updateUI();
+    startTurnTimer();
+}
 
     function startTurnTimer() {
         if (!isMultiplayer) return;
@@ -1120,6 +1122,20 @@
             if (opponentPaliers > myPaliers) pendingLines += opponentPaliers - myPaliers;
         });
 
+        socket.on('error', ({ message }) => {
+    console.log('Erreur serveur:', message);
+    alert(message);
+    multiplayerScreen.style.display = "flex"; // Retour à l’écran multijoueur
+    document.getElementById("gameContainer").style.display = "none";
+    isGameOver = true;
+    isMultiplayer = false;
+    currentRoom = null;
+    sharedSeed = null;
+    if (turnTimer) {
+        clearInterval(turnTimer);
+        turnTimer = null;
+    }
+});
         socket.on('gameOver', (data) => {
             if (turnTimer) clearInterval(turnTimer);
             if (playerName === data.winner) {
