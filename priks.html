@@ -226,6 +226,21 @@
     flex-grow: 1; /* Permet à la liste de prendre l’espace restant */
     overflow-y: auto; /* Garde le défilement si nécessaire */
 }
+#leaveButton {
+    width: 100%; /* Même largeur que joinButton */
+    padding: 5px;
+    font-family: var(--font-family);
+    font-size: 14px;
+    color: var(--text-color);
+    background-color: var(--button-bg);
+    border: 2px solid #0F380F;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+#leaveButton:hover {
+    background-color: var(--button-hover);
+}
     </style>
 </head>
 <body>
@@ -276,12 +291,13 @@
         <div id="hiscoresContent"></div>
     </div>
     <div id="multiplayerScreen">
-        <div id="multiplayerContent">
-            <input id="playerName" type="text" maxlength="5" placeholder="Nom (5 lettres)" style="font-family: var(--font-family);">
-            <button id="joinButton">Rejoindre</button>
-            <div id="playerList"></div>
-        </div>
+    <div id="multiplayerContent">
+        <input id="playerName" type="text" maxlength="5" placeholder="Nom (5 lettres)" style="font-family: var(--font-family);">
+        <button id="joinButton">Rejoindre</button>
+        <div id="playerList"></div>
+        <button id="leaveButton">Quitter</button> <!-- Nouveau bouton -->
     </div>
+</div>
     <audio id="placeSound" src="place.wav"></audio>
     <audio id="bombSound" src="bomb.wav"></audio>
     <audio id="chainSound" src="chain.mp3"></audio>
@@ -942,6 +958,7 @@
         const joinButton = document.getElementById("joinButton");
         const playerNameInput = document.getElementById("playerName");
         const playerList = document.getElementById("playerList");
+        const leaveButton = document.getElementById("leaveButton"); // Nouveau
 
         startButton.addEventListener("click", () => {
             document.getElementById("startScreen").style.display = "none";
@@ -1027,6 +1044,31 @@
                 joinButton.disabled = true;
             }
         });
+
+        // Nouveau gestionnaire pour leaveButton
+    leaveButton.addEventListener("click", () => {
+        multiplayerScreen.style.display = "none"; // Ferme la fenêtre
+        if (playerName && currentRoom) {
+            socket.emit('leave', { room: currentRoom, name: playerName }); // Optionnel : informer le serveur
+        }
+        // Réinitialise l’état multijoueur
+        isMultiplayer = false;
+        currentRoom = null;
+        sharedSeed = null;
+        pendingLines = 0;
+        playerName = null;
+        if (turnTimer) clearInterval(turnTimer);
+        playerNameInput.disabled = false;
+        joinButton.disabled = false;
+        playerNameInput.value = "";
+        playerList.innerHTML = "";
+        // Retourne à l’écran d’accueil ou à la grille selon l’état
+        if (isGameOver) {
+            document.getElementById("startScreen").style.display = "flex";
+        } else {
+            document.getElementById("gameContainer").style.display = "block";
+        }
+    });
 
         socket.on('playerList', (players) => {
             playerList.innerHTML = "";
