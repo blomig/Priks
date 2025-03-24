@@ -16,22 +16,31 @@
             src: url("gameboy.ttf") format("truetype");
         }
         #rulesButtonContainer {
-            width: 320px;
-            margin: 5px auto 0;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-        #rulesButton, #hiscoresButton, #switchButton, #multiplayerButton {
-            padding: 5px 10px;
-            font-family: var(--font-family);
-            font-size: 14px;
-            color: var(--text-color);
-            background-color: var(--button-bg, #8BAC0F);
-            border: 2px solid #0F380F;
-            cursor: pointer;
-        }
+    width: 320px;
+    margin: 5px auto 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column; /* Changement : alignement vertical */
+    align-items: center; /* Centre les éléments horizontalement */
+    gap: 10px; /* Espace entre topButtons et multiplayerButton */
+}
+
+#topButtons {
+    display: flex;
+    justify-content: center; /* Garde les 3 boutons alignés horizontalement */
+    gap: 10px; /* Espace entre Rules, Hiscores, Switch */
+}
+
+/* Les styles des boutons restent inchangés */
+#rulesButton, #hiscoresButton, #switchButton, #multiplayerButton {
+    padding: 5px 10px;
+    font-family: var(--font-family);
+    font-size: 14px;
+    color: var(--text-color);
+    background-color: var(--button-bg, #8BAC0F);
+    border: 2px solid #0F380F;
+    cursor: pointer;
+}
         .gameboy-theme {
             --font-family: "gameboy", monospace;
             --canvas-bg: #cadc9f;
@@ -237,12 +246,14 @@
             <div id="timerDisplay">TEMPS : 5</div>
         </div>
         <div id="info"></div>
-        <div id="rulesButtonContainer">
-            <button id="rulesButton">RULES</button>
-            <button id="hiscoresButton">HISCORES</button>
-            <button id="switchButton">SWITCH</button>
-            <button id="multiplayerButton">MULTIPLAYER</button>
-        </div>
+       <div id="rulesButtonContainer">
+    <div id="topButtons">
+        <button id="rulesButton">RULES</button>
+        <button id="hiscoresButton">HISCORES</button>
+        <button id="switchButton">SWITCH</button>
+    </div>
+    <button id="multiplayerButton">MULTIPLAYER</button>
+    </div>
     </div>
     <div id="startScreen">
         <img src="start_screen.png" alt="Écran d'accueil" id="startImage">
