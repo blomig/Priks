@@ -977,39 +977,43 @@
         const playerList = document.getElementById("playerList");
         const leaveButton = document.getElementById("leaveButton"); // Nouveau
 
-        startButton.addEventListener("click", () => {
-            document.getElementById("startScreen").style.display = "none";
-            document.getElementById("gameContainer").style.display = "block";
-            const beginSound = audioElements[currentTheme === 'gameboy' ? 'beginSound' : 'beginSoundNew'];
-            if (beginSound) beginSound.play().catch(e => console.error("Erreur son début:", e));
-            drawGrid();
-            updateUI();
-        });
+       startButton.addEventListener("click", () => {
+    document.getElementById("startScreen").style.display = "none";
+    document.getElementById("gameContainer").style.display = "block";
+    const beginSound = audioElements[currentTheme === 'gameboy' ? 'beginSound' : 'beginSoundNew'];
+    if (beginSound) beginSound.play().catch(e => console.error("Erreur son début:", e));
+    drawGrid();
+    updateUI();
+});
 
         gameOverButton.addEventListener("click", () => {
-            document.getElementById("gameOverScreen").style.display = "none";
-            grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
-            bombCount = 1;
-            chainCount = 0;
-            score = 0;
-            moveCount = 0;
-            blockSequenceIndex = 0;
-            nextBlock = getNewBlock(0);
-            nextNextBlock = getNewBlock(1);
-            nextLine = getNewLine(2);
-            isBombSelected = false;
-            blockPosition = 0;
-            isGameOver = false;
-            isMultiplayer = false;
-            pendingLines = 0;
-            if (turnTimer) clearInterval(turnTimer);
-            document.getElementById("gameContainer").style.display = "none";
-            document.getElementById("startScreen").style.display = "flex";
-            drawGrid();
-            updateUI();
-            const beginSound = audioElements[currentTheme === 'gameboy' ? 'beginSound' : 'beginSoundNew'];
-            if (beginSound) beginSound.play().catch(e => console.error("Erreur son début:", e));
-        });
+    document.getElementById("gameOverScreen").style.display = "none";
+    grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null)); // Réinitialise la grille
+    bombCount = 1;
+    chainCount = 0;
+    score = 0;
+    moveCount = 0;
+    blockSequenceIndex = 0;
+    nextBlock = getNewBlock(0);
+    nextNextBlock = getNewBlock(1);
+    nextLine = getNewLine(2);
+    isBombSelected = false;
+    blockPosition = 0;
+    isGameOver = false;
+    isMultiplayer = false;
+    pendingLines = 0;
+    isProcessing = false; // Débloque les interactions
+    if (turnTimer) {
+        clearInterval(turnTimer);
+        turnTimer = null;
+    }
+    document.getElementById("gameContainer").style.display = "none";
+    document.getElementById("startScreen").style.display = "flex";
+    drawGrid();
+    updateUI();
+    const beginSound = audioElements[currentTheme === 'gameboy' ? 'beginSound' : 'beginSoundNew'];
+    if (beginSound) beginSound.play().catch(e => console.error("Erreur son début:", e));
+});
 
         rulesButton.addEventListener("click", () => rulesScreen.style.display = "flex");
         rulesScreen.addEventListener("click", () => rulesScreen.style.display = "none");
@@ -1038,8 +1042,7 @@
         multiplayerButton.addEventListener("click", () => {
             if (!isGameOver && !isMultiplayer) {
                 document.getElementById("gameContainer").style.display = "none";
-                document.getElementById("startScreen").style.display = "flex";
-                isGameOver = true;
+                
             }
             multiplayerScreen.style.display = "flex";
             playerNameInput.disabled = false;
