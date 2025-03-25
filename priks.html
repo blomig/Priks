@@ -614,21 +614,24 @@
     }
 
     async function addBlock(col) {
-        if (isProcessing) return;
-        isProcessing = true;
-        let row = gridSize - 1;
-        while (row >= 0 && !grid[row][col]) row--;
-        row++;
-        if (row >= gridSize) {
-            const endSound = audioElements[currentTheme === 'gameboy' ? 'endSound' : 'endSoundNew'];
-            if (endSound) endSound.play().catch(e => console.error("Erreur son fin:", e));
-            const x = col * cellSize + 40 + cellSize / 2;
-            const y = gridSize * cellSize + cellSize / 2;
+    if (isProcessing) return;
+    isProcessing = true;
+    let row = gridSize - 1;
+    while (row >= 0 && !grid[row][col]) row--;
+    row++;
+    if (row >= gridSize) {
+        const endSound = audioElements[currentTheme === 'gameboy' ? 'endSound' : 'endSoundNew'];
+        if (endSound) endSound.play().catch(e => console.error("Erreur son fin:", e));
+        const x = col * cellSize + 40 + cellSize / 2;
+        const y = gridSize * cellSize + cellSize / 2;
+        await new Promise(resolve => { // Attendre l’animation
             animateGameOver(x, y);
-            endGame();
-            isProcessing = false;
-            return;
-        }
+            setTimeout(resolve, 1000); // Durée approximative de l’animation (ajuste si besoin)
+        });
+        endGame();
+        isProcessing = false;
+        return;
+    }
         if (isBombSelected) {
             await animateBlock(col, gridSize * cellSize, row, true);
             const bombSound = audioElements[currentTheme === 'gameboy' ? 'bombSound' : 'bombSoundNew'];
@@ -873,29 +876,32 @@
     if (isGameOver) return;
     isGameOver = true;
     if (isMultiplayer && currentRoom) socket.emit('gameOver', currentRoom);
-    // Arrêter toutes les interactions en cours
-    isProcessing = true; // Bloque addBlock et autres actions
+    isProcessing = true;
     if (turnTimer) {
         clearInterval(turnTimer);
         turnTimer = null;
     }
-    loadHighScores().then((highScores) => {
-        if (score > highScores[9][1]) addHighScore(score);
-        document.getElementById("gameOverScore").textContent = `SCORE FINAL : ${score}`;
-        document.getElementById("gameContainer").style.display = "none";
-        document.getElementById("gameOverScreen").style.display = "flex";
-        // Réinitialisation complète
-        isMultiplayer = false;
-        currentRoom = null;
-        sharedSeed = null;
-        pendingLines = 0;
-        blockPosition = 0;
-        isBombSelected = false;
-        document.getElementById("playerName").disabled = false;
-        document.getElementById("joinButton").disabled = false;
-        document.getElementById("playerName").value = "";
-        drawGrid(); // Redessine pour éviter les animations résiduelles
-    }).catch(err => console.error("Erreur chargement scores:", err));
+    // Forcer l’affichage immédiat
+    document.getElementById("gameContainer").style.display = "none";
+    document.getElementById("gameOverScreen").style.display = "flex";
+    document.getElementById("gameOverScore").textContent = `SCORE FINAL : ${score}`;
+    loadHighScores()
+        .then((highScores) => {
+            if (score > highScores[9][1]) addHighScore(score);
+        })
+        .catch(err => console.error("Erreur chargement scores:", err))
+        .finally(() => {
+            isMultiplayer = false;
+            currentRoom = null;
+            sharedSeed = null;
+            pendingLines = 0;
+            blockPosition = 0;
+            isBombSelected = false;
+            document.getElementById("playerName").disabled = false;
+            document.getElementById("joinButton").disabled = false;
+            document.getElementById("playerName").value = "";
+            drawGrid();
+        });
 }
 
     function startMultiplayerGame() {
@@ -1075,10 +1081,13 @@
     joinButton.disabled = false;
     playerNameInput.value = "";
     playerList.innerHTML = "";
+           isProcessing = false; // Ajout pour débloquer le solo
     if (isGameOver) {
         document.getElementById("startScreen").style.display = "flex";
     } else {
         document.getElementById("gameContainer").style.display = "block";
+        drawGrid(); // Redessiner pour assurer la cohérence
+        updateUI(); // Mettre à jour l’interface
     }
 });
 
