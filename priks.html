@@ -848,7 +848,7 @@
                 if (emptyColumnSound) emptyColumnSound.play().catch(e => console.error("Erreur son colonne vide:", e));
                 for (const col of emptyColumns) {
                     const x = col * cellSize + 40 + cellSize / 2;
-                    const y = 0; // Haut de la colonne
+                    const y = cellSize / 2; // Centré sur la case du haut
                     await animateScorePopup(x, y, 10);
                 }
             }
