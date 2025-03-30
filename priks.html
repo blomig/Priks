@@ -681,26 +681,29 @@
     }
 
     function addRandomLine() {
-        const lineData = [];
-        for (let col = 0; col < gridSize; col++) {
-            let row = gridSize - 1;
-            while (row >= 0 && !grid[row][col]) row--;
-            row++;
-            if (row >= gridSize) {
-                const endSound = audioElements[currentTheme === 'gameboy' ? 'endSound' : 'endSoundNew'];
-                if (endSound) endSound.play().catch(e => console.error("Erreur son fin:", e));
-                const x = col * cellSize + 40 + cellSize / 2;
-                const y = gridSize * cellSize + cellSize / 2;
+    const lineData = [];
+    for (let col = 0; col < gridSize; col++) {
+        let row = gridSize - 1;
+        while (row >= 0 && !grid[row][col]) row--;
+        row++;
+        if (row >= gridSize) {
+            const endSound = audioElements[currentTheme === 'gameboy' ? 'endSound' : 'endSoundNew'];
+            if (endSound) endSound.play().catch(e => console.error("Erreur son fin:", e));
+            const x = col * cellSize + 40 + cellSize / 2;
+            const y = gridSize * cellSize + cellSize / 2;
+            await new Promise(resolve => { // Ajout de l’attente
                 animateGameOver(x, y);
-                endGame();
-                return;
-            }
-            lineData.push({ col, row, color: nextLine[col] });
+                setTimeout(resolve, 1000); // Durée de l’animation (ajuste si besoin)
+            });
+            endGame();
+            return;
         }
-        animateLine(lineData).then(() => checkChains());
-        blockSequenceIndex++;
-        nextLine = getNewLine(blockSequenceIndex + 2);
+        lineData.push({ col, row, color: nextLine[col] });
     }
+    animateLine(lineData).then(() => checkChains());
+    blockSequenceIndex++;
+    nextLine = getNewLine(blockSequenceIndex + 2);
+}
 
     async function animateScorePopup(x, y, points) {
         const duration = 400;
