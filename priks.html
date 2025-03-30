@@ -525,18 +525,21 @@
     }
 
     async function animateBlock(col, startY, endRow, isBomb = false) {
-        const duration = 100;
-        const steps = 10;
-        const stepDuration = duration / steps;
-        const endY = endRow * cellSize;
-        let currentY = startY;
-        const color = isBomb ? bombColor : nextBlock;
-        for (let i = 0; i <= steps; i++) {
-            drawGrid([{ x: col * cellSize + 40, y: currentY, color }]);
-            currentY -= stepDuration;
-            await new Promise(resolve => setTimeout(resolve, stepDuration));
-        }
+    const duration = 100; // Durée totale en ms
+    const steps = 10; // Nombre d’étapes
+    const stepDuration = duration / steps; // Temps par étape
+    const endY = endRow * cellSize; // Position finale
+    const distance = startY - endY; // Distance à parcourir
+    const stepDistance = distance / steps; // Pas ajusté
+    let currentY = startY;
+    const color = isBomb ? bombColor : nextBlock;
+    
+    for (let i = 0; i <= steps; i++) {
+        drawGrid([{ x: col * cellSize + 40, y: currentY, color }]);
+        currentY -= stepDistance; // Déplacement précis
+        await new Promise(resolve => setTimeout(resolve, stepDuration));
     }
+}
 
     async function animateLine(lineData) {
         const startY = (gridSize + 1) * cellSize;
