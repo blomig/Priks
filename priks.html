@@ -310,6 +310,7 @@
     <audio id="lineSoundNew" src="line_new.mp3"></audio>
     <audio id="beginSoundNew" src="begin_new.wav"></audio>
     <audio id="endSoundNew" src="end_new.wav"></audio>
+    <audio id="emptyColumnSound" src="empty_coll.wav"></audio>
     <script>
     const socket = io('https://blox.blomig.com:3000');
     let playerName;
@@ -750,76 +751,116 @@
     }
 
     async function checkChains() {
-        let chainsRemoved;
-        let chainSeriesLevel = 0;
-        do {
-            chainsRemoved = false;
-            let visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
-            let toRemove = [];
-            const gridSnapshot = grid.map(row => [...row]);
-            function dfs(row, col, color, group) {
-                if (row < 0 || row >= gridSize || col < 0 || col >= gridSize || visited[row][col] || (Array.isArray(gridSnapshot[row][col]) ? gridSnapshot[row][col][0] : gridSnapshot[row][col]) !== color) return;
-                visited[row][col] = true;
-                group.push([row, col]);
-                dfs(row - 1, col, color, group);
-                dfs(row + 1, col, color, group);
-                dfs(row, col - 1, color, group);
-                dfs(row, col + 1, color, group);
-                dfs(row - 1, col - 1, color, group);
-                dfs(row - 1, col + 1, color, group);
-                dfs(row + 1, col - 1, color, group);
-                dfs(row + 1, col + 1, color, group);
-            }
+    let chainsRemoved;
+    let chainSeriesLevel = 0;
+    do {
+        chainsRemoved = false;
+        let visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
+        let toRemove = [];
+        const gridSnapshot = grid.map(row => [...row]);
+        // Suivi des colonnes non vides avant suppression
+        const nonEmptyColumns = new Set();
+        for (let col = 0; col < gridSize; col++) {
             for (let row = 0; row < gridSize; row++) {
-                for (let col = 0; col < gridSize; col++) {
-                    if (gridSnapshot[row][col] && !visited[row][col] && !Array.isArray(gridSnapshot[row][col])) {
-                        let group = [];
-                        const color = gridSnapshot[row][col];
-                        dfs(row, col, color, group);
-                        if (group.length >= 5) {
-                            toRemove = toRemove.concat(group);
-                            let points = chainSeriesLevel >= 2 ? 50 : (chainSeriesLevel === 1 || group.length > 5 ? 10 : 5);
-                            score += points;
-                            const chainSound = audioElements[currentTheme === 'gameboy' ? 'chainSound' : 'chainSoundNew'];
-                            if (chainSound) chainSound.play().catch(e => console.error("Erreur son chaîne:", e));
-                            await blinkBlocks(group, points);
-                        }
+                if (gridSnapshot[row][col]) {
+                    nonEmptyColumns.add(col);
+                    break;
+                }
+            }
+        }
+
+        function dfs(row, col, color, group) {
+            if (row < 0 || row >= gridSize || col < 0 || col >= gridSize || visited[row][col] || (Array.isArray(gridSnapshot[row][col]) ? gridSnapshot[row][col][0] : gridSnapshot[row][col]) !== color) return;
+            visited[row][col] = true;
+            group.push([row, col]);
+            dfs(row - 1, col, color, group);
+            dfs(row + 1, col, color, group);
+            dfs(row, col - 1, color, group);
+            dfs(row, col + 1, color, group);
+            dfs(row - 1, col - 1, color, group);
+            dfs(row - 1, col + 1, color, group);
+            dfs(row + 1, col - 1, color, group);
+            dfs(row + 1, col + 1, color, group);
+        }
+
+        for (let row = 0; row < gridSize; row++) {
+            for (let col = 0; col < gridSize; col++) {
+                if (gridSnapshot[row][col] && !visited[row][col] && !Array.isArray(gridSnapshot[row][col])) {
+                    let group = [];
+                    const color = gridSnapshot[row][col];
+                    dfs(row, col, color, group);
+                    if (group.length >= 5) {
+                        toRemove = toRemove.concat(group);
+                        let points = chainSeriesLevel >= 2 ? 50 : (chainSeriesLevel === 1 || group.length > 5 ? 10 : 5);
+                        score += points;
+                        const chainSound = audioElements[currentTheme === 'gameboy' ? 'chainSound' : 'chainSoundNew'];
+                        if (chainSound) chainSound.play().catch(e => console.error("Erreur son chaîne:", e));
+                        await blinkBlocks(group, points);
                     }
                 }
             }
-            if (toRemove.length > 0) {
-                chainsRemoved = true;
-                let priksAffected = new Set();
-                let priksToRemove = [];
-                toRemove.forEach(([row, col]) => {
-                    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
-                    directions.forEach(([dr, dc]) => {
-                        const r = row + dr;
-                        const c = col + dc;
-                        if (r >= 0 && r < gridSize && c >= 0 && c < gridSize && grid[r][c] && Array.isArray(grid[r][c]) && grid[r][c][0] === priksColor) {
-                            const key = `${r},${c}`;
-                            if (!priksAffected.has(key)) {
-                                priksAffected.add(key);
-                                grid[r][c][1]--;
-                                if (grid[r][c][1] <= 0) priksToRemove.push([r, c]);
-                            }
-                        }
-                    });
-                });
-                toRemove.forEach(([row, col]) => grid[row][col] = null);
-                if (priksToRemove.length > 0) await blinkBlocks(priksToRemove);
-                chainCount++;
-                if (chainCount % 10 === 0) bombCount++;
-                chainSeriesLevel++;
-                await animateGravity(calculateGravityMoves());
-                drawGrid();
-                if (isMultiplayer && currentRoom) socket.emit('scoreUpdate', { room: currentRoom, score });
-            } else {
-                chainSeriesLevel = 0;
-            }
-        } while (chainsRemoved);
-    }
+        }
 
+        if (toRemove.length > 0) {
+            chainsRemoved = true;
+            let priksAffected = new Set();
+            let priksToRemove = [];
+            toRemove.forEach(([row, col]) => {
+                const directions = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
+                directions.forEach(([dr, dc]) => {
+                    const r = row + dr;
+                    const c = col + dc;
+                    if (r >= 0 && r < gridSize && c >= 0 && c < gridSize && grid[r][c] && Array.isArray(grid[r][c]) && grid[r][c][0] === priksColor) {
+                        const key = `${r},${c}`;
+                        if (!priksAffected.has(key)) {
+                            priksAffected.add(key);
+                            grid[r][c][1]--;
+                            if (grid[r][c][1] <= 0) priksToRemove.push([r, c]);
+                        }
+                    }
+                });
+            });
+            toRemove.forEach(([row, col]) => grid[row][col] = null);
+            if (priksToRemove.length > 0) await blinkBlocks(priksToRemove);
+            chainCount++;
+            if (chainCount % 10 === 0) bombCount++;
+            chainSeriesLevel++;
+            await animateGravity(calculateGravityMoves());
+
+            // Nouvelle règle : Vérifier les colonnes vidées
+            const emptyColumns = [];
+            for (let col = 0; col < gridSize; col++) {
+                let isEmpty = true;
+                for (let row = 0; row < gridSize; row++) {
+                    if (grid[row][col]) {
+                        isEmpty = false;
+                        break;
+                    }
+                }
+                if (isEmpty && nonEmptyColumns.has(col)) {
+                    emptyColumns.push(col);
+                }
+            }
+            if (emptyColumns.length > 0) {
+                const bonusPoints = emptyColumns.length * 10;
+                score += bonusPoints;
+                const emptyColumnSound = document.getElementById("emptyColumnSound");
+                if (emptyColumnSound) emptyColumnSound.play().catch(e => console.error("Erreur son colonne vide:", e));
+                for (const col of emptyColumns) {
+                    const x = col * cellSize + 40 + cellSize / 2;
+                    const y = 0; // Haut de la colonne
+                    await animateScorePopup(x, y, 10);
+                }
+            }
+
+            drawGrid();
+            if (isMultiplayer && currentRoom) socket.emit('scoreUpdate', { room: currentRoom, score });
+        } else {
+            chainSeriesLevel = 0;
+        }
+    } while (chainsRemoved);
+}
+        
     function animateGameOver(x, y) {
         const duration = 500;
         const steps = 30;
