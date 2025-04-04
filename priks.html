@@ -268,6 +268,7 @@
         <button id="switchButton">SWITCH</button>
     </div>
     <button id="multiplayerButton">MULTIPLAYER</button>
+           <button id="soundToggleButton">SOUND: ON</button>
     </div>
     </div>
     <div id="startScreen">
@@ -624,8 +625,10 @@
     while (row >= 0 && !grid[row][col]) row--;
     row++;
     if (row >= gridSize) {
-        const endSound = audioElements[currentTheme === 'gameboy' ? 'endSound' : 'endSoundNew'];
+        if (soundEnabled) {
+            const endSound = audioElements[currentTheme === 'gameboy' ? 'endSound' : 'endSoundNew'];
         if (endSound) endSound.play().catch(e => console.error("Erreur son fin:", e));
+        }
         const x = col * cellSize + 40 + cellSize / 2;
         const y = gridSize * cellSize + cellSize / 2;
         await new Promise(resolve => { // Attendre l’animation
@@ -638,8 +641,10 @@
     }
         if (isBombSelected) {
             await animateBlock(col, gridSize * cellSize, row, true);
+            if (soundEnabled) {
             const bombSound = audioElements[currentTheme === 'gameboy' ? 'bombSound' : 'bombSoundNew'];
             if (bombSound) bombSound.play().catch(e => console.error("Erreur son bombe:", e));
+            }
             let toRemove = [];
             for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
                 for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
@@ -663,8 +668,10 @@
         } else {
             await animateBlock(col, gridSize * cellSize, row);
             grid[row][col] = nextBlock;
-            const placeSound = audioElements[currentTheme === 'gameboy' ? 'placeSound' : 'placeSoundNew'];
+            if (soundEnabled) {
+                const placeSound = audioElements[currentTheme === 'gameboy' ? 'placeSound' : 'placeSoundNew'];
             if (placeSound) placeSound.play().catch(e => console.error("Erreur son placement:", e));
+            }
             moveCount++;
             blockSequenceIndex++;
             nextBlock = nextNextBlock;
@@ -688,8 +695,10 @@
         while (row >= 0 && !grid[row][col]) row--;
         row++;
         if (row >= gridSize) {
-            const endSound = audioElements[currentTheme === 'gameboy' ? 'endSound' : 'endSoundNew'];
+            if (soundEnabled) {
+                const endSound = audioElements[currentTheme === 'gameboy' ? 'endSound' : 'endSoundNew'];
             if (endSound) endSound.play().catch(e => console.error("Erreur son fin:", e));
+            }
             const x = col * cellSize + 40 + cellSize / 2;
             const y = gridSize * cellSize + cellSize / 2;
             await new Promise(resolve => { // Ajout de l’attente
@@ -793,8 +802,10 @@
                         toRemove = toRemove.concat(group);
                         let points = chainSeriesLevel >= 2 ? 50 : (chainSeriesLevel === 1 || group.length > 5 ? 10 : 5);
                         score += points;
-                        const chainSound = audioElements[currentTheme === 'gameboy' ? 'chainSound' : 'chainSoundNew'];
+                        if (soundEnabled) {
+                            const chainSound = audioElements[currentTheme === 'gameboy' ? 'chainSound' : 'chainSoundNew'];
                         if (chainSound) chainSound.play().catch(e => console.error("Erreur son chaîne:", e));
+                        }
                         await blinkBlocks(group, points);
                     }
                 }
@@ -844,8 +855,10 @@
             if (emptyColumns.length > 0) {
                 const bonusPoints = emptyColumns.length * 10;
                 score += bonusPoints;
-                const emptyColumnSound = document.getElementById("emptyColumnSound");
+                if (soundEnabled) {
+                    const emptyColumnSound = document.getElementById("emptyColumnSound");
                 if (emptyColumnSound) emptyColumnSound.play().catch(e => console.error("Erreur son colonne vide:", e));
+                }
                 for (const col of emptyColumns) {
                     const x = col * cellSize + 40 + cellSize / 2;
                     const y = cellSize / 2; // Centré sur la case du haut
@@ -1006,7 +1019,8 @@
         img.onload = checkImagesLoaded;
         img.onerror = () => checkImagesLoaded();
     });
-
+    let soundEnabled = true;
+        
     document.addEventListener("DOMContentLoaded", () => {
         document.body.classList.add('gameboy-theme');
         const startButton = document.getElementById("startButton");
@@ -1023,12 +1037,20 @@
         const playerNameInput = document.getElementById("playerName");
         const playerList = document.getElementById("playerList");
         const leaveButton = document.getElementById("leaveButton"); // Nouveau
+        const soundToggleButton = document.getElementById("soundToggleButton");
+
+    soundToggleButton.addEventListener("click", () => {
+        soundEnabled = !soundEnabled;
+        soundToggleButton.textContent = `SOUND: ${soundEnabled ? "ON" : "OFF"}`;
+    });
 
        startButton.addEventListener("click", () => {
     document.getElementById("startScreen").style.display = "none";
     document.getElementById("gameContainer").style.display = "block";
-    const beginSound = audioElements[currentTheme === 'gameboy' ? 'beginSound' : 'beginSoundNew'];
+    if (soundEnabled) {
+        const beginSound = audioElements[currentTheme === 'gameboy' ? 'beginSound' : 'beginSoundNew'];
     if (beginSound) beginSound.play().catch(e => console.error("Erreur son début:", e));
+    }
     drawGrid();
     updateUI();
 });
@@ -1058,8 +1080,10 @@
     document.getElementById("startScreen").style.display = "flex";
     drawGrid();
     updateUI();
-    const beginSound = audioElements[currentTheme === 'gameboy' ? 'beginSound' : 'beginSoundNew'];
+    if (soundEnabled) {
+        const beginSound = audioElements[currentTheme === 'gameboy' ? 'beginSound' : 'beginSoundNew'];
     if (beginSound) beginSound.play().catch(e => console.error("Erreur son début:", e));
+    }
 });
 
         rulesButton.addEventListener("click", () => rulesScreen.style.display = "flex");
