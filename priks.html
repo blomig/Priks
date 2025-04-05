@@ -548,8 +548,10 @@
         const duration = 100;
         const steps = 10;
         const stepDuration = duration / steps;
-        const lineSound = audioElements[currentTheme === 'gameboy' ? 'lineSound' : 'lineSoundNew'];
+        if (soundEnabled) {
+            const lineSound = audioElements[currentTheme === 'gameboy' ? 'lineSound' : 'lineSoundNew'];
         if (lineSound) lineSound.play().catch(e => console.error("Erreur son ligne:", e));
+        }
         const animations = lineData.map(({ col, row, color }) => {
             const endY = row * cellSize;
             const stepDistance = (startY - endY) / steps;
