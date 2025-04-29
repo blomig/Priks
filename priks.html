@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BLOX V2</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-status-bar-style" content="black">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLOX v1</title>
    
     <style>
         body {
@@ -139,7 +143,7 @@
             border: 2px solid #0F380F;
             cursor: pointer;
             z-index: 1001;
-            pointer-events: auto; /* Assurer que les clics sont activés */
+            pointer-events: auto;
         }
         #startButton:hover {
             background-color: #306230;
@@ -164,12 +168,12 @@
         }
         #gameOverScore {
             position: absolute;
-            top: 10px;
+            top: 200px;
             left: 50%;
             transform: translateX(-50%);
             font-family: "gameboy", monospace;
-            font-size: 16px;
-            color: #0F380F;
+            font-size: 20px;
+            color: #FFFFFF;
             z-index: 1002;
         }
         #gameOverPressStart {
@@ -203,15 +207,64 @@
                 opacity: 0;
             }
         }
+ #rulesButtonContainer {
+    width: 320px;
+    margin: 5px auto 0;
+    text-align: center;
+    display: flex; /* Aligner les boutons côte à côte */
+    justify-content: center; /* Centrer les boutons */
+    gap: 10px; /* Espacement entre les boutons */
+}
+
+#rulesButton, #hiscoresButton {
+    padding: 5px 10px;
+    font-family: "gameboy", monospace;
+    font-size: 14px;
+    color: #0F380F;
+    background-color: #8BAC0F;
+    border: 2px solid #0F380F;
+    cursor: pointer;
+}
+
+#rulesButton:hover, #hiscoresButton:hover {
+    background-color: #306230;
+}
+
+#rulesScreen, #hiscoresScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: flex-start;
+    z-index: 1000;
+}
+
+#rulesContent, #hiscoresContent {
+    width: 360px;
+    height: 400px;
+    background-color: #cadc9f;
+    padding: 20px;
+    border: 2px solid #0F380F;
+    font-family: "gameboy", monospace;
+    font-size: 12px;
+    color: #0F380F;
+    text-align: left;
+    overflow-y: auto;
+    position: absolute;
+    top: 10px; /* Ajusté pour être au-dessus de la grille */
+    left: 50%;
+    transform: translateX(-50%);
+}
     </style>
 </head>
 <body>
     <div id="gameContainer">
         <canvas id="gameCanvas" width="360" height="400"></canvas>
-        <div id="highScores">
-            <h3>MEILLEURS SCORES</h3>
-            <ul id="highScoreList"></ul>
-        </div>
+       
         <div id="underGrid">
             <div id="scoreDisplay">SCORE : <span id="score">0</span></div>
             <div id="progressContainer">
@@ -222,13 +275,16 @@
                     <img src="bomb.png" alt="Bombes" id="bombIcon">
                     <span id="bombCount">1</span>
                 </div>
-                <span id="chainsRemaining">CHAÎNES RESTANTES : 10</span>
+                <span id="chainsRemaining">CHAINES RESTANTES : 10</span>
             </div>
         </div>
         <div id="info">
-            <p>Utilisez ← et → (ou cliquez/touchez une colonne) pour déplacer, Espace (ou clic colonne) pour placer, B (ou clic bombe) pour sélectionner une bombe</p>
-            <p id="rules">Le but de Priks est de faire le plus gros score en faisant des chaînes de 5 blox de même couleur. La difficulté ? Régulièrement, des blox gris arrivent (des Priks) qui ne peuvent pas être cassés sauf par bombes ou chaînes adjacentes (5→4→3→2→1→disparition). Et tous les 10 tours, une floppée de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au début, puis 1 supplémentaire toutes les 10 chaînes) qui cassent tout ce qu'elles touchent - y compris les Priks ! À vous de jouer !</p>
+             <!-- Les règles seront affichées dans la superposition -->
         </div>
+        <div id="rulesButtonContainer">
+            <button id="rulesButton">RULES</button>
+            <button id="hiscoresButton">HISCORES</button>
+</div>
     </div>
     <div id="startScreen">
         <img src="start_screen.png" alt="Écran d'accueil" id="startImage">
@@ -241,307 +297,383 @@
         <span id="gameOverPressStart">PRESS START</span>
         <button id="gameOverButton">START</button>
     </div>
+    <div id="rulesScreen">
+    <div id="rulesContent">
+        <p>Utilisez ← et → -ou cliquez/touchez une colonne- pour déplacer, Espace -ou clic colonne- pour placer, B -ou clic bombe- pour sélectionner une bombe</p>
+        <p>Le but de Blox est de faire le plus gros score en faisant des chaines de 5 blox de meme couleur. La difficulte ? Régulièrement, des blox chiffres arrivent (des Priks) qui ne peuvent pas être casses sauf par bombes ou chaines adjacentes. Et tous les 10 tours, une floppee de blox vient mettre le bazar. Heureusement, vous disposez de bombes (1 au debut, puis 1 supplementaire toutes les 10 chaines) qui cassent tout ce qu'elles touchent - y compris les Priks ! A vous de jouer !</p>
+    </div>
+</div>
+    <div id="hiscoresScreen">
+    <div id="hiscoresContent"></div>
+</div>
+    <audio id="placeSound" src="place.wav"></audio>
+    <audio id="bombSound" src="bomb.wav"></audio>
+    <audio id="chainSound" src="chain.mp3"></audio>
+    <audio id="lineSound" src="line.mp3"></audio>
+    <audio id="beginSound" src="begin.wav"></audio> <!-- Nouveau son pour Start -->
+     <audio id="endSound" src="end.wav"></audio> <!-- Nouveau son pour Game Over -->
     <script>
-    // Charger le canvas en premier
-    const canvas = document.getElementById("gameCanvas");
-    if (!canvas) console.error("Canvas non trouvé");
-    const ctx = canvas.getContext("2d");
-    if (!ctx) console.error("Contexte 2D non trouvé");
+       // Charger le canvas en premier
+const canvas = document.getElementById("gameCanvas");
+if (!canvas) console.error("Canvas non trouvé");
+const ctx = canvas.getContext("2d");
+if (!ctx) console.error("Contexte 2D non trouvé");
 
-    // Variables globales
-    console.log("Début des variables globales");
-    const gridSize = 8;
-    const cellSize = 320 / gridSize;
-    const previewHeight = cellSize * 2;
-    let grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
-    let bombCount = 1;
-    let chainCount = 0;
-    let score = 0;
-    let moveCount = 0;
-    let nextBlock = null;
-    let nextNextBlock = null;
-    let blockPosition = 0;
-    let nextLine = null;
-    let isBombSelected = false;
+// Variables globales
+console.log("Début des variables globales");
+const gridSize = 8;
+const cellSize = 320 / gridSize;
+const previewHeight = cellSize * 2;
+let grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
+let bombCount = 1;
+let chainCount = 0;
+let score = 0;
+let moveCount = 0;
+let nextBlock = null;
+let nextNextBlock = null;
+let blockPosition = 0;
+let nextLine = null;
+let isBombSelected = false;
+let isProcessing = false;
+let isGameOver = false;
 
-    const colors = ["red", "blue", "green", "yellow", "purple", "orange"];
-    const priksColor = "gray";
-    const bombColor = "bomb";
+const colors = ["red", "blue", "green", "yellow", "purple", "orange"];
+const priksColor = "gray";
+const bombColor = "bomb";
 
-    // Charger les images
-    const images = {};
-    colors.forEach(color => {
-        images[color] = new Image();
-        images[color].src = `${color}.png`;
+// Charger les images
+const images = {};
+colors.forEach(color => {
+    images[color] = new Image();
+    images[color].src = `${color}.png`;
+});
+images[priksColor] = new Image();
+images[priksColor].src = "priks.png";
+images[bombColor] = new Image();
+images[bombColor].src = "bomb.png";
+
+// Générer un nouveau bloc
+function getNewBlock() {
+    const block = Math.random() < 0.1 ? [priksColor, 5] : colors[Math.floor(Math.random() * colors.length)];
+    console.log("Nouveau bloc généré:", block);
+    return block;
+}
+
+// Générer une nouvelle ligne
+function getNewLine() {
+    let newLine = Array(gridSize);
+    for (let i = 0; i < gridSize; i++) {
+        newLine[i] = colors[Math.floor(Math.random() * colors.length)];
+    }
+    let priksCol = Math.floor(Math.random() * gridSize);
+    newLine[priksCol] = [priksColor, 5];
+    return newLine;
+}
+
+// Initialisation
+if (!nextBlock) nextBlock = getNewBlock();
+if (!nextNextBlock) nextNextBlock = getNewBlock();
+if (!nextLine) nextLine = getNewLine();
+
+// Charger les hiscores depuis l’API
+function loadHighScores() {
+    console.log("Chargement des scores depuis l’API...");
+    return fetch('https://www.blomig.com/api/scores.php?v=' + Date.now(), {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-cache'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(highScores => {
+        console.log("Scores chargés:", highScores);
+        if (highScores.length < 10) {
+            while (highScores.length < 10) {
+                highScores.push(["AAAAA", 0]);
+            }
+        }
+        return highScores;
+    })
+    .catch(error => {
+        console.error("Erreur chargement scores:", error);
+        return [["AAAAA", 0], ["BBBBB", 0], ["CCCCC", 0], ["DDDDD", 0], ["EEEEE", 0], ["FFFFF", 0], ["GGGGG", 0], ["HHHHH", 0], ["IIIII", 0], ["JJJJJ", 0]];
     });
-    images[priksColor] = new Image();
-    images[priksColor].src = "priks.png";
-    images[bombColor] = new Image();
-    images[bombColor].src = "bomb.png";
+}
 
-    // Générer un nouveau bloc
-    function getNewBlock() {
-        const block = Math.random() < 0.1 ? [priksColor, 5] : colors[Math.floor(Math.random() * colors.length)];
-        console.log("Nouveau bloc généré:", block);
-        return block;
-    }
-
-    // Générer une nouvelle ligne
-    function getNewLine() {
-        let newLine = Array(gridSize);
-        for (let i = 0; i < gridSize; i++) {
-            newLine[i] = colors[Math.floor(Math.random() * colors.length)];
-        }
-        let priksCol = Math.floor(Math.random() * gridSize);
-        newLine[priksCol] = [priksColor, 5];
-        return newLine;
-    }
-
-    // Initialisation
-    if (!nextBlock) nextBlock = getNewBlock();
-    if (!nextNextBlock) nextNextBlock = getNewBlock();
-    if (!nextLine) nextLine = getNewLine();
-
-    // Attacher les événements une fois le DOM chargé
-    document.addEventListener("DOMContentLoaded", () => {
-        console.log("DOM chargé, début des événements");
-        const startButton = document.getElementById("startButton");
-        console.log("Bouton Start trouvé:", startButton);
-        if (startButton) {
-            startButton.addEventListener("click", () => {
-                console.log("Bouton Start cliqué");
-                document.getElementById("startScreen").style.display = "none";
-                updateHighScoresDisplay();
-                drawGrid();
-                updateUI();
+// Sauvegarder les hiscores via l’API
+function saveHighScores(newScore) {
+    console.log("Données à envoyer:", newScore);
+    return fetch('https://www.blomig.com/api/scores.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newScore)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(`HTTP error! status: ${response.status}, message: ${err.error}`);
             });
-        } else {
-            console.error("Erreur : #startButton non trouvé");
         }
-
-        const gameOverButton = document.getElementById("gameOverButton");
-        console.log("Bouton Game Over trouvé:", gameOverButton);
-        if (gameOverButton) {
-            gameOverButton.addEventListener("click", () => {
-                console.log("Bouton Game Over cliqué");
-                document.getElementById("gameOverScreen").style.display = "none";
-                grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
-                bombCount = 1;
-                chainCount = 0;
-                score = 0;
-                moveCount = 0;
-                nextBlock = getNewBlock();
-                nextNextBlock = getNewBlock();
-                nextLine = getNewLine();
-                isBombSelected = false;
-                blockPosition = 0;
-                drawGrid();
-                updateUI();
-            });
-        } else {
-            console.error("Erreur : #gameOverButton non trouvé");
-        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("Score sauvegardé:", data);
+        return data;
+    })
+    .catch(error => {
+        console.error("Erreur sauvegarde scores:", error);
+        throw error;
     });
+}
 
-    // Charger et afficher les hiscores
-    function loadHighScores() {
-        const highScores = JSON.parse(localStorage.getItem("priksHighScores")) || [];
-        return highScores.length ? highScores : [["AAAAA", 0], ["BBBBB", 0], ["CCCCC", 0], ["DDDDD", 0], ["EEEEE", 0], ["FFFFF", 0], ["GGGGG", 0], ["HHHHH", 0], ["IIIII", 0], ["JJJJJ", 0]];
-    }
+// Mettre à jour l’affichage des hiscores
+// Supprimé : updateHighScoresDisplay
 
-    function saveHighScores(highScores) {
-        localStorage.setItem("priksHighScores", JSON.stringify(highScores));
-    }
-
-    function updateHighScoresDisplay() {
-        const highScores = loadHighScores();
-        const list = document.getElementById("highScoreList");
-        list.innerHTML = "";
-        highScores.forEach(([name, score]) => {
-            const li = document.createElement("li");
-            li.textContent = `${name} : ${score}`;
-            list.appendChild(li);
-        });
-    }
-
-    function addHighScore(score) {
-        let highScores = loadHighScores();
-        let name = prompt("Nouveau highscore ! Entrez vos initiales (5 lettres max) :", "AAAAA");
-        if (name) {
-            name = name.slice(0, 5).padEnd(5, " ").toUpperCase();
+// Ajouter un nouveau highscore
+function addHighScore(score) {
+    let name = prompt("Nouveau highscore ! Entrez vos initiales (5 lettres max) :", "AAAAA");
+    console.log("Nom saisi:", name, "Score:", score);
+    if (name) {
+        name = name.slice(0, 5).padEnd(5, " ").toUpperCase();
+        console.log("Nom formaté:", name, "Score:", score);
+        loadHighScores().then(highScores => {
+            console.log("Highscores actuels:", highScores);
             highScores.push([name, score]);
+            console.log("Highscores après ajout:", highScores);
             highScores.sort((a, b) => b[1] - a[1]);
             highScores = highScores.slice(0, 10);
-            saveHighScores(highScores);
-            updateHighScoresDisplay();
-        }
+            console.log("Highscores après tri:", highScores);
+            saveHighScores({ name: name, score: score }).then(() => {
+                //update supprimé
+            }).catch(error => {
+                console.error("Échec de la sauvegarde, score non ajouté:", error);
+                alert("Erreur lors de la sauvegarde du score. Essaye encore ou contacte l'admin.");
+            });
+        });
     }
+}
 
-    // Dessiner la grille
-    function drawGrid(movingBlocks = []) {
-        ctx.fillStyle = "#cadc9f";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let row = 0; row < gridSize; row++) {
-            for (let col = 0; col < gridSize; col++) {
-                ctx.strokeRect(col * cellSize + 40, row * cellSize, cellSize, cellSize);
-                if (grid[row][col]) {
-                    const block = grid[row][col];
-                    const color = Array.isArray(block) ? block[0] : block;
-                    if (images[color] && images[color].complete) {
-                        ctx.drawImage(images[color], col * cellSize + 40 + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
-                        if (Array.isArray(block) && block[0] === priksColor) {
-                            ctx.fillStyle = "#0F380F";
-                            ctx.font = "16px gameboy";
-                            ctx.textAlign = "center";
-                            ctx.textBaseline = "middle";
-                            ctx.fillText(block[1], col * cellSize + 40 + cellSize / 2, row * cellSize + cellSize / 2);
-                        }
-                    }
-                }
-            }
-        }
-        ctx.strokeRect(40, gridSize * cellSize, 320, previewHeight);
-        const previewBlock = isBombSelected ? bombColor : nextBlock;
-        const previewColor = Array.isArray(previewBlock) ? previewBlock[0] : previewBlock;
-        if (images[previewColor] && images[previewColor].complete) {
-            ctx.drawImage(images[previewColor], blockPosition * cellSize + 40 + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
-            if (Array.isArray(previewBlock) && previewBlock[0] === priksColor) {
-                ctx.fillStyle = "#0F380F";
-                ctx.font = "16px gameboy";
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText(previewBlock[1], blockPosition * cellSize + 40 + cellSize / 2, gridSize * cellSize + cellSize / 2);
-            }
-        }
-        if (moveCount % 10 === 9) {
-            for (let col = 0; col < gridSize; col++) {
-                const lineBlock = nextLine[col];
-                const lineColor = Array.isArray(lineBlock) ? lineBlock[0] : lineBlock;
-                if (images[lineColor] && images[lineColor].complete) {
-                    ctx.drawImage(images[lineColor], col * cellSize + 40 + 2, (gridSize + 1) * cellSize + 2, cellSize - 4, cellSize - 4);
-                    if (Array.isArray(lineBlock) && lineBlock[0] === priksColor) {
+// Dessiner la grille
+function drawGrid(movingBlocks = []) {
+    ctx.fillStyle = "#cadc9f";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let row = 0; row < gridSize; row++) {
+        for (let col = 0; col < gridSize; col++) {
+            ctx.strokeRect(col * cellSize + 40, row * cellSize, cellSize, cellSize);
+            if (grid[row][col]) {
+                const block = grid[row][col];
+                const color = Array.isArray(block) ? block[0] : block;
+                if (images[color] && images[color].complete) {
+                    ctx.drawImage(images[color], col * cellSize + 40 + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
+                    if (Array.isArray(block) && block[0] === priksColor) {
                         ctx.fillStyle = "#0F380F";
                         ctx.font = "16px gameboy";
                         ctx.textAlign = "center";
                         ctx.textBaseline = "middle";
-                        ctx.fillText(lineBlock[1], col * cellSize + 40 + cellSize / 2, (gridSize + 1) * cellSize + cellSize / 2);
+                        ctx.fillText(block[1], col * cellSize + 40 + cellSize / 2, row * cellSize + cellSize / 2);
                     }
                 }
             }
         }
-        movingBlocks.forEach(({ x, y, color }) => {
-            const moveColor = Array.isArray(color) ? color[0] : color;
-            if (images[moveColor] && images[moveColor].complete) {
-                ctx.drawImage(images[moveColor], x + 2, y + 2, cellSize - 4, cellSize - 4);
-                if (Array.isArray(color) && color[0] === priksColor) {
+    }
+    ctx.strokeRect(40, gridSize * cellSize, 320, previewHeight);
+    const previewBlock = isBombSelected ? bombColor : nextBlock;
+    const previewColor = Array.isArray(previewBlock) ? previewBlock[0] : previewBlock;
+    if (images[previewColor] && images[previewColor].complete) {
+        ctx.drawImage(images[previewColor], blockPosition * cellSize + 40 + 2, gridSize * cellSize + 2, cellSize - 4, cellSize - 4);
+        if (Array.isArray(previewBlock) && previewBlock[0] === priksColor) {
+            ctx.fillStyle = "#0F380F";
+            ctx.font = "16px gameboy";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(previewBlock[1], blockPosition * cellSize + 40 + cellSize / 2, gridSize * cellSize + cellSize / 2);
+        }
+    }
+    if (moveCount % 10 === 9) {
+        for (let col = 0; col < gridSize; col++) {
+            const lineBlock = nextLine[col];
+            const lineColor = Array.isArray(lineBlock) ? lineBlock[0] : lineBlock;
+            if (images[lineColor] && images[lineColor].complete) {
+                ctx.drawImage(images[lineColor], col * cellSize + 40 + 2, (gridSize + 1) * cellSize + 2, cellSize - 4, cellSize - 4);
+                if (Array.isArray(lineBlock) && lineBlock[0] === priksColor) {
                     ctx.fillStyle = "#0F380F";
                     ctx.font = "16px gameboy";
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
-                    ctx.fillText(color[1], x + cellSize / 2, y + cellSize / 2);
+                    ctx.fillText(lineBlock[1], col * cellSize + 40 + cellSize / 2, (gridSize + 1) * cellSize + cellSize / 2);
                 }
             }
-        });
-        const nextNextColor = Array.isArray(nextNextBlock) ? nextNextBlock[0] : nextNextBlock;
-        if (images[nextNextColor] && images[nextNextColor].complete) {
-            ctx.drawImage(images[nextNextColor], 2, gridSize * cellSize + 2, 36, 36);
-            if (Array.isArray(nextNextBlock) && nextNextBlock[0] === priksColor) {
+        }
+    }
+    movingBlocks.forEach(({ x, y, color }) => {
+        const moveColor = Array.isArray(color) ? color[0] : color;
+        if (images[moveColor] && images[moveColor].complete) {
+            ctx.drawImage(images[moveColor], x + 2, y + 2, cellSize - 4, cellSize - 4);
+            if (Array.isArray(color) && color[0] === priksColor) {
                 ctx.fillStyle = "#0F380F";
                 ctx.font = "16px gameboy";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
-                ctx.fillText(nextNextBlock[1], 2 + 18, gridSize * cellSize + 20);
+                ctx.fillText(color[1], x + cellSize / 2, y + cellSize / 2);
             }
         }
+    });
+    const nextNextColor = Array.isArray(nextNextBlock) ? nextNextBlock[0] : nextNextBlock;
+    if (images[nextNextColor] && images[nextNextColor].complete) {
+        ctx.drawImage(images[nextNextColor], 2, gridSize * cellSize + 2, 36, 36);
+        if (Array.isArray(nextNextBlock) && nextNextBlock[0] === priksColor) {
+            ctx.fillStyle = "#0F380F";
+            ctx.font = "16px gameboy";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(nextNextBlock[1], 2 + 18, gridSize * cellSize + 20);
+        }
     }
+}
 
-    // Animation pour un bloc ou une bombe
-    async function animateBlock(col, startY, endRow, isBomb = false) {
-        const startRow = gridSize;
-        const endY = endRow * cellSize;
-        const duration = 100;
-        const steps = 10;
-        const stepDuration = duration / steps;
+// Animation pour un bloc ou une bombe
+async function animateBlock(col, startY, endRow, isBomb = false) {
+    const startRow = gridSize;
+    const endY = endRow * cellSize;
+    const duration = 100;
+    const steps = 10;
+    const stepDuration = duration / steps;
+    const stepDistance = (startY - endY) / steps;
+
+    let currentY = startY;
+    const color = isBomb ? bombColor : nextBlock;
+    for (let i = 0; i <= steps; i++) {
+        drawGrid([{ x: col * cellSize + 40, y: currentY, color }]);
+        currentY -= stepDistance;
+        await new Promise(resolve => setTimeout(resolve, stepDuration));
+    }
+}
+
+// Animation pour une ligne complète
+async function animateLine(lineData) {
+    const startY = (gridSize + 1) * cellSize;
+    const duration = 100;
+    const steps = 10;
+    const stepDuration = duration / steps;
+     // Jouer le son au début de l’animation
+    const lineSound = document.getElementById("lineSound");
+    if (lineSound) {
+        lineSound.play().catch(e => console.error("Erreur son ligne:", e));
+    }
+    const animations = lineData.map(({ col, row, color }) => {
+        const endY = row * cellSize;
         const stepDistance = (startY - endY) / steps;
+        return { col, currentY: startY, endY, stepDistance, color };
+    });
 
-        let currentY = startY;
-        const color = isBomb ? bombColor : nextBlock;
-        for (let i = 0; i <= steps; i++) {
-            drawGrid([{ x: col * cellSize + 40, y: currentY, color }]);
-            currentY -= stepDistance;
-            await new Promise(resolve => setTimeout(resolve, stepDuration));
-        }
-    }
-
-    // Animation pour la gravité
-    async function animateGravity(movingBlocks) {
-        const duration = 100;
-        const steps = 10;
-        const stepDuration = duration / steps;
-        const animatedBlocks = movingBlocks.map(({ startRow, endRow, col, color }) => ({
-            x: col * cellSize + 40,
-            y: startRow * cellSize,
-            targetY: endRow * cellSize,
-            color,
-            stepDistance: (startRow * cellSize - endRow * cellSize) / steps
+    for (let i = 0; i <= steps; i++) {
+        const movingBlocks = animations.map(anim => ({
+            x: anim.col * cellSize + 40,
+            y: anim.currentY,
+            color: anim.color
         }));
-
-        for (let i = 0; i <= steps; i++) {
-            animatedBlocks.forEach(block => {
-                block.y -= block.stepDistance;
-            });
-            drawGrid(animatedBlocks);
-            await new Promise(resolve => setTimeout(resolve, stepDuration));
-        }
+        drawGrid(movingBlocks);
+        animations.forEach(anim => {
+            anim.currentY -= anim.stepDistance;
+        });
+        await new Promise(resolve => setTimeout(resolve, stepDuration));
     }
 
-    // Effet d’explosion
-    async function drawExplosionParticles(x, y) {
-        const pixelSize = 2;
-        const colors = ["#0F380F", "#306230", "#8BAC0F", "#9BBC0F"];
-        const explosionArea = 3 * cellSize;
-        const baseX = x - explosionArea / 2;
-        const baseY = y - explosionArea / 2;
-        const particleCount = 50;
-        const duration = 450;
-        const steps = 15;
-        const stepDuration = duration / steps;
-        const fallDistance = 20;
+    lineData.forEach(({ col, row, color }) => {
+        grid[row][col] = color;
+    });
+}
 
-        const particles = [];
-        for (let i = 0; i < particleCount; i++) {
-            particles.push({
-                x: baseX + Math.random() * explosionArea,
-                y: baseY + Math.random() * explosionArea,
-                vy: fallDistance / steps,
-                color: colors[Math.floor(Math.random() * colors.length)]
-            });
-        }
+// Animation pour la gravité
+async function animateGravity(movingBlocks) {
+    const duration = 100;
+    const steps = 10;
+    const stepDuration = duration / steps;
+    const animatedBlocks = movingBlocks.map(({ startRow, endRow, col, color }) => ({
+        x: col * cellSize + 40,
+        y: startRow * cellSize,
+        targetY: endRow * cellSize,
+        color,
+        stepDistance: (startRow * cellSize - endRow * cellSize) / steps
+    }));
 
-        for (let frame = 0; frame < steps; frame++) {
-            particles.forEach(p => {
-                if (frame % 2 === 0) {
-                    ctx.fillStyle = p.color;
-                    ctx.fillRect(p.x, p.y, pixelSize, pixelSize);
-                }
-                p.y += p.vy;
-            });
-            await new Promise(resolve => setTimeout(resolve, stepDuration));
-        }
+    for (let i = 0; i <= steps; i++) {
+        animatedBlocks.forEach(block => {
+            block.y -= block.stepDistance;
+        });
+        drawGrid(animatedBlocks);
+        await new Promise(resolve => setTimeout(resolve, stepDuration));
+    }
+}
+
+// Effet d’explosion
+async function drawExplosionParticles(x, y) {
+    const pixelSize = 2;
+    const colors = ["#0F380F", "#306230", "#8BAC0F", "#9BBC0F"];
+    const explosionArea = 3 * cellSize;
+    const baseX = x - explosionArea / 2;
+    const baseY = y - explosionArea / 2;
+    const particleCount = 50;
+    const duration = 450;
+    const steps = 15;
+    const stepDuration = duration / steps;
+    const fallDistance = 20;
+
+    const particles = [];
+    for (let i = 0; i < particleCount; i++) {
+        particles.push({
+            x: baseX + Math.random() * explosionArea,
+            y: baseY + Math.random() * explosionArea,
+            vy: fallDistance / steps,
+            color: colors[Math.floor(Math.random() * colors.length)]
+        });
     }
 
-    // Ajouter un bloc ou une bombe
-    async function addBlock(col) {
+    for (let frame = 0; frame < steps; frame++) {
+        particles.forEach(p => {
+            if (frame % 2 === 0) {
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, pixelSize, pixelSize);
+            }
+            p.y += p.vy;
+        });
+        await new Promise(resolve => setTimeout(resolve, stepDuration));
+    }
+}
+
+// Ajouter un bloc ou une bombe avec verrouillage
+async function addBlock(col) {
+    if (isProcessing) return;
+    isProcessing = true;
     let row = gridSize - 1;
     while (row >= 0 && !grid[row][col]) row--;
     row++;
     if (row >= gridSize) {
+        // Jouer le son juste avant endGame
+        const endSound = document.getElementById("endSound");
+        if (endSound) {
+            endSound.play().catch(e => console.error("Erreur son fin:", e));
+        }
+        // Lancer l’animation au centre de la case bloquée
+        const x = col * cellSize + 40 + cellSize / 2; // Centre horizontal
+        const y = gridSize * cellSize + cellSize / 2; // Bas de la grille
+        animateGameOver(x, y);
         endGame();
+        isProcessing = false;
         return;
     }
     if (isBombSelected) {
         await animateBlock(col, gridSize * cellSize, row, true);
+        // Jouer le son après l'animation du bloc, avant l'explosion
+        const bombSound = document.getElementById("bombSound");
+        if (bombSound) {
+            bombSound.play().catch(e => console.error("Erreur son bombe:", e));
+        }
         let toRemove = [];
         for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
             for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
@@ -554,8 +686,7 @@
             const bombX = col * cellSize + 40 + cellSize / 2;
             const bombY = row * cellSize + cellSize / 2;
             await blinkBlocks(toRemove, null, true, bombX, bombY);
-            const bombSound = document.getElementById("bombSound");
-            if (bombSound) bombSound.play().catch(e => console.error("Erreur son bombe:", e));
+            
         }
         for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
             for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
@@ -580,297 +711,457 @@
         await checkChains();
         if (moveCount % 10 === 0 && moveCount > 0) {
             addRandomLine();
-            nextLine = getNewLine();
+            // nextLine = getNewLine(); // Déplacé dans addRandomLine
         }
     }
     drawGrid();
     updateUI();
+    isProcessing = false;
 }
 
-    // Ajouter une ligne complète
-    function addRandomLine() {
-        for (let col = 0; col < gridSize; col++) {
-            let row = gridSize - 1;
-            while (row >= 0 && !grid[row][col]) row--;
-            row++;
-            if (row >= gridSize) {
-                endGame();
+// Ajouter une ligne complète avec animation
+// Ajouter une ligne complète avec animation
+function addRandomLine() {
+    const lineData = [];
+    for (let col = 0; col < gridSize; col++) {
+        let row = gridSize - 1;
+        while (row >= 0 && !grid[row][col]) row--;
+        row++;
+        if (row >= gridSize) {
+            const endSound = document.getElementById("endSound");
+            if (endSound) {
+                endSound.play().catch(e => console.error("Erreur son fin:", e));
+            }
+            // Lancer l’animation pour la colonne qui a provoqué la fin
+            const x = col * cellSize + 40 + cellSize / 2; // Centre horizontal
+            const y = gridSize * cellSize + cellSize / 2; // Bas de la grille
+            animateGameOver(x, y);
+            endGame();
+            return;
+        }
+        lineData.push({ col, row, color: nextLine[col] });
+    }
+    animateLine(lineData).then(() => {
+        checkChains(); // checkChains gérera les points uniformément
+    });
+    nextLine = getNewLine();
+}
+// Animation des points
+async function animateScorePopup(x, y, points) {
+    const duration = 400;
+    const steps = 10;
+    const stepDuration = duration / steps;
+    let size = 10;
+    const maxSize = 40;
+
+    for (let i = 0; i <= steps; i++) {
+        ctx.save();
+        ctx.fillStyle = "#0F380F";
+        ctx.font = `${size}px gameboy`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`+${points}`, x, y);
+        ctx.restore();
+        size = 10 + (maxSize - 10) * (i / steps);
+        await new Promise(resolve => setTimeout(resolve, stepDuration));
+    }
+}
+
+// Faire clignoter les blocs
+async function blinkBlocks(blocks, points = null, isBomb = false, bombX = null, bombY = null) {
+    const blinkCount = 3;
+    const blinkDuration = 150;
+
+    let avgX = 0, avgY = 0;
+    blocks.forEach(([row, col]) => {
+        avgX += col * cellSize + 40 + cellSize / 2;
+        avgY += row * cellSize + cellSize / 2;
+    });
+    avgX /= blocks.length;
+    avgY /= blocks.length;
+
+    let particlePromise = null;
+    if (isBomb && bombX && bombY) {
+        console.log("bombX:", bombX, "bombY:", bombY);
+        particlePromise = drawExplosionParticles(bombX, bombY);
+    }
+
+    for (let i = 0; i < blinkCount; i++) {
+        blocks.forEach(([row, col]) => {
+            ctx.clearRect(col * cellSize + 40 + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
+            ctx.strokeRect(col * cellSize + 40, row * cellSize, cellSize, cellSize);
+        });
+        if (points && i === 0) {
+            animateScorePopup(avgX, avgY, points);
+        }
+        await new Promise(resolve => setTimeout(resolve, blinkDuration));
+        drawGrid();
+        await new Promise(resolve => setTimeout(resolve, blinkDuration));
+    }
+
+    if (particlePromise) {
+        await particlePromise;
+    }
+
+    blocks.forEach(([row, col]) => {
+        grid[row][col] = null;
+    });
+}
+
+// Vérifier les chaînes avec une copie de la grille
+async function checkChains() {
+    let chainsRemoved;
+    let chainSeriesLevel = 0; // Compteur pour le niveau de la série
+    do {
+        chainsRemoved = false;
+        let visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
+        let toRemove = [];
+        const gridSnapshot = grid.map(row => [...row]);
+
+        function dfs(row, col, color, group) {
+            if (row < 0 || row >= gridSize || col < 0 || col >= gridSize || visited[row][col] || (Array.isArray(gridSnapshot[row][col]) ? gridSnapshot[row][col][0] : gridSnapshot[row][col]) !== color) {
                 return;
             }
-            grid[row][col] = nextLine[col];
-        }
-        drawGrid();
-        checkChains();
-    }
-
-    // Animation des points
-    async function animateScorePopup(x, y, points) {
-        const duration = 400;
-        const steps = 10;
-        const stepDuration = duration / steps;
-        let size = 10;
-        const maxSize = 40;
-
-        for (let i = 0; i <= steps; i++) {
-            ctx.save();
-            ctx.fillStyle = "#0F380F";
-            ctx.font = `${size}px gameboy`;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(`+${points}`, x, y);
-            ctx.restore();
-            size = 10 + (maxSize - 10) * (i / steps);
-            await new Promise(resolve => setTimeout(resolve, stepDuration));
-        }
-    }
-
-    // Faire clignoter les blocs
-    async function blinkBlocks(blocks, points = null, isBomb = false, bombX = null, bombY = null) {
-        const blinkCount = 3;
-        const blinkDuration = 150;
-
-        let avgX = 0, avgY = 0;
-        blocks.forEach(([row, col]) => {
-            avgX += col * cellSize + 40 + cellSize / 2;
-            avgY += row * cellSize + cellSize / 2;
-        });
-        avgX /= blocks.length;
-        avgY /= blocks.length;
-
-        let particlePromise = null;
-        if (isBomb && bombX && bombY) {
-            console.log("bombX:", bombX, "bombY:", bombY);
-            particlePromise = drawExplosionParticles(bombX, bombY);
+            visited[row][col] = true;
+            group.push([row, col]);
+            dfs(row - 1, col, color, group);
+            dfs(row + 1, col, color, group);
+            dfs(row, col - 1, color, group);
+            dfs(row, col + 1, color, group);
+            dfs(row - 1, col - 1, color, group);
+            dfs(row - 1, col + 1, color, group);
+            dfs(row + 1, col - 1, color, group);
+            dfs(row + 1, col + 1, color, group);
         }
 
-        for (let i = 0; i < blinkCount; i++) {
-            blocks.forEach(([row, col]) => {
-                ctx.clearRect(col * cellSize + 40 + 2, row * cellSize + 2, cellSize - 4, cellSize - 4);
-                ctx.strokeRect(col * cellSize + 40, row * cellSize, cellSize, cellSize);
-            });
-            if (points && i === 0) {
-                animateScorePopup(avgX, avgY, points);
-            }
-            await new Promise(resolve => setTimeout(resolve, blinkDuration));
-            drawGrid();
-            await new Promise(resolve => setTimeout(resolve, blinkDuration));
-        }
-
-        if (particlePromise) {
-            await particlePromise;
-        }
-    }
-
-    // Vérifier les chaînes
-    async function checkChains() {
-        let chainsRemoved;
-        let isGravityChain = false;
-        do {
-            chainsRemoved = false;
-            let visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
-            let toRemove = [];
-
-            function dfs(row, col, color, group) {
-                if (row < 0 || row >= gridSize || col < 0 || col >= gridSize || visited[row][col] || (Array.isArray(grid[row][col]) ? grid[row][col][0] : grid[row][col]) !== color) {
-                    return;
-                }
-                visited[row][col] = true;
-                group.push([row, col]);
-                dfs(row - 1, col, color, group);
-                dfs(row + 1, col, color, group);
-                dfs(row, col - 1, color, group);
-                dfs(row, col + 1, color, group);
-                dfs(row - 1, col - 1, color, group);
-                dfs(row - 1, col + 1, color, group);
-                dfs(row + 1, col - 1, color, group);
-                dfs(row + 1, col + 1, color, group);
-            }
-
-            for (let row = 0; row < gridSize; row++) {
-                for (let col = 0; col < gridSize; col++) {
-                    if (grid[row][col] && !visited[row][col] && !Array.isArray(grid[row][col])) {
-                        let group = [];
-                        const color = grid[row][col];
-                        dfs(row, col, color, group);
-                        if (group.length >= 5) {
-                            toRemove = toRemove.concat(group);
-                            let points = isGravityChain ? 10 : (group.length > 5 ? 10 : 5);
-                            score += points;
-                            await blinkBlocks(group, points);
-                            document.getElementById("chainSound").play();
+        for (let row = 0; row < gridSize; row++) {
+            for (let col = 0; col < gridSize; col++) {
+                if (gridSnapshot[row][col] && !visited[row][col] && !Array.isArray(gridSnapshot[row][col])) {
+                    let group = [];
+                    const color = gridSnapshot[row][col];
+                    dfs(row, col, color, group);
+                    if (group.length >= 5) {
+                        toRemove = toRemove.concat(group);
+                        // Calculer les points selon le niveau de la série
+                        let points;
+                        if (chainSeriesLevel >= 2) {
+                            points = 50; // Troisième chaîne ou plus dans la série
+                        } else if (chainSeriesLevel === 1 || group.length > 5) {
+                            points = 10; // Deuxième chaîne ou plus de 5 blocs
+                        } else {
+                            points = 5; // Première chaîne de 5 blocs
                         }
+                        score += points;
+                        const chainSound = document.getElementById("chainSound");
+                        if (chainSound) {
+                            chainSound.play().catch(e => console.error("Erreur son chaîne:", e));
+                        }
+                        await blinkBlocks(group, points);
                     }
                 }
             }
+        }
 
-            if (toRemove.length > 0) {
-                chainsRemoved = true;
-                let priksAffected = new Set();
-                let priksToRemove = [];
-                toRemove.forEach(([row, col]) => {
-                    const directions = [
-                        [-1, 0], [1, 0], [0, -1], [0, 1],
-                        [-1, -1], [-1, 1], [1, -1], [1, 1]
-                    ];
-                    directions.forEach(([dr, dc]) => {
-                        const r = row + dr;
-                        const c = col + dc;
-                        if (r >= 0 && r < gridSize && c >= 0 && c < gridSize && grid[r][c] && Array.isArray(grid[r][c]) && grid[r][c][0] === priksColor) {
-                            const key = `${r},${c}`;
-                            if (!priksAffected.has(key)) {
-                                priksAffected.add(key);
-                                grid[r][c][1]--;
-                                if (grid[r][c][1] <= 0) {
-                                    priksToRemove.push([r, c]);
-                                }
+        if (toRemove.length > 0) {
+            chainsRemoved = true;
+            let priksAffected = new Set();
+            let priksToRemove = [];
+            toRemove.forEach(([row, col]) => {
+                const directions = [
+                    [-1, 0], [1, 0], [0, -1], [0, 1],
+                    [-1, -1], [-1, 1], [1, -1], [1, 1]
+                ];
+                directions.forEach(([dr, dc]) => {
+                    const r = row + dr;
+                    const c = col + dc;
+                    if (r >= 0 && r < gridSize && c >= 0 && c < gridSize && grid[r][c] && Array.isArray(grid[r][c]) && grid[r][c][0] === priksColor) {
+                        const key = `${r},${c}`;
+                        if (!priksAffected.has(key)) {
+                            priksAffected.add(key);
+                            grid[r][c][1]--;
+                            if (grid[r][c][1] <= 0) {
+                                priksToRemove.push([r, c]);
                             }
                         }
-                    });
+                    }
                 });
+            });
 
-                toRemove.forEach(([row, col]) => {
-                    grid[row][col] = null;
-                });
+            toRemove.forEach(([row, col]) => {
+                grid[row][col] = null;
+            });
 
-                if (priksToRemove.length > 0) {
-                    await blinkBlocks(priksToRemove);
-                    priksToRemove.forEach(([row, col]) => {
-                        grid[row][col] = null;
-                    });
-                }
-
-                chainCount++;
-                if (chainCount % 10 === 0) bombCount++;
-                isGravityChain = true;
-                await animateGravity(calculateGravityMoves());
-                drawGrid();
-            } else {
-                isGravityChain = false;
+            if (priksToRemove.length > 0) {
+                await blinkBlocks(priksToRemove);
             }
-        } while (chainsRemoved);
-    }
 
-    // Calculer les mouvements de gravité
-    function calculateGravityMoves() {
-        let moves = [];
-        for (let col = 0; col < gridSize; col++) {
-            let newCol = [];
-            for (let row = 0; row < gridSize; row++) {
-                if (grid[row][col]) newCol.push({ row, color: grid[row][col] });
-            }
-            for (let i = 0; i < newCol.length; i++) {
-                let startRow = newCol[i].row;
-                let endRow = i;
-                if (startRow !== endRow) {
-                    moves.push({ startRow, endRow, col, color: newCol[i].color });
-                }
-            }
-            for (let row = 0; row < gridSize; row++) {
-                grid[row][col] = (row < newCol.length) ? newCol[row].color : null;
-            }
-        }
-        return moves;
-    }
-
-    // Mettre à jour l’interface
-    function updateUI() {
-        document.getElementById("bombCount").textContent = bombCount;
-        document.getElementById("score").textContent = score;
-        const chainsToNextBomb = 10 - (chainCount % 10);
-        document.getElementById("chainsRemaining").textContent = `Chaînes restantes : ${chainsToNextBomb}`;
-
-        const progress = (moveCount % 10) * 10;
-        const progressBar = document.getElementById("progressBar");
-        progressBar.style.width = `${progress}%`;
-        if (moveCount % 10 >= 8) {
-            progressBar.style.backgroundColor = "#0F380F";
-        } else if (moveCount % 10 >= 5) {
-            progressBar.style.backgroundColor = "#306230";
+            chainCount++;
+            if (chainCount % 10 === 0) bombCount++;
+            chainSeriesLevel++; // Incrémenter le niveau de la série
+            await animateGravity(calculateGravityMoves());
+            drawGrid();
         } else {
-            progressBar.style.backgroundColor = "#8BAC0F";
+            chainSeriesLevel = 0; // Réinitialiser après une série terminée
+        }
+    } while (chainsRemoved);
+}
+
+// Animation des cercles concentriques pour la fin de partie
+function animateGameOver(x, y) {
+    const duration = 500; // Durée totale en ms
+    const steps = 30; // Nombre d'étapes pour l'animation
+    const stepDuration = duration / steps;
+    const maxRadius = cellSize * 1.5; // Grand cercle initial
+    const minRadius = 2; // Point minimal
+    const colors = ["#0F380F", "#306230", "#8BAC0F", "#9BBC0F"]; // Couleurs GameBoy
+
+    let step = 0;
+    const animate = () => {
+        if (step > steps * 2) return; // 2 cycles : réduction puis agrandissement
+        ctx.save();
+        ctx.beginPath();
+        const radius = step <= steps 
+            ? maxRadius - (maxRadius - minRadius) * (step / steps) // Réduction
+            : minRadius + (maxRadius - minRadius) * ((step - steps) / steps); // Agrandissement
+        const color = colors[Math.floor(step / (steps / colors.length)) % colors.length];
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.restore();
+        step++;
+        if (step <= steps * 2) {
+            requestAnimationFrame(animate);
+        }
+    };
+    requestAnimationFrame(animate);
+}
+// Calculer les mouvements de gravité
+function calculateGravityMoves() {
+    let moves = [];
+    for (let col = 0; col < gridSize; col++) {
+        let newCol = [];
+        for (let row = 0; row < gridSize; row++) {
+            if (grid[row][col]) newCol.push({ row, color: grid[row][col] });
+        }
+        for (let i = 0; i < newCol.length; i++) {
+            let startRow = newCol[i].row;
+            let endRow = i;
+            if (startRow !== endRow) {
+                moves.push({ startRow, endRow, col, color: newCol[i].color });
+            }
+        }
+        for (let row = 0; row < gridSize; row++) {
+            grid[row][col] = (row < newCol.length) ? newCol[row].color : null;
         }
     }
+    return moves;
+}
 
-    // Fin du jeu
-    function endGame() {
-        const highScores = loadHighScores();
+// Mettre à jour l’interface
+function updateUI() {
+    document.getElementById("bombCount").textContent = bombCount;
+    document.getElementById("score").textContent = score;
+    const chainsToNextBomb = 10 - (chainCount % 10);
+    document.getElementById("chainsRemaining").textContent = `CHAÎNES RESTANTES : ${chainsToNextBomb}`;
+
+    const progress = (moveCount % 10) * 10;
+    const progressBar = document.getElementById("progressBar");
+    progressBar.style.width = `${progress}%`;
+    if (moveCount % 10 >= 8) {
+        progressBar.style.backgroundColor = "#0F380F";
+    } else if (moveCount % 10 >= 5) {
+        progressBar.style.backgroundColor = "#306230";
+    } else {
+        progressBar.style.backgroundColor = "#8BAC0F";
+    }
+}
+
+// Fin du jeu
+function endGame() {
+    if (isGameOver) return;
+    isGameOver = true;
+    console.log("Appel de endGame, score actuel:", score);
+    loadHighScores().then((highScores) => {
         if (score > highScores[9][1]) {
             addHighScore(score);
         }
+        
         document.getElementById("gameOverScore").textContent = `SCORE FINAL : ${score}`;
         document.getElementById("gameOverScreen").style.display = "flex";
-    }
+    });
+}
+document.addEventListener("DOMContentLoaded", () => {
+    const startButton = document.getElementById("startButton");
+    const gameOverButton = document.getElementById("gameOverButton");
+    const rulesButton = document.getElementById("rulesButton");
+    const rulesScreen = document.getElementById("rulesScreen");
+    const hiscoresButton = document.getElementById("hiscoresButton");
+    const hiscoresScreen = document.getElementById("hiscoresScreen");
+    const hiscoresContent = document.getElementById("hiscoresContent");
 
-    // Gestion des touches
-    document.addEventListener("keydown", (event) => {
-        switch (event.key) {
-            case "ArrowLeft":
-                if (blockPosition > 0) blockPosition--;
-                drawGrid();
-                break;
-            case "ArrowRight":
-                if (blockPosition < gridSize - 1) blockPosition++;
-                drawGrid();
-                break;
-            case " ":
-                event.preventDefault();
-                addBlock(blockPosition);
-                break;
-            case "b":
-            case "B":
-                if (bombCount > 0 && !isBombSelected) {
-                    isBombSelected = true;
-                    drawGrid();
+    // Vérification et écouteur pour startButton
+    if (startButton) {
+        startButton.addEventListener("click", () => {
+            console.log("Bouton Start cliqué");
+            const startScreen = document.getElementById("startScreen");
+            if (startScreen) {
+                console.log("startScreen trouvé, changement de display à 'none'");
+                startScreen.style.display = "none";
+                const beginSound = document.getElementById("beginSound");
+                if (beginSound) {
+                    beginSound.currentTime = 0; // Réinitialiser la position du son
+                    beginSound.play().catch(e => console.error("Erreur son début:", e));
                 }
-                break;
-        }
-    });
-
-    // Gestion des clics sur le canvas
-    canvas.addEventListener("click", (event) => {
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        if (y < gridSize * cellSize) {
-            const col = Math.floor((x - 40) / cellSize);
-            if (col >= 0 && col < gridSize) {
-                blockPosition = col;
-                addBlock(col);
+            } else {
+                console.error("Erreur : #startScreen non trouvé");
             }
-        }
-    });
-
-    // Gestion du clic sur l’icône de bombe
-    document.getElementById("bombIcon").addEventListener("click", () => {
-        if (bombCount > 0 && !isBombSelected) {
-            isBombSelected = true;
-            drawGrid();
-        }
-    });
-
-    // Attendre que les images soient chargées
-    let imagesLoaded = 0;
-    const totalImages = colors.length + 2;
-    function checkImagesLoaded() {
-        imagesLoaded++;
-        console.log("Image chargée, total:", imagesLoaded, "/", totalImages); // Suivre le chargement
-        if (imagesLoaded === totalImages) {
-            updateHighScoresDisplay();
+            
             drawGrid();
             updateUI();
-        }
+        });
+    } else {
+        console.error("Erreur : #startButton non trouvé");
     }
 
-    Object.values(images).forEach(img => {
-        img.onload = checkImagesLoaded;
-        img.onerror = () => {
-            console.error(`Erreur de chargement de l'image : ${img.src}`);
-            checkImagesLoaded();
-        };
-    });
-</script>
-    <audio id="placeSound" src="place.wav"></audio>
-    <audio id="bombSound" src="bomb.wav"></audio>
-    <audio id="chainSound" src="chain.mp3"></audio>
+    // Vérification et écouteur pour gameOverButton
+    if (gameOverButton) {
+        gameOverButton.addEventListener("click", () => {
+            console.log("Bouton Game Over cliqué");
+            document.getElementById("gameOverScreen").style.display = "none";
+            grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
+            bombCount = 1;
+            chainCount = 0;
+            score = 0;
+            moveCount = 0;
+            nextBlock = getNewBlock();
+            nextNextBlock = getNewBlock();
+            nextLine = getNewLine();
+            isBombSelected = false;
+            blockPosition = 0;
+            isGameOver = false;
+            drawGrid();
+            updateUI();
+            // Jouer le son begin.mp3 lors du démarrage d'une nouvelle partie
+            const beginSound = document.getElementById("beginSound");
+            if (beginSound) {
+                beginSound.currentTime = 0; // Réinitialiser la position du son
+                beginSound.play().catch(e => console.error("Erreur son début:", e));
+            }
+        });
+    } else {
+        console.error("Erreur : #gameOverButton non trouvé");
+    }
+
+    // Vérification et écouteurs pour rulesButton et rulesScreen
+    if (rulesButton && rulesScreen) {
+        rulesButton.addEventListener("click", () => {
+            console.log("Bouton Rules cliqué");
+            rulesScreen.style.display = "flex";
+        });
+
+        rulesScreen.addEventListener("click", () => {
+            console.log("RulesScreen cliqué, fermeture...");
+            rulesScreen.style.display = "none";
+        });
+    } else {
+        console.error("Erreur : #rulesButton ou #rulesScreen non trouvé");
+    }
+
+    // Vérification et écouteurs pour hiscoresButton, hiscoresScreen, et hiscoresContent
+    if (hiscoresButton && hiscoresScreen && hiscoresContent) {
+        hiscoresButton.addEventListener("click", () => {
+            console.log("Bouton Hiscores cliqué");
+            loadHighScores().then(highScores => {
+                hiscoresContent.innerHTML = "";
+                highScores.forEach(([name, score], index) => {
+                    const p = document.createElement("p");
+                    p.textContent = `${index + 1}. ${name} : ${score}`;
+                    hiscoresContent.appendChild(p);
+                });
+                hiscoresScreen.style.display = "flex";
+            }).catch(error => {
+                console.error("Erreur chargement highscores:", error);
+            });
+        });
+
+        hiscoresScreen.addEventListener("click", () => {
+            console.log("HiscoresScreen cliqué, fermeture...");
+            hiscoresScreen.style.display = "none";
+        });
+    } else {
+        console.error("Erreur : #hiscoresButton, #hiscoresScreen ou #hiscoresContent non trouvé");
+    }
+});
+// Gestion des touches
+document.addEventListener("keydown", (event) => {
+    if (isProcessing) return;
+    switch (event.key) {
+        case "ArrowLeft":
+            if (blockPosition > 0) blockPosition--;
+            drawGrid();
+            break;
+        case "ArrowRight":
+            if (blockPosition < gridSize - 1) blockPosition++;
+            drawGrid();
+            break;
+        case " ":
+            event.preventDefault();
+            addBlock(blockPosition);
+            break;
+        case "b":
+        case "B":
+            if (bombCount > 0 && !isBombSelected) {
+                isBombSelected = true;
+                drawGrid();
+            }
+            break;
+    }
+});
+
+// Gestion des clics sur le canvas
+canvas.addEventListener("click", (event) => {
+    if (isProcessing) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    if (y < gridSize * cellSize) {
+        const col = Math.floor((x - 40) / cellSize);
+        if (col >= 0 && col < gridSize) {
+            blockPosition = col;
+            addBlock(col);
+        }
+    }
+});
+
+// Gestion du clic sur l’icône de bombe avec verrouillage
+document.getElementById("bombIcon").addEventListener("click", () => {
+    if (isProcessing) return;
+    if (bombCount > 0 && !isBombSelected) {
+        isBombSelected = true;
+        drawGrid();
+    }
+});
+
+// Attendre que les images soient chargées
+let imagesLoaded = 0;
+const totalImages = colors.length + 2;
+function checkImagesLoaded() {
+    imagesLoaded++;
+    console.log("Image chargée, total:", imagesLoaded, "/", totalImages);
+    if (imagesLoaded === totalImages) {
+        // updateHighScoresDisplay(); // Supprimé
+        drawGrid();
+        updateUI();
+    }
+}
+
+Object.values(images).forEach(img => {
+    img.onload = checkImagesLoaded;
+    img.onerror = () => {
+        console.error(`Erreur de chargement de l'image : ${img.src}`);
+        checkImagesLoaded();
+    };
+});
+    </script>
 </body>
 </html>
