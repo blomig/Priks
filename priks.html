@@ -3,231 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <meta name="mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-status-bar-style" content="black">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BLOX</title>
-   
+   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap">
     <style>
-        body {
-            background-color: #cadc9f;
-        }
-        canvas {
-            border: 1px solid black;
-            display: block;
-            margin: 0 auto;
-        }
-        #gameContainer {
-            text-align: center;
-            font-family: Arial, sans-serif;
-            position: relative;
-        }
-        #gameCanvas {
-            background-color: #cadc9f;
-        }
-        #info {
-            margin-top: 10px;
-            color: #0f380f;
-        }
-        #rules {
-            font-size: 0.9em;
-            margin-top: 5px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            color: #0f380f;
-        }
-        #underGrid {
-            display: flex;
-            justify-content: space-between;
-            width: 320px;
-            margin: 5px auto 0;
-        }
-        #progressContainer {
-            width: 100px;
-            height: 10px;
-            background-color: #cadc9f;
-            border: 1px solid #000;
-            position: relative;
-            margin: 5px 0;
-        }
-        #progressBar {
-            height: 100%;
-            width: 0%;
-            background-color: #8bac0f;
-            transition: width 0.2s ease-in-out;
-        }
-        #scoreDisplay {
-            font-size: 1.5em;
-            font-family: "gameboy", monospace;
-            color: #0f380f;
-        }
-        #bombDisplay {
-            display: flex;
-            align-items: center;
-            flex-direction: column;
-        }
-        #bombDisplay img {
-            width: 36px;
-            height: 36px;
-            margin-right: 5px;
-            cursor: pointer;
-        }
-        #bombCount {
-            font-size: 1.5em;
-            font-family: "gameboy", monospace;
-            color: #0f380f;
-        }
-        #chainsRemaining {
-            font-size: 0.8em;
-            margin-top: 2px;
-            font-family: "gameboy", monospace;
-            color: #0f380f;
-        }
-        #highScores {
-            position: absolute;
-            right: calc(50% - 400px);
-            top: 0;
-            width: 150px;
-            text-align: left;
-            font-size: 0.9em;
-            font-family: "gameboy", monospace;
-        }
-        #highScores h3 {
-            margin: 0 0 5px 0;
-        }
-        #highScores ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
+        /* Styles de base */
         @font-face {
-            font-family: "gameboy";
-            src: url("gameboy.ttf") format("truetype");
-        }
-        #startScreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            z-index: 1000;
-        }
-        #startImage {
-            max-width: 360px;
-            max-height: 400px;
-            object-fit: contain;
-            margin-top: 10px;
-        }
-        #pressStart {
-            position: absolute;
-            bottom: 60px;
-            font-family: "gameboy", monospace;
-            font-size: 14px;
-            color: #0F380F;
-            animation: blink 1s infinite;
-        }
-        #startButton {
-            position: absolute;
-            bottom: 20px;
-            padding: 10px 20px;
-            font-family: "gameboy", monospace;
-            font-size: 16px;
-            color: #0F380F;
-            background-color: #8BAC0F;
-            border: 2px solid #0F380F;
-            cursor: pointer;
-            z-index: 1001;
-            pointer-events: auto;
-        }
-        #startButton:hover {
-            background-color: #306230;
-        }
-        #gameOverScreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: flex-start;
-            z-index: 1000;
-        }
-        #gameOverImage {
-            max-width: 360px;
-            max-height: 400px;
-            object-fit: contain;
-            margin-top: 10px;
-        }
-        #gameOverScore {
-            position: absolute;
-            top: 200px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-family: "gameboy", monospace;
-            font-size: 20px;
-            color: #FFFFFF;
-            z-index: 1002;
-        }
-        #gameOverPressStart {
-            position: absolute;
-            bottom: 60px;
-            font-family: "gameboy", monospace;
-            font-size: 14px;
-            color: #0F380F;
-            animation: blink 1s infinite;
-        }
-        #gameOverButton {
-            position: absolute;
-            bottom: 20px;
-            padding: 10px 20px;
-            font-family: "gameboy", monospace;
-            font-size: 16px;
-            color: #0F380F;
-            background-color: #8BAC0F;
-            border: 2px solid #0F380F;
-            cursor: pointer;
-            z-index: 1001;
-        }
-        #gameOverButton:hover {
-            background-color: #306230;
-        }
-        @keyframes blink {
-            0%, 50% {
-                opacity: 1;
-            }
-            51%, 100% {
-                opacity: 0;
-            }
-        }
- #rulesButtonContainer {
+    font-family: "gameboy";
+    src: url("gameboy.ttf") format("truetype");
+}
+            
+#rulesButtonContainer {
     width: 320px;
     margin: 5px auto 0;
     text-align: center;
-    display: flex; /* Aligner les boutons côte à côte */
-    justify-content: center; /* Centrer les boutons */
-    gap: 10px; /* Espacement entre les boutons */
+    display: flex;
+    justify-content: center;
+    gap: 10px;
 }
 
-#rulesButton, #hiscoresButton {
+#rulesButton, #hiscoresButton, #switchButton {
     padding: 5px 10px;
-    font-family: "gameboy", monospace;
+    font-family: var(--font-family);
     font-size: 14px;
-    color: #0F380F;
-    background-color: #8BAC0F;
+    color: var(--text-color);
+    background-color: var(--button-bg, #8BAC0F); /* Utiliser une variable par défaut */
     border: 2px solid #0F380F;
     cursor: pointer;
 }
 
-#rulesButton:hover, #hiscoresButton:hover {
-    background-color: #306230;
+.gameboy-theme {
+    --font-family: "gameboy", monospace;
+    --canvas-bg: #cadc9f;
+    --text-color: #0F380F;
+    --progress-bg: #cadc9f;
+    --progress-bar: #8BAC0F;
+    --content-bg: #cadc9f;
+    --button-bg: #8BAC0F; /* Fond GameBoy */
+}
+
+.colorful-theme {
+    --font-family: "Open Sans", sans-serif;
+    --canvas-bg: #e0e0e0;
+    --text-color: #333333;
+    --progress-bg: #d0d0d0;
+    --progress-bar: #FF5555;
+    --content-bg: #F5F5F5;
+    --button-bg: #ddc8cf; /* Fond rouge vif pour le thème Coloré */
+}
+
+#rulesButton:hover, #hiscoresButton:hover, #switchButton:hover {
+    background-color: var(--button-hover, #306230); /* Variable pour le hover */
+}
+
+.gameboy-theme {
+    --button-hover: #306230; /* Hover GameBoy */
+}
+
+.colorful-theme {
+    --button-hover: #CC0000; /* Hover rouge foncé pour Coloré */
+}
+
+/* Styles spécifiques aux thèmes (restants inchangés) */
+#gameCanvas {
+    background-color: var(--canvas-bg);
+}
+
+#scoreDisplay,
+#bombCount,
+#chainsRemaining,
+#info {
+    font-family: var(--font-family);
+    color: var(--text-color);
+}
+
+#progressContainer {
+    background-color: var(--progress-bg);
+    border: 1px solid #000;
+    width: 100px;
+    height: 10px;
+    position: relative;
+    margin: 5px 0;
+}
+
+#progressBar {
+    height: 100%;
+    width: 0%;
+    background-color: var(--progress-bar);
+    transition: width 0.2s ease-in-out;
+}
+
+#rulesContent,
+#hiscoresContent {
+    width: 360px;
+    height: 400px;
+    background-color: var(--content-bg);
+    padding: 20px;
+    border: 2px solid #0F380F;
+    font-family: var(--font-family);
+    font-size: 14px;
+    color: var(--text-color);
+    text-align: left;
+    overflow-y: auto;
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.gameboy-theme #startImage {
+    content: url("start_screen.png");
+}
+
+.colorful-theme #startImage {
+    content: url("startScreen_new.png");
+}
+
+.gameboy-theme #gameOverImage {
+    content: url("gameover.png");
+}
+
+.colorful-theme #gameOverImage {
+    content: url("gameover_new.png");
+}
+
+/* Styles existants (inchangés) */
+#gameContainer {
+    text-align: center;
+    position: relative;
+}
+
+#info {
+    margin-top: 10px;
+}
+
+#underGrid {
+    display: flex;
+    justify-content: space-between;
+    width: 320px;
+    margin: 5px auto 0;
+}
+
+#bombDisplay {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+#bombDisplay img {
+    width: 36px;
+    height: 36px;
+    margin-right: 5px;
+    cursor: pointer;
 }
 
 #rulesScreen, #hiscoresScreen {
@@ -243,96 +174,118 @@
     z-index: 1000;
 }
 
-#rulesContent, #hiscoresContent {
-    width: 360px;
-    height: 400px;
-    background-color: #cadc9f;
-    padding: 20px;
-    border: 2px solid #0F380F;
-    font-family: "gameboy", monospace;
-    font-size: 12px;
-    color: #0F380F;
-    text-align: left;
-    overflow-y: auto;
-    position: absolute;
-    top: 10px; /* Ajusté pour être au-dessus de la grille */
-    left: 50%;
-    transform: translateX(-50%);
-}
-    #rulesButtonContainer {
-    width: 320px;
-    margin: 5px auto 0;
-    text-align: center;
+#startScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
-    gap: 10px;
+    align-items: flex-start;
+    z-index: 1000;
 }
 
-#rulesButton, #hiscoresButton, #switchButton {
-    padding: 5px 10px;
-    font-family: "gameboy", monospace;
+#startImage {
+    max-width: 360px;
+    max-height: 400px;
+    object-fit: contain;
+    margin-top: 10px;
+}
+
+#pressStart {
+    position: absolute;
+    bottom: 60px;
+    font-family: var(--font-family);
     font-size: 14px;
-    color: #0F380F;
-    background-color: #8BAC0F;
+    color: var(--text-color);
+    animation: blink 1s infinite;
+}
+
+#startButton {
+    position: absolute;
+    bottom: 20px;
+    padding: 10px 20px;
+    font-family: var(--font-family);
+    font-size: 16px;
+    color: var(--text-color);
+    background-color: var(--button-bg);
     border: 2px solid #0F380F;
     cursor: pointer;
+    z-index: 1001;
+    pointer-events: auto;
 }
 
-#rulesButton:hover, #hiscoresButton:hover, #switchButton:hover {
-    background-color: #306230;
+#startButton:hover {
+    background-color: var(--button-hover);
 }
 
-/* Styles spécifiques aux thèmes */
-.gameboy-theme #gameCanvas {
-    background-color: #cadc9f; /* Fond GameBoy */
+#gameOverScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: flex-start;
+    z-index: 1000;
 }
 
-.colorful-theme #gameCanvas {
-    background-color: #e0e0e0; /* Fond plus clair et moderne */
+#gameOverImage {
+    max-width: 360px;
+    max-height: 400px;
+    object-fit: contain;
+    margin-top: 10px;
 }
 
-.gameboy-theme #scoreDisplay,
-.gameboy-theme #bombCount,
-.gameboy-theme #chainsRemaining,
-.gameboy-theme #info {
-    color: #0F380F; /* Couleur texte GameBoy */
+#gameOverScore {
+    position: absolute;
+    top: 200px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-family);
+    font-size: 16px;
+    color: var(--text-color);
+    z-index: 1002;
 }
 
-.colorful-theme #scoreDisplay,
-.colorful-theme #bombCount,
-.colorful-theme #chainsRemaining,
-.colorful-theme #info {
-    color: #333333; /* Couleur texte plus moderne */
+#gameOverPressStart {
+    position: absolute;
+    bottom: 60px;
+    font-family: var(--font-family);
+    font-size: 14px;
+    color: var(--text-color);
+    animation: blink 1s infinite;
 }
 
-.gameboy-theme #progressContainer {
-    background-color: #cadc9f;
+#gameOverButton {
+    position: absolute;
+    bottom: 20px;
+    padding: 10px 20px;
+    font-family: var(--font-family);
+    font-size: 16px;
+    color: var(--text-color);
+    background-color: var(--button-bg);
+    border: 2px solid #0F380F;
+    cursor: pointer;
+    z-index: 1001;
 }
 
-.colorful-theme #progressContainer {
-    background-color: #d0d0d0;
+#gameOverButton:hover {
+    background-color: var(--button-hover);
 }
 
-.gameboy-theme #progressBar {
-    background-color: #8BAC0F;
+@keyframes blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0;
+    }
 }
-
-.colorful-theme #progressBar {
-    background-color: #FF5555; /* Rouge vif pour la barre de progression */
-}
-
-.gameboy-theme #rulesContent,
-.gameboy-theme #hiscoresContent {
-    background-color: #cadc9f;
-    color: #0F380F;
-}
-
-.colorful-theme #rulesContent,
-.colorful-theme #hiscoresContent {
-    background-color: #F5F5F5;
-    color: #333333;
-}
-
     </style>
 </head>
 <body>
@@ -418,24 +371,40 @@ let isBombSelected = false;
 let isProcessing = false;
 let isGameOver = false;
 
-// Ajout de la gestion des thèmes
-let currentTheme = 'gameboy'; // Thème par défaut
+let currentTheme = 'gameboy';
 const colors = ["red", "blue", "green", "yellow", "purple", "orange"];
 const priksColor = "gray";
 const bombColor = "bomb";
 
-// Gestion des ensembles d’images pour les deux thèmes
 const imageSets = {
     gameboy: {},
     colorful: {}
 };
 
-// Charger les images pour les deux thèmes
+const soundSets = {
+    gameboy: {
+        place: "place.mp3",
+        bomb: "bomb.mp3",
+        chain: "chain.mp3",
+        line: "line.wav",
+        begin: "begin.mp3",
+        end: "end.mp3"
+    },
+    colorful: {
+        place: "place_new.mp3",
+        bomb: "bomb_new.mp3",
+        chain: "chain_new.mp3",
+        line: "line_new.wav",
+        begin: "begin_new.mp3",
+        end: "end_new.mp3"
+    }
+};
+
 colors.forEach(color => {
     imageSets.gameboy[color] = new Image();
-    imageSets.gameboy[color].src = `${color}.png`; // Images GameBoy
+    imageSets.gameboy[color].src = `${color}.png`;
     imageSets.colorful[color] = new Image();
-    imageSets.colorful[color].src = `${color}_new.png`; // Images Colorées
+    imageSets.colorful[color].src = `${color}_new.png`;
 });
 imageSets.gameboy[priksColor] = new Image();
 imageSets.gameboy[priksColor].src = "priks.png";
@@ -446,8 +415,14 @@ imageSets.gameboy[bombColor].src = "bomb.png";
 imageSets.colorful[bombColor] = new Image();
 imageSets.colorful[bombColor].src = "bomb_new.png";
 
-// Utiliser l’ensemble d’images actif
 let images = imageSets[currentTheme];
+
+// Charger les sons dynamiquement
+const audioElements = {};
+Object.keys(soundSets.gameboy).forEach(key => {
+    audioElements[key + 'Sound'] = document.getElementById(key + 'Sound');
+    audioElements[key + 'SoundNew'] = document.getElementById(key + 'SoundNew');
+});
 
 // Générer un nouveau bloc
 function getNewBlock() {
@@ -657,11 +632,12 @@ async function animateLine(lineData) {
     const duration = 100;
     const steps = 10;
     const stepDuration = duration / steps;
-     // Jouer le son au début de l’animation
-    const lineSound = document.getElementById("lineSound");
+
+    const lineSound = audioElements[currentTheme === 'gameboy' ? 'lineSound' : 'lineSoundNew'];
     if (lineSound) {
         lineSound.play().catch(e => console.error("Erreur son ligne:", e));
     }
+
     const animations = lineData.map(({ col, row, color }) => {
         const endY = row * cellSize;
         const stepDistance = (startY - endY) / steps;
@@ -751,14 +727,12 @@ async function addBlock(col) {
     while (row >= 0 && !grid[row][col]) row--;
     row++;
     if (row >= gridSize) {
-        // Jouer le son juste avant endGame
-        const endSound = document.getElementById("endSound");
+        const endSound = audioElements[currentTheme === 'gameboy' ? 'endSound' : 'endSoundNew'];
         if (endSound) {
             endSound.play().catch(e => console.error("Erreur son fin:", e));
         }
-        // Lancer l’animation au centre de la case bloquée
-        const x = col * cellSize + 40 + cellSize / 2; // Centre horizontal
-        const y = gridSize * cellSize + cellSize / 2; // Bas de la grille
+        const x = col * cellSize + 40 + cellSize / 2;
+        const y = gridSize * cellSize + cellSize / 2;
         animateGameOver(x, y);
         endGame();
         isProcessing = false;
@@ -766,8 +740,7 @@ async function addBlock(col) {
     }
     if (isBombSelected) {
         await animateBlock(col, gridSize * cellSize, row, true);
-        // Jouer le son après l'animation du bloc, avant l'explosion
-        const bombSound = document.getElementById("bombSound");
+        const bombSound = audioElements[currentTheme === 'gameboy' ? 'bombSound' : 'bombSoundNew'];
         if (bombSound) {
             bombSound.play().catch(e => console.error("Erreur son bombe:", e));
         }
@@ -783,7 +756,6 @@ async function addBlock(col) {
             const bombX = col * cellSize + 40 + cellSize / 2;
             const bombY = row * cellSize + cellSize / 2;
             await blinkBlocks(toRemove, null, true, bombX, bombY);
-            
         }
         for (let r = Math.max(0, row - 1); r <= Math.min(gridSize - 1, row + 1); r++) {
             for (let c = Math.max(0, col - 1); c <= Math.min(gridSize - 1, col + 1); c++) {
@@ -799,7 +771,7 @@ async function addBlock(col) {
         grid[row][col] = nextBlock;
         console.log("Bloc placé:", row, col, nextBlock);
         console.log("nextBlock avant:", nextBlock, "nextNextBlock avant:", nextNextBlock);
-        const placeSound = document.getElementById("placeSound");
+        const placeSound = audioElements[currentTheme === 'gameboy' ? 'placeSound' : 'placeSoundNew'];
         if (placeSound) placeSound.play().catch(e => console.error("Erreur son placement:", e));
         moveCount++;
         nextBlock = nextNextBlock;
@@ -808,15 +780,12 @@ async function addBlock(col) {
         await checkChains();
         if (moveCount % 10 === 0 && moveCount > 0) {
             addRandomLine();
-            // nextLine = getNewLine(); // Déplacé dans addRandomLine
         }
     }
     drawGrid();
     updateUI();
     isProcessing = false;
 }
-
-// Ajouter une ligne complète avec animation
 // Ajouter une ligne complète avec animation
 function addRandomLine() {
     const lineData = [];
@@ -825,13 +794,12 @@ function addRandomLine() {
         while (row >= 0 && !grid[row][col]) row--;
         row++;
         if (row >= gridSize) {
-            const endSound = document.getElementById("endSound");
+            const endSound = audioElements[currentTheme === 'gameboy' ? 'endSound' : 'endSoundNew'];
             if (endSound) {
                 endSound.play().catch(e => console.error("Erreur son fin:", e));
             }
-            // Lancer l’animation pour la colonne qui a provoqué la fin
-            const x = col * cellSize + 40 + cellSize / 2; // Centre horizontal
-            const y = gridSize * cellSize + cellSize / 2; // Bas de la grille
+            const x = col * cellSize + 40 + cellSize / 2;
+            const y = gridSize * cellSize + cellSize / 2;
             animateGameOver(x, y);
             endGame();
             return;
@@ -839,7 +807,7 @@ function addRandomLine() {
         lineData.push({ col, row, color: nextLine[col] });
     }
     animateLine(lineData).then(() => {
-        checkChains(); // checkChains gérera les points uniformément
+        checkChains();
     });
     nextLine = getNewLine();
 }
@@ -908,7 +876,7 @@ async function blinkBlocks(blocks, points = null, isBomb = false, bombX = null, 
 // Vérifier les chaînes avec une copie de la grille
 async function checkChains() {
     let chainsRemoved;
-    let chainSeriesLevel = 0; // Compteur pour le niveau de la série
+    let chainSeriesLevel = 0;
     do {
         chainsRemoved = false;
         let visited = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
@@ -939,17 +907,16 @@ async function checkChains() {
                     dfs(row, col, color, group);
                     if (group.length >= 5) {
                         toRemove = toRemove.concat(group);
-                        // Calculer les points selon le niveau de la série
                         let points;
                         if (chainSeriesLevel >= 2) {
-                            points = 50; // Troisième chaîne ou plus dans la série
+                            points = 50;
                         } else if (chainSeriesLevel === 1 || group.length > 5) {
-                            points = 10; // Deuxième chaîne ou plus de 5 blocs
+                            points = 10;
                         } else {
-                            points = 5; // Première chaîne de 5 blocs
+                            points = 5;
                         }
                         score += points;
-                        const chainSound = document.getElementById("chainSound");
+                        const chainSound = audioElements[currentTheme === 'gameboy' ? 'chainSound' : 'chainSoundNew'];
                         if (chainSound) {
                             chainSound.play().catch(e => console.error("Erreur son chaîne:", e));
                         }
@@ -994,15 +961,14 @@ async function checkChains() {
 
             chainCount++;
             if (chainCount % 10 === 0) bombCount++;
-            chainSeriesLevel++; // Incrémenter le niveau de la série
+            chainSeriesLevel++;
             await animateGravity(calculateGravityMoves());
             drawGrid();
         } else {
-            chainSeriesLevel = 0; // Réinitialiser après une série terminée
+            chainSeriesLevel = 0;
         }
     } while (chainsRemoved);
 }
-
 // Animation des cercles concentriques pour la fin de partie
 function animateGameOver(x, y) {
     const duration = 500;
@@ -1084,7 +1050,6 @@ function endGame() {
         if (score > highScores[9][1]) {
             addHighScore(score);
         }
-        
         document.getElementById("gameOverScore").textContent = `SCORE FINAL : ${score}`;
         document.getElementById("gameOverScreen").style.display = "flex";
     });
